@@ -1,0 +1,22 @@
+{
+  "name": "alis",
+  "owner": {
+    "name": "Alis Build"
+  },
+  "plugins": [
+    {
+      "name": "alis-build",
+      "source": "./plugins/alis-build",
+      "description": "Connect Claude Code to Alis Build through MCP.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Alis Build"
+      },
+      "homepage": "https://github.com/alis-build/claude-plugin",
+      "repository": "https://github.com/alis-build/claude-plugin",
+      "license": "MIT",
+      "keywords": ["alis", "build", "mcp", "deploys", "workspaces"],
+      "category": "developer-tools"
+    }
+  ]
+}
