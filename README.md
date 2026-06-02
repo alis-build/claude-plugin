@@ -1,64 +1,51 @@
 # Alis Build Claude Code Plugin
 
 <p align="center">
-  <img src="plugins/alis-build/assets/logo.svg" alt="Alis Build logo" width="128" height="128">
+  <img src="plugins/alis-build/assets/connectivity.svg" alt="Claude Code connected to Alis Build" width="760">
 </p>
 
 <p align="center">
-  <strong>Connect Claude Code to Alis Build through MCP.</strong>
+  <strong>Connect Claude Code to Alis Build.</strong>
 </p>
 
-Connect Claude Code to Alis Build so Claude can inspect landing zones, products, neurons, builds, deploys, and related workspace context through the Alis Build MCP server.
-
-This first release is MCP-only. It does not bundle skills, agents, hooks, commands, LSP servers, monitors, or UI.
+Use this plugin to let Claude Code inspect Alis Build landing zones, products, neurons, builds, deploys, and related workspace context.
 
 ## What You Get
 
-- A preconfigured Claude Code MCP server for `https://mcp.alis.build/mcp`
-- OAuth/OIDC authentication through `https://identity.alisx.com`
-- Alis Build tools exposed inside Claude Code after login
-- Read and write access controlled by Alis Build OAuth scopes and Claude Code MCP approvals
+- A preconfigured Claude Code MCP server for `https://mcp.alis.build`
+- OAuth/OIDC sign-in through `https://identity.alisx.com`
+- Alis Build tools available inside Claude Code after sign-in
+- Claude Code approval prompts before tools perform sensitive actions
 
 ## Before You Start
 
 You need:
 
 - Claude Code installed and authenticated
-- Network access to `https://mcp.alis.build`
-- Network access to `https://identity.alisx.com`
 - An Alis Build account with access to the landing zones and products you want to use
-- OAuth access for the scopes below:
-
-```text
-build:read
-build:write
-ideas:read
-ideas:write
-```
+- Network access to `https://mcp.alis.build` and `https://identity.alisx.com`
 
 ## Install
 
-Add this repository as a Claude Code plugin marketplace:
+Add the Alis plugin marketplace:
 
 ```sh
 claude plugin marketplace add alis-build/claude-plugin --sparse .claude-plugin plugins/alis-build
 ```
 
-Install the plugin from the terminal before starting Claude Code:
+Install the Alis Build plugin:
 
 ```sh
 claude plugin install alis-build@alis --scope user
 ```
 
-Then start Claude Code normally:
+Start Claude Code:
 
 ```sh
 claude
 ```
 
-This avoids the extra in-session reload step. If you install, enable, or disable the plugin from inside an already-running Claude Code session, run `/reload-plugins` before using `/mcp`.
-
-For a repository-shared install, use project scope instead:
+For a repository-shared install, use project scope:
 
 ```sh
 claude plugin install alis-build@alis --scope project
@@ -72,20 +59,16 @@ In Claude Code, run:
 /mcp
 ```
 
-Select the `alis-build` MCP server and complete the OAuth login flow in your browser.
+Select the `api` MCP server for the `alis-build` plugin and complete the OAuth sign-in flow in your browser.
 
-Expected result:
-
-- `alis-build` is listed as a plugin-provided MCP server.
-- Login opens a browser for `https://identity.alisx.com`.
-- OAuth consent includes `build:read`, `build:write`, `ideas:read`, and `ideas:write`.
+You should see `api` listed as a plugin-provided MCP server for `alis-build`. The sign-in flow opens `https://identity.alisx.com` in your browser.
 
 ## Use It
 
-After login, ask Claude Code to use Alis Build. For example:
+After sign-in, ask Claude Code to use Alis Build:
 
 ```text
-List the landing zones I can access.
+Use Alis Build to list the landing zones I can access.
 ```
 
 ```text
@@ -96,62 +79,20 @@ Show recent builds for product os in landing zone alis.
 Review the latest deploy logs for this neuron and suggest the next action.
 ```
 
-## Local Development
+Claude Code will ask before running tools that require approval.
 
-Validate JSON files:
+## Troubleshooting
 
-```sh
-python3 -m json.tool plugins/alis-build/.claude-plugin/plugin.json
-python3 -m json.tool plugins/alis-build/.mcp.json
-python3 -m json.tool .claude-plugin/marketplace.json
-```
-
-Validate the marketplace and plugin with Claude Code:
+If `api` does not appear in `/mcp`, confirm that the plugin install completed successfully:
 
 ```sh
-claude plugin validate .
-claude plugin validate ./plugins/alis-build
+claude plugin install alis-build@alis --scope user
 ```
 
-Install from a local checkout:
-
-```sh
-claude plugin marketplace add /path/to/claude-plugin
-claude plugin install alis-build@alis
-```
-
-Test without installing:
-
-```sh
-claude --plugin-dir ./plugins/alis-build
-```
-
-## Repository Layout
+If you installed or changed the plugin inside an already-running Claude Code session, reload plugins:
 
 ```text
-.
-├── .claude-plugin
-│   └── marketplace.json
-├── LICENSE
-├── README.md
-├── docs
-│   ├── oauth.md
-│   └── publishing.md
-└── plugins
-    └── alis-build
-        ├── .claude-plugin
-        │   └── plugin.json
-        ├── .mcp.json
-        └── assets
-            └── logo.svg
+/reload-plugins
 ```
 
-## Publishing
-
-See [docs/publishing.md](docs/publishing.md) for release steps.
-
-## Security Notes
-
-The plugin includes a public OAuth client ID because Alis Build does not support dynamic client registration. Do not commit OAuth client secrets, user tokens, or local Claude credentials to this repository.
-
-The plugin does not filter or exclude MCP tools. Access is controlled by OAuth scopes, Alis Build permissions, and Claude Code MCP approval prompts.
+If sign-in fails, confirm that you can reach both `https://mcp.alis.build` and `https://identity.alisx.com`, then try `/mcp` again.
