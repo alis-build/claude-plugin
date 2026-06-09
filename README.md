@@ -87,11 +87,11 @@ This plugin includes Alis Build workflow commands:
 
 ```text
 /alis-build:getting-started
-/alis-build:add-runtime-agent-skills
-/alis-build:add-agui
-/alis-build:add-lro
-/alis-build:add-scheduler
-/alis-build:add-tool
+/alis-build:agent-runtime-skills
+/alis-build:agent-agui
+/alis-build:agent-lro
+/alis-build:agent-scheduler
+/alis-build:agent-tool
 ```
 
 These commands use the Alis Build getting-started and ADK-Go workflow skills. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
