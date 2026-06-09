@@ -81,6 +81,21 @@ Review the latest deploy logs for this neuron and suggest the next action.
 
 Claude Code will ask before running tools that require approval.
 
+## Commands
+
+This plugin includes Alis Build workflow commands:
+
+```text
+/alis-build:getting-started
+/alis-build:add-runtime-agent-skills
+/alis-build:add-agui
+/alis-build:add-lro
+/alis-build:add-scheduler
+/alis-build:add-tool
+```
+
+These commands use the Alis Build getting-started and ADK-Go workflow skills. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
+
 ## Troubleshooting
 
 If `api` does not appear in `/mcp`, confirm that the plugin install completed successfully:
