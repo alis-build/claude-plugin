@@ -68,6 +68,14 @@ You should see `api` listed as a plugin-provided MCP server for `alis-build`. Th
 After sign-in, ask Claude Code to use Alis Build:
 
 ```text
+build it
+```
+
+```text
+fix it
+```
+
+```text
 Use Alis Build to list the landing zones I can access.
 ```
 
@@ -86,15 +94,12 @@ Claude Code will ask before running tools that require approval.
 This plugin includes Alis Build workflow commands:
 
 ```text
+/alis-build:build-it
+/alis-build:fix-it
 /alis-build:getting-started
-/alis-build:agent-runtime-skills
-/alis-build:agent-agui
-/alis-build:agent-lro
-/alis-build:agent-scheduler
-/alis-build:agent-tool
 ```
 
-These commands use the Alis Build getting-started and ADK-Go workflow skills. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
+Type `build it` to discover the right Alis Build skill for the thing you want to build. Type `fix it` to use the same discovery flow when the goal is framed as a fix. `/alis-build:build-it` and `/alis-build:fix-it` are slash-command shortcuts for the same router. `/alis-build:getting-started` uses the Alis Build `getting-started` skill for the platform workflow and simpleapi quickstart. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
 
 ## Troubleshooting
 

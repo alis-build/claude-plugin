@@ -1,5 +1,0 @@
----
-description: Add a long-running ADK tool to an ADK-Go agent.
----
-
-Use the Alis Build MCP and the adk-add-lro skill to add a long-running ADK tool to this agent. Guide me through the proto changes, define step, LRO infra, resumable handler, weblro launcher wiring, and local verification.
