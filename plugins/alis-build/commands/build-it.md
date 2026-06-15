@@ -2,12 +2,4 @@
 description: Find the right Alis Build skill for what you want to build.
 ---
 
-Use the Alis Build MCP SkillTools flow to help me build the thing I want.
-
-First infer what I want built from the current request and workspace context. If the build goal is still ambiguous, ask exactly one concise clarification question: "What exactly should Alis build?"
-
-Once the goal is clear, call SearchSkills with the clarified goal as the query. SearchSkills must be the first SkillTools discovery call. Present the returned queried_skills in a concise table with columns for number, skill id, description, and when to choose it. Ask me which skill to use before loading or executing any specialized workflow.
-
-If SearchSkills returns no results, call ListSkills as the backup and present the available skills. If no listed skill fits the goal, ask whether I want to request a new skill. If I agree, call RequestSkill with display_name, description, use_case, and notes. The current RequestSkill implementation emails the Alis Build team for review.
-
-Do not trigger builds, defines, deploys, commits, or code edits from this router step. After I choose a skill, load that skill and follow its instructions.
+Run the Alis Build "build it" router as described in the Alis Build MCP server instructions: infer what I want built from the current request and workspace context (ask exactly one concise clarification only if the goal is ambiguous), call SearchSkills with the clarified goal, present the matching skills, and load the one I choose. Do not run Define, Build, Deploy, commits, or code edits from this router step — only the loaded skill does that, and only when its workflow requires it.
