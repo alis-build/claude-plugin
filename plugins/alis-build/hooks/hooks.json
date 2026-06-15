@@ -41,6 +41,18 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*__LoadSkill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/inject-skill-session-id.sh",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
