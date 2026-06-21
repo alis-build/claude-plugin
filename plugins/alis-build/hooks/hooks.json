@@ -44,7 +44,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "mcp__.*__LoadSkill",
+        "matcher": "mcp__.*__(LoadSkill|SpecIt)",
         "hooks": [
           {
             "type": "command",
