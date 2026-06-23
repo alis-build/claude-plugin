@@ -11,13 +11,15 @@
 # routing channel:
 #
 #   * vocative "alis" (e.g. "alis, ...", "ask alis to ...") -> inject the DBD
-#     primer AND the routing contract, and mark this session as Alis-engaged.
-#   * any later turn in an Alis-engaged session -> re-inject the routing contract
-#     only (no primer), so follow-up build/fix/help requests route through
-#     SearchSkills instead of going straight to code.
+#     primer AND the full routing contract, and mark this session as
+#     Alis-engaged.
+#   * any later turn in an Alis-engaged session -> inject a terse one-block
+#     reminder only (the full contract was already provided on the engaging
+#     turn), so the router stays live without repeating the whole block or the
+#     primer every turn.
 #   * sessions where the user never addressed Alis -> inject nothing.
 #
-# The routing contract is self-scoping (it only activates the router for
+# The routing reminder is self-scoping (it only activates the router for
 # build/fix-shaped Alis Build requests). Not gated on an ~/alis.build workspace.
 #
 # Whatever this script prints to stdout is added to Claude's context. The prompt
@@ -62,13 +64,12 @@ else
   exit 0
 fi
 
-# DBD framing first (the mental model), then the actionable routing contract.
 if $emit_primer; then
+  # DBD framing first (the mental model), then the full routing contract.
   primer="${CLAUDE_PLUGIN_ROOT:-}/context/dbd-primer.md"
   [ -f "$primer" ] && cat "$primer"
-fi
+  cat <<'EOF'
 
-cat <<'EOF'
 <alis-routing>
 Alis Build routing contract — the user has engaged Alis this session. Keep this
 in mind for this and the following turns:
@@ -92,3 +93,15 @@ in mind for this and the following turns:
   the returned BuildSpec back to the user.
 </alis-routing>
 EOF
+else
+  # Follow-up in an engaged session: terse reminder (full contract given earlier).
+  cat <<'EOF'
+<alis-routing>
+Alis Build router active (full contract was provided earlier this session). Any
+request to build, fix, add, or change something on the Alis Build platform →
+call `SearchSkills` FIRST and do NOT inspect or edit code, run
+Define / Build / Deploy, or commit before a skill is loaded. "spec it" → call
+`SpecIt` directly.
+</alis-routing>
+EOF
+fi
