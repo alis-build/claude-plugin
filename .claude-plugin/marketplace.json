@@ -8,7 +8,7 @@
       "name": "alis-build",
       "source": "./plugins/alis-build",
       "description": "Connect Claude Code to Alis Build through MCP.",
-      "version": "0.3.7",
+      "version": "0.3.8",
       "author": {
         "name": "Alis Build"
       },
