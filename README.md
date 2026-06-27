@@ -16,6 +16,7 @@ Use this plugin to let Claude Code inspect Alis Build landing zones, products, n
 - OAuth/OIDC sign-in through `https://identity.alisx.com`
 - Alis Build tools available inside Claude Code after sign-in
 - Claude Code approval prompts before tools perform sensitive actions
+- The `alis` CLI auto-approved in Claude Code, so command-line calls run without a permission prompt each time
 
 ## Before You Start
 
@@ -88,6 +89,8 @@ Review the latest deploy logs for this neuron and suggest the next action.
 ```
 
 Claude Code will ask before running tools that require approval.
+
+The plugin auto-approves single, simple `alis ...` shell commands so the CLI runs without a permission prompt each time. For safety it only approves a lone invocation — anything that chains or redirects (`|`, `&&`, `||`, `;`, `&`, `>`, `<`, backticks, `$(...)`) falls through to Claude Code's normal permission flow. To restrict which subcommands are auto-approved, set `ALIS_ALLOWED_SUBCMDS` to a space-separated allowlist (e.g. `ALIS_ALLOWED_SUBCMDS="define build deploy operations"`); unset means every `alis` subcommand is approved.
 
 ## Commands
 
