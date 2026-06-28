@@ -15,6 +15,7 @@ Use this plugin to let Claude Code inspect Alis Build landing zones, products, n
 - A preconfigured Claude Code MCP server for `https://mcp.alis.build`
 - OAuth/OIDC sign-in through `https://identity.alisx.com`
 - Alis Build tools available inside Claude Code after sign-in
+- A standing Define → Build → Deploy primer loaded into every session, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required
 - Claude Code approval prompts before tools perform sensitive actions
 - The `alis` CLI auto-approved in Claude Code, so command-line calls run without a permission prompt each time
 
