@@ -9,6 +9,15 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/inject-service-context.sh",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreToolUse": [
