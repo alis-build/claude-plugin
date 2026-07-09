@@ -8,7 +8,7 @@
   <strong>Connect Claude Code to Alis Build.</strong>
 </p>
 
-Use this plugin to let Claude Code inspect Alis Build landing zones, products, neurons, builds, deploys, and related workspace context.
+Use this plugin to let Claude Code inspect Alis Build organisations, products, neurons, builds, deploys, and related workspace context.
 
 ## What You Get
 
@@ -25,7 +25,7 @@ Use this plugin to let Claude Code inspect Alis Build landing zones, products, n
 You need:
 
 - Claude Code installed and authenticated
-- An Alis Build account with access to the landing zones and products you want to use
+- An Alis Build account with access to the organisations and products you want to use
 - Network access to `https://mcp.alis.build` and `https://identity.alisx.com`
 
 ## Install
@@ -79,11 +79,11 @@ fix it
 ```
 
 ```text
-Use Alis Build to list the landing zones I can access.
+Use Alis Build to list the organisations I can access.
 ```
 
 ```text
-Show recent builds for product os in landing zone alis.
+Show recent builds for product os in organisation alis.
 ```
 
 ```text

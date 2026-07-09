@@ -45,6 +45,23 @@ $cmd
 EOF
 [ "$first" = "alis" ] || exit 0
 
+# Never auto-approve explicit-approval flags: --confirm-production (production
+# deploy gate) and `blocks uninstall --yes` (destructive, prompt-skipping).
+# Falling through here means the human sees Claude Code's permission prompt in
+# addition to having approved in chat — deliberate double-keying.
+case "$cmd" in
+  *'--confirm-production'*)
+    exit 0
+    ;;
+esac
+if [ "$sub" = "blocks" ] || [ "$sub" = "block" ]; then
+  case "$cmd" in
+    *uninstall*--yes* | *--yes*uninstall*)
+      exit 0
+      ;;
+  esac
+fi
+
 # Optional allowlist of subcommands.
 if [ -n "${ALIS_ALLOWED_SUBCMDS:-}" ]; then
   allowed=0
