@@ -22,7 +22,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "mcp__.*__(LoadSkill|SpecIt)",
+        "matcher": "mcp__.*__(LoadSkill|SpecIt|RunDefine|RunBuild|RunDeploy)",
         "hooks": [
           {
             "type": "command",

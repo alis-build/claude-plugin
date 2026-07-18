@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-# PreToolUse hook: inject the Claude Code session_id into Alis MCP LoadSkill
-# calls so the server can resolve the caller's active Context and prepend an
-# <alis-runtime-context> block to the returned skill.
+# PreToolUse hook: inject the Claude Code session_id into the Alis MCP tools
+# that resolve the caller's active Context — LoadSkill / SpecIt (to prepend an
+# <alis-runtime-context> block / spec the session) and RunDefine / RunBuild /
+# RunDeploy (to link the resulting build-activity to the calling session via
+# Correlation.context). See the hooks.json matcher for the exact tool set.
 #
 # Claude Code does not pass its session_id to MCP servers by default. A
 # PreToolUse hook, however, receives session_id on stdin and may rewrite the
 # outgoing tool arguments via hookSpecificOutput.updatedInput. This merges the
-# session_id into LoadSkill's arguments (the session_id field on the MCP
-# LoadSkillRequest); the model never supplies it.
+# session_id into the tool's arguments (the session_id field on the MCP
+# request); the model never supplies it.
 #
 # Reads the hook payload (JSON) on stdin and writes the hook response to stdout.
 set -euo pipefail
