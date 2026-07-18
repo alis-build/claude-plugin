@@ -113,3 +113,13 @@ service's directory.
 **Fallback.** Use the MCP `RunDefine` / `RunBuild` / `RunDeploy` tools only when there is no
 shell available (remote / headless agents). They run the same operation server-side; `RunDefine`
 needs an explicit commit (never `HEAD`).
+
+## Google documentation — prefer the Developer Knowledge MCP
+
+When the Google Developer Knowledge MCP tools are available in this session
+(`search_documents`, `get_documents`, `answer_query`), prefer them over generic web search
+for Google-technology documentation — Google Cloud, Android, Flutter, Firebase, Go, web.dev,
+and other Google developer surfaces. They query Google's own documentation index and return
+current, canonical pages. Alis Build services run on Google Cloud (Cloud Run, Spanner,
+Pub/Sub, Terraform), so this covers most platform-infrastructure questions. If the tools are
+not present, research normally; `/alis-build:connect-google` sets them up.

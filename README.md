@@ -17,6 +17,7 @@ Use this plugin to let Claude Code inspect Alis Build organisations, products, n
 - Alis Build tools available inside Claude Code after sign-in
 - A standing Define → Build → Deploy primer loaded into every session, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
+- A one-time `/alis-build:connect-google` command that connects Google's official Developer Knowledge MCP server (docs search over cloud.google.com, Android, Flutter, Firebase, go.dev, web.dev, …)
 - Claude Code approval prompts before tools perform sensitive actions
 - The `alis` CLI auto-approved in Claude Code, so command-line calls run without a permission prompt each time
 
@@ -101,10 +102,42 @@ This plugin includes Alis Build workflow commands:
 ```text
 /alis-build:build-it
 /alis-build:fix-it
-/alis-build:getting-started
+/alis-build:connect-google
 ```
 
-Type `build it` to discover the right Alis Build skill for the thing you want to build. Type `fix it` to use the same discovery flow when the goal is framed as a fix. `/alis-build:build-it` and `/alis-build:fix-it` are slash-command shortcuts for the same router. `/alis-build:getting-started` uses the Alis Build `getting-started` skill for the platform workflow and simpleapi quickstart. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
+Type `build it` to discover the right Alis Build skill for the thing you want to build. Type `fix it` to use the same discovery flow when the goal is framed as a fix. `/alis-build:build-it` and `/alis-build:fix-it` are slash-command shortcuts for the same router. `/alis-build:connect-google` is a one-time setup command for the Google Developer Knowledge MCP server (see below). If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
+
+## Google Developer Knowledge MCP (optional)
+
+Google's official documentation-search MCP server ([developers.google.com/knowledge/mcp](https://developers.google.com/knowledge/mcp)) gives Claude the `search_documents`, `get_documents`, and `answer_query` tools over Google's own docs index — cloud.google.com, developer.android.com, Flutter, Firebase, go.dev, web.dev, and more. Alis Build services run on Google Cloud, so this covers most platform-infrastructure questions with current, canonical pages instead of web search.
+
+To set it up, run this once in Claude Code and complete the Google sign-in in your browser:
+
+```text
+/alis-build:connect-google
+```
+
+The command adds the server at user scope using the plugin's shared Google OAuth Desktop-app client. The client secret is stored in your OS keychain by Claude Code — it never lands in a config file. Restart the session (or open `/mcp`) afterwards to pick up the new tools.
+
+Already have this MCP server installed? Nothing breaks: the command detects any existing server pointing at `developerknowledge.googleapis.com` (under any name, at any scope) and leaves it alone, and Claude Code itself deduplicates MCP servers by endpoint URL — your own configuration always wins.
+
+Notes while the OAuth consent screen is in Testing mode:
+
+- Your Google account must be registered as a test user by the plugin maintainer. An "access blocked / app not verified" error during sign-in means it is not.
+- Sign-in expires after about 7 days; re-run `claude mcp login google-developer-knowledge` (or use `/mcp`) to re-authenticate.
+
+At session start the plugin checks whether the server is connected and, if not, quietly reminds Claude to suggest `/alis-build:connect-google` when Google documentation comes up. Set `ALIS_SUPPRESS_GOOGLE_MCP_NUDGE=1` to silence this.
+
+### Maintainer: Google OAuth client setup
+
+One-time setup for the credentials shipped in `plugins/alis-build/commands/connect-google.md`:
+
+1. Create (or choose) a Google Cloud project and enable the **Developer Knowledge API**. Quota for all plugin users is billed against this project.
+2. Configure the OAuth consent screen: External, Testing mode, and add each team member's Google account as a test user.
+3. Create an OAuth client of type **Desktop app** and copy its client id and secret.
+4. Replace `__GOOGLE_OAUTH_CLIENT_ID__` and `__GOOGLE_OAUTH_CLIENT_SECRET__` in `plugins/alis-build/commands/connect-google.md`.
+
+Per [Google's installed-app OAuth model](https://developers.google.com/identity/protocols/oauth2#installed) the Desktop-app client secret is not treated as confidential, so committing it is acceptable — but GitHub secret scanning will likely flag the `GOCSPX-…` value on a public repository (dismiss or allowlist the alert). Publishing the consent screen to Production later removes the 7-day sign-in expiry and the test-user list (Google verification may be required for the scope).
 
 ## Troubleshooting
 
