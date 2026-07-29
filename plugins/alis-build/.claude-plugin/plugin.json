@@ -1,13 +1,12 @@
 {
   "name": "alis-build",
-  "version": "0.14.0",
-  "description": "Connect Claude Code to Alis Build through MCP tools and workspace context.",
+  "version": "0.15.0",
+  "description": "Connect Claude Code to Alis Build through the alis CLI and workspace context.",
   "author": {
     "name": "Alis Build"
   },
   "homepage": "https://github.com/alis-build/claude-plugin",
   "repository": "https://github.com/alis-build/claude-plugin",
   "license": "MIT",
-  "keywords": ["alis", "build", "mcp", "deploys", "workspaces"],
-  "mcpServers": "./.mcp.json"
+  "keywords": ["alis", "build", "cli", "deploys", "workspaces"]
 }

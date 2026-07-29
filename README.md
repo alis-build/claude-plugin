@@ -8,17 +8,13 @@
   <strong>Connect Claude Code to Alis Build.</strong>
 </p>
 
-Use this plugin to let Claude Code inspect Alis Build organisations, products, neurons, builds, deploys, and related workspace context.
+Use this plugin to let Claude Code work with Alis Build organisations, products, neurons, builds, and deploys through the `alis` CLI, with workspace-aware context injected into every session.
 
 ## What You Get
 
-- A preconfigured Claude Code MCP server for `https://mcp.alis.build`
-- OAuth/OIDC sign-in through `https://identity.alisx.com`
-- Alis Build tools available inside Claude Code after sign-in
 - A standing Define → Build → Deploy primer loaded into every session, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
 - A one-time `/alis-build:connect-google` command that connects Google's official Developer Knowledge MCP server (docs search over cloud.google.com, Android, Flutter, Firebase, go.dev, web.dev, …)
-- Claude Code approval prompts before tools perform sensitive actions
 - The `alis` CLI auto-approved in Claude Code, so command-line calls run without a permission prompt each time
 
 ## Before You Start
@@ -26,15 +22,15 @@ Use this plugin to let Claude Code inspect Alis Build organisations, products, n
 You need:
 
 - Claude Code installed and authenticated
+- The [`alis` CLI](https://alis.build) installed, on your `PATH`, and signed in (`alis login`)
 - An Alis Build account with access to the organisations and products you want to use
-- Network access to `https://mcp.alis.build` and `https://identity.alisx.com`
 
 ## Install
 
 Add the Alis plugin marketplace:
 
 ```sh
-claude plugin marketplace add alis-build/claude-plugin --sparse .claude-plugin plugins/alis-build
+claude plugin marketplace add https://github.com/alis-build/claude-plugin --sparse .claude-plugin plugins/alis-build
 ```
 
 Install the Alis Build plugin:
@@ -55,21 +51,9 @@ For a repository-shared install, use project scope:
 claude plugin install alis-build@alis --scope project
 ```
 
-## Sign In
-
-In Claude Code, run:
-
-```text
-/mcp
-```
-
-Select the `api` MCP server for the `alis-build` plugin and complete the OAuth sign-in flow in your browser.
-
-You should see `api` listed as a plugin-provided MCP server for `alis-build`. The sign-in flow opens `https://identity.alisx.com` in your browser.
-
 ## Use It
 
-After sign-in, ask Claude Code to use Alis Build:
+Ask Claude Code to use Alis Build:
 
 ```text
 build it
@@ -141,7 +125,7 @@ Per [Google's installed-app OAuth model](https://developers.google.com/identity/
 
 ## Troubleshooting
 
-If `api` does not appear in `/mcp`, confirm that the plugin install completed successfully:
+If the primer or commands do not appear, confirm that the plugin install completed successfully:
 
 ```sh
 claude plugin install alis-build@alis --scope user
@@ -153,4 +137,4 @@ If you installed or changed the plugin inside an already-running Claude Code ses
 /reload-plugins
 ```
 
-If sign-in fails, confirm that you can reach both `https://mcp.alis.build` and `https://identity.alisx.com`, then try `/mcp` again.
+If `alis` commands fail with an auth error, run `alis login` (or `alis authorise <org>.<product>` for git/package credentials) and retry.

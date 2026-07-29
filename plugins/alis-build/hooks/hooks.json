@@ -31,16 +31,6 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "mcp__.*__(LoadSkill|SpecIt|RunDefine|RunBuild|RunDeploy)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/inject-skill-session-id.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
