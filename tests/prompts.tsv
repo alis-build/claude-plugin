@@ -1,0 +1,47 @@
+# Routing eval prompts for the alis-build:discover skill.
+# Columns (tab-separated): prompt <TAB> expect_fire (yes|no) <TAB> category
+# Categories:
+#   platform  - platform-shaped user language; discovery should fire (yes)
+#   generic   - generic coding with no platform surface; must NOT fire (no)
+#   wake-word - explicitly addresses alis; must fire (yes)
+#   ambiguous - judgement calls; the expectation column records the outcome we
+#               deem reasonable given the discover skill's contract:
+#               * "build it" / "deploy this to production" are direct DBD
+#                 commands on an already-known target -> CLI directly, no
+#                 discovery (no);
+#               * "add caching to the search endpoint" is build work inside an
+#                 alis.build workspace with no skill loaded -> discovery (yes);
+#               * "why is terraform complaining..." names Terraform, a listed
+#                 platform trigger -> discovery (yes);
+#               * "set up authentication for my app" names no platform noun and
+#                 is plausibly generic -> no fire (no).
+add a new endpoint to my payments service and deploy it	yes	platform
+my spanner migration keeps failing on the protobundle step	yes	platform
+how do I give my teammate access to this product?	yes	platform
+create a new neuron for order fulfilment in the retail product	yes	platform
+the generated go package for my service will not resolve after define	yes	platform
+set up a pub/sub topic that fires whenever an invoice is created	yes	platform
+how do I run the playground tests for this neuron?	yes	platform
+ship the latest build of the ledger service to the dev environment	yes	platform
+migrate this service off the legacy product-level proto imports	yes	platform
+add a new field to the customer proto and push the contract	yes	platform
+rename this variable everywhere	no	generic
+why is this regex not matching?	no	generic
+write a unit test for parseDate	no	generic
+explain what this function does	no	generic
+convert this loop to use a map instead	no	generic
+fix the off-by-one error in this slice indexing	no	generic
+sort these imports alphabetically	no	generic
+what does the yield keyword do in python?	no	generic
+add a docstring to this method	no	generic
+squash the last three commits into one	no	generic
+alis, set up tracing	yes	wake-word
+hey alis can you ship this	yes	wake-word
+ask alis to create a landing zone for acme	yes	wake-word
+alis, what is the right way to version this api?	yes	wake-word
+get alis to install the packages for this service	yes	wake-word
+build it	no	ambiguous
+deploy this to production	no	ambiguous
+add caching to the search endpoint	yes	ambiguous
+why is terraform complaining about a missing variable?	yes	ambiguous
+set up authentication for my app	no	ambiguous

@@ -1,18 +1,27 @@
 #!/usr/bin/env bash
-# SessionStart hook: always inject the Alis Build DBD primer into the session.
+# SessionStart hook: inject the Alis Build DBD primer into the session.
 #
-# The primer (context/dbd-primer.md) is the standing how-to guide — the DBD
-# mental model, the routing contract (when to discover a skill vs run a command),
-# and the execution contract (prefer the `alis` CLI). Installing the plugin
-# installs this guide into every session; no trigger word is required, which
-# replaces the old regex-gated UserPromptSubmit injection.
-#
-# Whatever this script prints to stdout is added to Claude's context at session
-# start, and re-injected after /compact. Claude Code sets CLAUDE_PLUGIN_ROOT for
-# plugin-bundled hooks. If the primer is missing we emit nothing and exit 0 so
-# the session proceeds unmodified (graceful degradation, like the sibling hooks).
+# Source-aware: fresh sessions (source "startup" / "clear", or a payload with
+# no source field) get the full primer (context/dbd-primer.md — mental model,
+# skills contract, execution contract). Resume and compact get the compressed
+# digest (context/dbd-digest.md) instead — those sessions already carried the
+# full primer once, so a short refresher is enough and saves tokens. A missing
+# digest falls back to the full primer; a missing primer emits nothing. Either
+# way we exit 0 so the session proceeds unmodified (graceful degradation, like
+# the sibling hooks). Claude Code sets CLAUDE_PLUGIN_ROOT for plugin hooks.
 set -euo pipefail
 
 primer="${CLAUDE_PLUGIN_ROOT:-}/context/dbd-primer.md"
+digest="${CLAUDE_PLUGIN_ROOT:-}/context/dbd-digest.md"
+
+payload="$(cat 2>/dev/null || true)"
+if printf '%s' "$payload" \
+  | grep -qE '"source"[[:space:]]*:[[:space:]]*"(resume|compact)"'; then
+  if [ -f "$digest" ]; then
+    cat "$digest"
+    exit 0
+  fi
+fi
+
 [ -f "$primer" ] && cat "$primer"
 exit 0
