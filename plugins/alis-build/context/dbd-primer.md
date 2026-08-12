@@ -63,10 +63,11 @@ This primer is the standing how-to guide for Alis Build work. It carries three t
 
 ## Skills — discovery is native
 
-Skill discovery now runs through the harness's own skill router. The `alis-build:discover`
-skill — plus any per-skill entries synced from the registry — fires on the user's own words
-when the task touches the platform; no wake word is needed. Once a skill is loaded, it owns
-execution.
+Skill discovery runs through the plugin-owned `alis-build:discover` skill, which fires on
+the user's own words when the task touches the platform; no wake word is needed. The
+session-start hook refreshes catalog metadata only — it never installs or prunes native
+per-skill entries. A user may explicitly opt into those with `alis skills sync --native`.
+Once a skill is loaded, it owns execution.
 
 Direct DBD commands ("define it", "build it", "deploy it" on an already-known target) are
 deterministic — run the `alis` CLI directly (see **Executing DBD**); no skill is needed.

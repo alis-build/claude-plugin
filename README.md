@@ -14,6 +14,7 @@ Use this plugin to let Claude Code work with Alis Build organisations, products,
 
 - A standing Define → Build → Deploy primer loaded into every session, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
+- Plugin-owned discovery and capture skills, with catalog metadata refreshed quietly at session start; the plugin never installs or prunes native user skills
 - A one-time `/alis-build:connect-google` command that connects Google's official Developer Knowledge MCP server (docs search over cloud.google.com, Android, Flutter, Firebase, go.dev, web.dev, …)
 - The `alis` CLI auto-approved in Claude Code, so command-line calls run without a permission prompt each time
 
