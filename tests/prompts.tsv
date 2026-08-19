@@ -9,8 +9,8 @@
 #               * "build it" / "deploy this to production" are direct DBD
 #                 commands on an already-known target -> CLI directly, no
 #                 discovery (no);
-#               * "add caching to the search endpoint" is build work inside an
-#                 alis.build workspace with no skill loaded -> discovery (yes);
+#               * "add caching to the search endpoint" names no platform noun —
+#                 workspace presence alone is no longer a trigger -> no fire (no);
 #               * "why is terraform complaining..." names Terraform, a listed
 #                 platform trigger -> discovery (yes);
 #               * "set up authentication for my app" names no platform noun and
@@ -42,6 +42,6 @@ alis, what is the right way to version this api?	yes	wake-word
 get alis to install the packages for this service	yes	wake-word
 build it	no	ambiguous
 deploy this to production	no	ambiguous
-add caching to the search endpoint	yes	ambiguous
+add caching to the search endpoint	no	ambiguous
 why is terraform complaining about a missing variable?	yes	ambiguous
 set up authentication for my app	no	ambiguous

@@ -18,9 +18,12 @@ and credentials for you.
 
 ## Skills are native
 
-The `alis-build:discover` skill finds and loads registry skills from the user's own words —
-no wake word; a loaded skill owns execution. After solving something new by hand, the user
-can say "capture this as a skill" and `alis-build:capture` saves it for their team.
+The `alis-build:discover` skill routes platform-shaped work to registry skills — quietly and
+local-first: probe `alis skills suggest "<outcome>" --json`; load only on a distinctive
+match (`distinctive` ≥ 3); no match means no skill and no narration. Generic coding
+(Makefiles, ordinary bugs, tests, git) needs no discovery even inside a workspace. A loaded
+skill owns execution. After solving something new by hand, the user can say "capture this
+as a skill" and `alis-build:capture` saves it for their team.
 
 Production changes need explicit confirmation: a production deploy exits with code 3 until
 re-run with `--confirm-production`, and that flag requires the user's explicit approval —

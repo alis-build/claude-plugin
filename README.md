@@ -14,7 +14,8 @@ Use this plugin to let Claude Code work with Alis Build organisations, products,
 
 - A standing Define → Build → Deploy primer loaded into every session, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
-- Plugin-owned discovery and capture skills, with catalog metadata refreshed quietly at session start; the plugin never installs or prunes native user skills
+- Quiet, local-first discovery and capture skills: `alis-build:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalog in ~40ms, and loads a registry skill only on a distinctive match; catalog metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
+- Confidence-gated per-prompt skill suggestions (a `UserPromptSubmit` hook backed by `alis skills suggest`) — a suggestion appears only when the match is distinctive; wake phrases (`alis, …`, `capture this as a skill`) route from any directory
 - A one-time `/alis-build:connect-google` command that connects Google's official Developer Knowledge MCP server (docs search over cloud.google.com, Android, Flutter, Firebase, go.dev, web.dev, …)
 - The `alis` CLI auto-approved in Claude Code, so command-line calls run without a permission prompt each time
 
@@ -85,12 +86,10 @@ The plugin auto-approves single, simple `alis ...` shell commands so the CLI run
 This plugin includes Alis Build workflow commands:
 
 ```text
-/alis-build:build-it
-/alis-build:fix-it
 /alis-build:connect-google
 ```
 
-Type `build it` to discover the right Alis Build skill for the thing you want to build. Type `fix it` to use the same discovery flow when the goal is framed as a fix. `/alis-build:build-it` and `/alis-build:fix-it` are slash-command shortcuts for the same router. `/alis-build:connect-google` is a one-time setup command for the Google Developer Knowledge MCP server (see below). If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
+Discovery is skill-native: describe platform-shaped work in your own words and the `alis-build:discover` skill routes it — local catalog probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis-build:capture` saves it for your team. `/alis-build:connect-google` is a one-time setup command for the Google Developer Knowledge MCP server (see below). If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
 
 ## Google Developer Knowledge MCP (optional)
 
