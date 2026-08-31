@@ -12,9 +12,13 @@ under `infra/`; validate via the generated playground.
 
 `alis define <pkg> --json --install` · `alis build <pkg> --json --deploy -e <env>` ·
 `alis deploy <pkg> --json` · `alis packages install|upgrade|add <pkg> --json`. The CLI is
-self-documenting: `alis docs` and `alis <cmd> --help` are the source of truth. Never
+self-documenting: `alis docs` and `alis <cmd> --help` are the source of truth. Under
+`--json`, stdout is ONE final JSON object; progress is NDJSON on stderr — never merge
+`2>&1` into a JSON parser. Never poll with `sleep` loops: block with
+`alis operations wait <op> --json`. Never hand-edit dependency pins (`sed` on go.mod) or
 hand-roll package-manager environments — `alis packages` handles the private registries
-and credentials for you.
+and credentials for you. When a conversation references an Ideate project (`ideas/<id>`),
+run `alis ideate context <id>` first.
 
 ## Skills are native
 

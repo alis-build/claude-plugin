@@ -49,9 +49,17 @@ EOF
 # treats a fresh acceptEdits/bypassPermissions record matching this exact
 # command as a standing user grant for non-production approvals (production
 # deploys always require explicit human approval). Best-effort — every failure
-# path falls through so the allow decision below is never affected. Written
-# before the double-key carve-outs so the mode is recorded even when this hook
-# defers to a normal prompt.
+# path falls through so the allow decision below is never affected.
+#
+# Written deliberately BEFORE the double-key carve-outs, and that ordering is
+# safe by construction on the consumer side: the CLI resolves human approval
+# flags (--approve/--yes/ALIS_APPROVE) before it ever consults this record
+# (commands/approval.go), and the record only matches when the exact argv,
+# a <60s mtime, and the harness env marker all line up (approval/agent.go) —
+# so a record written for a command this hook then declines to auto-approve
+# cannot authorize anything else. Recording on every alis invocation also
+# gives the CLI an audit signal in default mode, where the record grants
+# nothing.
 mode="$(printf '%s' "$payload" | jq -r '.permission_mode // "default"' 2>/dev/null || echo default)"
 sid="$(printf '%s' "$payload" | jq -r '.session_id // empty' 2>/dev/null || true)"
 if mkdir -p "$HOME/.alis" 2>/dev/null && tmp="$(mktemp "$HOME/.alis/.agent-approval.XXXXXX" 2>/dev/null)"; then

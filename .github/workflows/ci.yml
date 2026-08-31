@@ -1,0 +1,25 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  guard-and-hooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release guard
+        # Tag builds are strict: a release can never ship OAuth placeholders.
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            RELEASE_GUARD_STRICT=1 tests/release-guard.sh
+          else
+            tests/release-guard.sh
+          fi
+      - name: Hook tests
+        run: |
+          tests/sync-skills-hook-test.sh
+          tests/load-primer-hook-test.sh
