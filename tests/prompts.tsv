@@ -22,7 +22,7 @@ create a new neuron for order fulfilment in the retail product	yes	platform
 the generated go package for my service will not resolve after define	yes	platform
 set up a pub/sub topic that fires whenever an invoice is created	yes	platform
 how do I run the playground tests for this neuron?	yes	platform
-ship the latest build of the ledger service to the dev environment	yes	platform
+ship the latest build of the ledger service to the dev environment	no	platform
 migrate this service off the legacy product-level proto imports	yes	platform
 add a new field to the customer proto and push the contract	yes	platform
 rename this variable everywhere	no	generic

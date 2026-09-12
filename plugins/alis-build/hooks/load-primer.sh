@@ -48,6 +48,8 @@ if printf '%s' "$payload" \
 fi
 # Outside a workspace the digest is the ceiling.
 [ "$in_workspace" -eq 0 ] && want=digest
+# Explicit overrides win over both workspace and lifecycle defaults.
+case "${ALIS_PRIMER:-}" in full|digest) want="$ALIS_PRIMER" ;; esac
 
 if [ "$want" = digest ] && [ -f "$digest" ]; then
   cat "$digest"

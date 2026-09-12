@@ -17,7 +17,7 @@ chmod +x "$test_dir/bin/alis"
 
 run_hook() {
   payload="$1"
-  PATH="$test_dir/bin:$PATH" ALIS_TEST_LOG="$test_dir/calls" "$hook" <<EOF
+  HOME="$test_dir" PATH="$test_dir/bin:$PATH" ALIS_TEST_LOG="$test_dir/calls" "$hook" <<EOF
 $payload
 EOF
 }

@@ -18,7 +18,7 @@ self-documenting: `alis docs` and `alis <cmd> --help` are the source of truth. U
 `alis operations wait <op> --json`. Never hand-edit dependency pins (`sed` on go.mod) or
 hand-roll package-manager environments — `alis packages` handles the private registries
 and credentials for you. The working directory is the context — after `alis service new`,
-cd into the `buildFolder` its result reports before continuing. When a conversation
+use `alis --cwd /absolute/buildFolder ...` before continuing. When a conversation
 references an Ideate project (`ideas/<id>`), run `alis ideate context <id>` first.
 
 ## Skills are native
@@ -32,4 +32,17 @@ as a skill" and `alis-build:capture` saves it for their team.
 
 Production changes need explicit confirmation: a production deploy exits with code 3 until
 re-run with `--confirm-production`, and that flag requires the user's explicit approval —
-never add it yourself.
+never invent it. Present the CLI's exact pinned retry through native permission
+confirmation; no extra chat question is needed first. Session modes grant nothing.
+
+Run one standalone Alis command per Bash call: no pipes, output trimming or redirects.
+Use `environment list <org>.<product> --json` for target IDs and production flags,
+without variable values. Check CLI help when using a newly introduced command.
+Start long DBD work with `--async`; retain `name` and run `next`. Start/wait/describe
+use common top-level fields (`schemaVersion: 1`, `done`, `status`, `version`); legacy
+start `metadata` is different from typed wait output. Read full JSON and errors.
+Claude background-task IDs are separate from Alis operation names; stopping a local
+wait never cancels server work. Use logs and build cancellation with a matching
+CLI/backend release. Diagnose auth, package DNS and platform failures separately.
+Direct DBD commands on a known target need no skill discovery. After a plugin update,
+use `/reload-plugins`; `alis doctor --json` reports cache and recent hook observations.

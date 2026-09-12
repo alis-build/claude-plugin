@@ -38,6 +38,26 @@ jq -e . "$repo/plugins/alis-build/hooks/hooks.json" >/dev/null || {
   fail=1
 }
 
+# Validate every registered hook and Python helper, not only shell syntax.
+python3 - "$repo" <<'PY' || fail=1
+import ast, json, os, sys
+from pathlib import Path
+root = Path(sys.argv[1]) / "plugins/alis-build"
+config = json.loads((root / "hooks/hooks.json").read_text())
+for entries in config["hooks"].values():
+    for entry in entries:
+        for hook in entry["hooks"]:
+            command = hook["command"]
+            prefix = "${CLAUDE_PLUGIN_ROOT}/"
+            if not command.startswith(prefix):
+                raise SystemExit("FAIL: hook is not plugin-relative")
+            path = root / command[len(prefix):]
+            if not path.is_file() or not os.access(path, os.X_OK):
+                raise SystemExit(f"FAIL: missing/non-executable hook: {path.name}")
+for path in (root / "hooks").glob("*.py"):
+    ast.parse(path.read_text(), filename=str(path))
+PY
+
 if [ "$fail" -eq 0 ]; then
   echo "release guard: OK (version $pv)"
 fi
