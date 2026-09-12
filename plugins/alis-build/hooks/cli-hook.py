@@ -60,10 +60,10 @@ def literal_argv(command):
     return argv if argv and argv[0] == "alis" else None
 
 
-def command_path(argv):
+def command_path(argv, depth=2):
     words = []
     i = 1
-    while i < len(argv) and len(words) < 2:
+    while i < len(argv) and len(words) < depth:
         token = argv[i]
         if token == "--": break
         flag = token.split("=", 1)[0]
@@ -105,7 +105,8 @@ def decide(payload):
     guarded = bool(flags & {"--confirm-production", "--approve", "--yes"})
     guarded = guarded or (top == "blocks" and "uninstall" in options)
     guarded = guarded or (top == "environment" and any(v in options for v in ("destroy", "unset")))
-    read_only = top in READ_TOP or path in READ_PATHS or bool(flags & {"--help", "-h"})
+    handoff_read = command_path(argv, 3) in {("workstation", "handoff", "status"), ("workstation", "handoff", "targets")}
+    read_only = top in READ_TOP or path in READ_PATHS or handoff_read or bool(flags & {"--help", "-h"})
     if payload.get("permission_mode") == "plan" and (guarded or not read_only):
         result.update(permissionDecision="deny", permissionDecisionReason="This Alis action changes state. Finish the plan and obtain execution approval first.")
         return {"hookSpecificOutput": result}

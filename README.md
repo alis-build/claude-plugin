@@ -89,6 +89,32 @@ Guarded actions (`--confirm-production`, `--approve`, `--yes`, block uninstall a
 
 ## Skills
 
+### Resume on my workstation
+
+Use `/alis-build:handoff` to move a local Claude session and its unfinished
+build/Define work to an enrolled workstation. The CLI prepares the destination,
+waits for the current turn and tools to finish, gracefully stops the source,
+and resumes in a persistent workstation terminal. Keep the laptop open until
+`alis workstation handoff status <id> --json` reports `safe_to_close: true`.
+Run status in a separate terminal; polling from the source Claude turn prevents
+that turn from reaching its handoff boundary.
+
+This requires the handoff-enabled CLI/workstation image, this plugin on both
+machines, matching Claude Code versions (2.1.269 or later in the 2.1 series),
+Python 3.9+, and independent Claude authentication on the destination. Existing
+SSH enrolment supplies the connection and host verification. The destination
+may request workspace trust or normal tool permissions in its browser terminal.
+Local commits and non-ignored uncommitted changes travel with the transcript;
+global credentials, unrelated sessions and running processes do not. Source
+files are retained for recovery. Read `alis docs handoff` for limits and
+cancellation. Reverse transfer is outside v1.
+
+The lifecycle hook quietly skips older CLIs when no handoff is active. An active
+handoff claim blocks new local tools/prompts if the coordinator is unavailable.
+The handoff command follows Claude's normal permission handling.
+
+### Discovery and capture
+
 Discovery is skill-native: describe platform-shaped work in your own words and the `alis-build:discover` skill routes it — local catalog probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis-build:capture` saves it for your team. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
 
 ## Troubleshooting
@@ -115,6 +141,8 @@ Run `RELEASE_GUARD_STRICT=1 tests/release-guard.sh`, the two shell hook tests,
 `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_behavior.py`, and
 `tests/routing-eval.sh --dry-run`. Behavioral tests use temporary homes and stub
 executables; no deployment, uninstall or message is sent.
+Also run `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_handoff.py` for lifecycle,
+source-claim and permission-routing checks.
 
 Live routing evaluation is opt-in: `tests/routing-eval.sh --live /path/to/disposable-fixture
 --results /tmp/routing-scores.json`. Use a disposable workspace and a stub `alis`
