@@ -14,7 +14,7 @@ Use this plugin to let Claude Code work with Alis Build organisations, products,
 
 - A standing Define → Build → Deploy primer, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required. The full primer loads inside `~/alis.build` workspaces; other directories get a compressed digest when the `alis` CLI is installed, and nothing otherwise (override with `ALIS_PRIMER=full|digest|off`)
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
-- Quiet, local-first discovery and capture skills: `alis-build:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalog in ~40ms, and loads a registry skill only on a distinctive match; catalog metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
+- Quiet, local-first discovery and capture skills: `alis:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalog in ~40ms, and loads a registry skill only on a distinctive match; catalog metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
 - Confidence-gated per-prompt skill suggestions (a `UserPromptSubmit` hook backed by `alis skills suggest`) — a suggestion appears only when the match is distinctive; wake phrases (`alis, …`, `capture this as a skill`) route from any directory
 - Structured CLI workflows run with the CLI's automation tier; guarded actions use Claude's native confirmation
 
@@ -38,7 +38,7 @@ claude plugin marketplace add https://github.com/alis-build/claude-plugin --spar
 Install the Alis Build plugin:
 
 ```sh
-claude plugin install alis-build@alis --scope user
+claude plugin install alis@alis --scope user
 ```
 
 Start Claude Code:
@@ -50,8 +50,25 @@ claude
 For a repository-shared install, use project scope:
 
 ```sh
-claude plugin install alis-build@alis --scope project
+claude plugin install alis@alis --scope project
 ```
+
+### Upgrading from `alis-build`
+
+Releases before v0.24.0 were published as the `alis-build` plugin
+(`/alis-build:…` commands). The plugin is now named `alis`, so the two are
+separate installs: remove the old one before installing the new one, or Claude
+loads both.
+
+```sh
+claude plugin marketplace update alis
+claude plugin uninstall alis-build@alis
+claude plugin install alis@alis --scope user
+```
+
+A project-scoped install is flipped by replacing `alis-build@alis` with
+`alis@alis` under `enabledPlugins` in `.claude/settings.json`. The `alis` CLI's
+setup and updates flows run this migration for you.
 
 ## Use It
 
@@ -91,7 +108,7 @@ Guarded actions (`--confirm-production`, `--approve`, `--yes`, block uninstall a
 
 ### Resume on my workstation
 
-Use `/alis-build:handoff` to move a local Claude session and its unfinished
+Use `/alis:handoff` to move a local Claude session and its unfinished
 build/Define work to an enrolled workstation. The CLI prepares the destination,
 waits for the current turn and tools to finish, gracefully stops the source,
 and resumes in a persistent workstation terminal. Keep the laptop open until
@@ -115,14 +132,14 @@ The handoff command follows Claude's normal permission handling.
 
 ### Discovery and capture
 
-Discovery is skill-native: describe platform-shaped work in your own words and the `alis-build:discover` skill routes it — local catalog probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis-build:capture` saves it for your team. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
+Discovery is skill-native: describe platform-shaped work in your own words and the `alis:discover` skill routes it — local catalog probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis:capture` saves it for your team. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
 
 ## Troubleshooting
 
 If the primer or commands do not appear, confirm that the plugin install completed successfully:
 
 ```sh
-claude plugin install alis-build@alis --scope user
+claude plugin install alis@alis --scope user
 ```
 
 If you installed or changed the plugin inside an already-running Claude Code session, reload plugins:

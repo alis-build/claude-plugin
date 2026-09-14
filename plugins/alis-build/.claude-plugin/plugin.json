@@ -1,6 +1,6 @@
 {
-  "name": "alis-build",
-  "version": "0.23.0",
+  "name": "alis",
+  "version": "0.24.0",
   "description": "Connect Claude Code to Alis Build through the alis CLI and workspace context.",
   "author": {
     "name": "Alis Build"

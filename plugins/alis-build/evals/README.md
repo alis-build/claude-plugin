@@ -1,4 +1,4 @@
-# Eval suite: `alis-build:discover`
+# Eval suite: `alis:discover`
 
 Measures **uplift** (Δ = with-plugin score minus without-plugin score) for the
 `discover` skill: does it route platform-shaped asks to the right registry skill,

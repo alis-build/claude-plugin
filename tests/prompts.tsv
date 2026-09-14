@@ -1,4 +1,4 @@
-# Routing eval prompts for the alis-build:discover skill.
+# Routing eval prompts for the alis:discover skill.
 # Columns (tab-separated): prompt <TAB> expect_fire (yes|no) <TAB> category
 # Categories:
 #   platform  - platform-shaped user language; discovery should fire (yes)

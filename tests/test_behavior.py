@@ -90,7 +90,7 @@ class RoutingTests(unittest.TestCase):
         final = {"type":"result", "subtype":"success", "result":"quiet response"}
         event = {"type":"assistant", "message":{"content":[{"type":"tool_use", "id":"a", "name":"Bash", "input":{"command":"alis skills suggest 'add an endpoint' --json"}}]}}
         self.assertEqual(routing_eval.score_events(json.dumps(event)+"\n"+json.dumps(final)), (True, []))
-        final["result"] = "alis-build:discover alis skills load"
+        final["result"] = "alis:discover alis skills load"
         self.assertEqual(routing_eval.score_events(json.dumps(final)), (False, []))
         self.assertTrue(routing_eval.score_events(json.dumps(event))[1])
 

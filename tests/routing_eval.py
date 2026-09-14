@@ -44,7 +44,7 @@ def score_events(stdout):
             if block.get("type") != "tool_use" or block.get("id") in seen: continue
             seen.add(block.get("id"))
             name, args = block.get("name"), block.get("input", {})
-            if name == "Skill" and args.get("skill") == "alis-build:discover": fired = True
+            if name == "Skill" and args.get("skill") == "alis:discover": fired = True
             if name == "Bash":
                 try: argv = shlex.split(args.get("command", ""))
                 except ValueError: continue
