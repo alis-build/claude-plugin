@@ -1,0 +1,2231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — alis-build v0.22.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>alis-build v0.22.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-pos">↑ +7.3 pts</span> vs baseline — improved 3 · flat 2 · regressed 3 of 8 cases.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.270</span>
+<span class="num">2026-09-14 08:08 UTC</span>
+<span class="num">21m 40s</span>
+<span class="num">$6.48</span>
+<span class="num">16 runs</span>
+
+
+
+<span>judge sonnet</span>
+<span class="num">threshold 100%</span>
+
+</div>
+</header>
+
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">71.9%</span><span class="sub">mean of per-case scores</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-pos">↑ +7.3</span><span class="sub">score points vs baseline, 8 of 8 cases</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">64.6%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">8</span><span class="sub">4 of 8 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">50%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case case-regressed" id="case-1">
+<div class="case-head">
+<h2>01-pubsub-invoice</h2>
+<span class="muted mono">evals/01-pubsub-invoice</span>
+<span class="spacer"></span>
+
+<span class="delta delta-neg">↓ -66.7 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">19 turns · $0.45 · 08:08:45 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">discover-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">event-handler-design</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I dug into the workspace before doing anything, and there are two blockers that mean I can&apos;t build this yet.
+
+**What&apos;s here.** `/private/tmp/e-SC1npE/home/cwd` is the `marvel.sm.helloworld.v1` neuron — a single gRPC service (`SayHello`), `infra/` with just `main.tf`, `cloudrun.tf`, `variables.tf`. There is no invoice resource, message, or service anywhere in this repo.
+
+**Blocker 1 — the topic isn&apos;t mine to write here.** On Alis Build, Pub/Sub topics are platform artifacts that Define generates from the protobuf contract in the org&apos;s define repo (`~/alis.build/marvel/define`), alongside the language packages and Spanner protobundles. Hand-adding a `google_pubsub_topic` to this neuron&apos;s `infra/` would create a topic the platform doesn&apos;t know about — it wouldn&apos;t be wired to the contract, and the generated publisher/subscriber packages wouldn&apos;t reference it. So the change starts in the define repo, not here. That repo isn&apos;t reachable from this session — Bash is confined to the neuron directory.
+
+**Blocker 2 — the CLI isn&apos;t authenticated.**
+
+```
+alis skills search ... → UNAUTHENTICATED: not logged in — run `alis login`, then retry
+```
+
+That rules out `alis define`, `alis build`, `alis packages`, and even listing the org&apos;s products to find where invoices live. `alis login` is interactive, so it&apos;s yours to run.
+
+**The question that actually decides the work:** where does the Invoice live? &quot;Fires whenever an invoice is created&quot; implies an existing `CreateInvoice` somewhere in `marvel.sm.*` — but it isn&apos;t this neuron. Either:
+
+- **It exists** (say `marvel.sm.invoices.v1`) → the work is: add the event message + topic declaration to that package&apos;s proto in the define repo, commit and push, `alis define marvel.sm.invoices.v1 --json --install`, then publish from the existing `CreateInvoice` handler.
+- **It doesn&apos;t exist yet** → this is a larger piece of work: a new Invoice contract and a neuron to serve it, with the topic falling out of the contract.
+
+If you log in and tell me which package owns invoices, I&apos;ll pick it up from there. One more thing worth flagging: I have no file-editing tools in this session, only read and a restricted shell — so even once you&apos;re authenticated, I can read and run commands but can&apos;t author the proto changes myself.</pre>
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">no-discovery-narration</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern found (expected absent)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">no-unprompted-registry-search</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 1x (expected 0..0)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:66.7%"></span></span>
+<span class="num">66.7%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:66.7%"></span></span>
+<span class="num">66.7%</span>
+<span class="muted num">17 turns · $0.46 · 08:10:09 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">event-handler-design</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I explored the repo but hit a hard blocker before I could write anything. Two things to flag:
+
+## 1. I can&apos;t write files in this session
+
+There&apos;s no Write/Edit tool available to me, and `Bash` is denied for anything beyond the read-only commands I already ran (`ls`, `find`). So I can&apos;t create `infra/pubsub.tf` or touch the Go code. If you want me to actually apply this, you&apos;ll need to grant file-write permission (or run Claude in a mode that allows Bash writes). I&apos;ve put the full contents below so nothing is lost either way.
+
+## 2. There is no invoice anywhere in this repo
+
+This is the `marvel.sm.helloworld.v1` neuron — a gRPC service on Cloud Run whose only method is `SayHello` (`helloworld.go:15`). The protobuf stubs it imports are the HelloWorld package only. So:
+
+- **The topic** I can define completely — that part is self-contained infra.
+- **&quot;fires whenever an invoice is created&quot;** has nothing to hook into here. There&apos;s no `CreateInvoice` handler, and no invoice message type to shape the event payload.
+
+I&apos;ve written the publisher as a standalone helper so it&apos;s ready to call from wherever `CreateInvoice` actually lives. **Which neuron owns invoice creation?** If it&apos;s a different repo, this Terraform belongs there instead, and I&apos;d want its proto to type the payload properly.
+
+---
+
+### `infra/pubsub.tf` (new file)
+
+```hcl
+resource &quot;google_pubsub_topic&quot; &quot;invoice_created&quot; {
+  name     = &quot;${var.ALIS_OS_NEURON}-invoice-created&quot;
+  project  = var.ALIS_OS_PROJECT
+  provider = google
+
+  # Retain published events so a subscriber can replay after an outage.
+  message_retention_duration = &quot;604800s&quot; # 7 days
+
+  labels = {
+    neuron = var.ALIS_OS_NEURON
+    event  = &quot;invoice-created&quot;
+  }
+}
+
+# The Cloud Run service account publishes the event.
+resource &quot;google_pubsub_topic_iam_member&quot; &quot;invoice_created_publisher&quot; {
+  topic    = google_pubsub_topic.invoice_created.name
+  project  = var.ALIS_OS_PROJECT
+  provider = google
+  role     = &quot;roles/pubsub.publisher&quot;
+  member   = &quot;serviceAccount:alis-build@${var.ALIS_OS_PROJECT}.iam.gserviceaccount.com&quot;
+}
+```
+
+Naming follows the `ALIS_OS_NEURON` prefix your Cloud Run service already uses (`infra/cloudrun.tf:2`), so the topic lands in the same project and is traceable to the neuron. If your org has a house convention for event topic names, tell me and I&apos;ll match it.
+
+### `infra/cloudrun.tf` — add the topic to the container env
+
+So the service doesn&apos;t hardcode the topic name:
+
+```hcl
+      env {
+        name  = &quot;INVOICE_CREATED_TOPIC&quot;
+        value = google_pubsub_topic.invoice_created.name
+      }
+```
+
+### `events.go` (new file)
+
+```go
+package main
+
+import (
+	&quot;context&quot;
+	&quot;encoding/json&quot;
+	&quot;os&quot;
+	&quot;sync&quot;
+
+	&quot;cloud.google.com/go/pubsub&quot;
+	&quot;go.alis.build/alog&quot;
+)
+
+var (
+	pubsubOnce   sync.Once
+	pubsubClient *pubsub.Client
+	pubsubErr    error
+)
+
+// InvoiceCreatedEvent is the payload published when an invoice is created.
+type InvoiceCreatedEvent struct {
+	Invoice string `json:&quot;invoice&quot;` // resource name, e.g. invoices/{invoice}
+}
+
+// PublishInvoiceCreated publishes an invoice creation event and blocks until
+// the server acknowledges it, so a failed publish surfaces to the caller.
+func PublishInvoiceCreated(ctx context.Context, event *InvoiceCreatedEvent) error {
+	pubsubOnce.Do(func() {
+		pubsubClient, pubsubErr = pubsub.NewClient(ctx, os.Getenv(&quot;ALIS_OS_PROJECT&quot;))
+	})
+	if pubsubErr != nil {
+		return pubsubErr
+	}
+
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	topic := pubsubClient.Topic(os.Getenv(&quot;INVOICE_CREATED_TOPIC&quot;))
+	res := topic.Publish(ctx, &amp;pubsub.Message{
+		Data:       data,
+		Attributes: map[string]string{&quot;event&quot;: &quot;invoice-created&quot;},
+	})
+	id, err := res.Get(ctx)
+	if err != nil {
+		return err
+	}
+	alog.Debugf(ctx, &quot;published invoice-created event %s&quot;, id)
+	return nil
+}
+```
+
+Two caveats on the Go file, both consequences of the write blocker:
+
+- It needs `cloud.google.com/go/pubsub` added via `go get` + `go mod tidy`. I couldn&apos;t run those (Bash denied, and the build pulls through your Artifact Registry proxies per `Dockerfile:15`), so `go.mod`/`go.sum` are unchanged and this won&apos;t compile as-is.
+- The payload is JSON with a resource name. Once you point me at the invoice proto, I&apos;d switch to `protojson` or a proto-encoded payload to match how the rest of your stubs travel.
+
+Tell me where invoices are created and whether Bash writes can be enabled, and I&apos;ll wire it up properly.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-discovery-narration</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-unprompted-registry-search</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>set up a pub/sub topic that fires whenever an invoice is created</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">discover-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;discover&quot;</code></div><div class="kv"><span>min</span><code>1</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">event-handler-design</span><span class="badge">llm</span></div>
+<div class="md"><p>The user asked for a Pub/Sub topic that fires when an invoice is created, on the Alis Build platform. The working directory holds one Go neuron (module <code>marvel.sm.helloworld.v1</code>, with <code>server.go</code>, <code>go.mod</code> and <code>infra/</code>). It has no invoice resource.</p>
+<p>Pass only if ALL of these hold:</p>
+<ol>
+<li>The plan is Alis Build shaped: the event is declared on the protobuf contract in the org's define repo and the topic is produced by Define (<code>alis define ... --install</code>) as a platform artifact, and the consuming side is a neuron-side Pub/Sub event handler (Cloud Run push endpoint, Terraform under <code>infra/</code>). Naming a <code>&lt;neuron-id&gt;-events</code> service, <code>/HandleEvent</code>, or <code>infra/events.tf</code> is a plus, not required.</li>
+<li>It does NOT propose raw <code>gcloud pubsub topics create</code> / generic Terraform for a standalone topic plus a hand-written subscriber as the primary plan, and does not ask "which cloud / which message broker".</li>
+<li>It notices the current neuron is <code>helloworld</code> and has no invoice resource, and either asks one targeted question (which neuron owns invoices / where the invoice contract lives in the define repo) or plans the handler for this neuron explicitly. Either is fine if framed by the plan in 1.</li>
+<li>It does NOT narrate skill discovery or its failures: no "no skill found", "probed the catalog", "registry search failed", "not logged in / run alis login". If a skill was loaded it is mentioned in at most one short clause.</li>
+</ol>
+<p>Fail if any of 1-4 is violated.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-discovery-narration</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;(running|run|probing|probe|checking|check(ed)?|used|using|invoked?)\\s+(the\\s+)?(skill\\s+)?(discovery|discover\\b|catalog|registry)|alis skills (suggest|search)|no (matching|relevant|suitable|tracing|migration|\\w+) skill (in|found|covers|available)|(couldn&apos;t|could not|didn&apos;t|did not|unable to) (find|check|search|reach) (a|any|the) (skill|registry|catalog)|not logged in|alis login|UNAUTHENTICATED|registry search&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;not_contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-unprompted-registry-search</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills search&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>0</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-2">
+<div class="case-head">
+<h2>02-terraform-missing-var</h2>
+<span class="muted mono">evals/02-terraform-missing-var</span>
+<span class="spacer"></span>
+
+<span class="delta delta-pos">↑ +33.3 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">17 turns · $0.41 · 08:11:49 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">concrete-diagnosis</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t run `terraform` or `alis docs` here (both denied), and I don&apos;t have your error text — but the code itself makes the likely cause clear.
+
+## Most likely: the three Spanner variables
+
+`infra/variables.tf:12-14` declares them with no default, so Terraform treats them as **required**:
+
+```hcl
+variable &quot;ALIS_MANAGED_SPANNER_PROJECT&quot; {}
+variable &quot;ALIS_MANAGED_SPANNER_INSTANCE&quot; {}
+variable &quot;ALIS_MANAGED_SPANNER_DB&quot; {}
+```
+
+and `infra/cloudrun.tf:33-44` consumes all three as env vars on the container.
+
+But Alis only injects `ALIS_MANAGED_SPANNER_*` at deploy time when the neuron actually has a managed Spanner database attached. This one doesn&apos;t have any Spanner usage at all:
+
+- `go.mod:7-11` — no `cloud.google.com/go/spanner`, no `go.alis.build/sproto`
+- `server.go` / `helloworld.go` — `SayHello` just returns a string; nothing reads those env vars
+
+So the deploy supplies nothing for them and Terraform fails with `No value for required variable`. A declared-but-unsupplied variable is an error; a declared-but-*unused* one is not — which is why the other five unused vars (`ALIS_OS_VERSION`, `ALIS_OS_DOMAIN`, `ALIS_OS_ORG_PROJECT`, `ALIS_OS_ORG_BACKEND_PRODUCT_PREFIX`, `ALIS_OS_GOOGLE_CUSTOMER_ID`) are fine.
+
+**Fix:** drop the three `variable` blocks from `variables.tf` and the three matching `env` blocks from `cloudrun.tf`. Don&apos;t paper over it with `default = &quot;&quot;` — that would ship empty Spanner config into the container.
+
+## The other possibility
+
+If you ran `terraform plan`/`validate` directly inside `infra/`, then *every* one of the 15 `ALIS_*` variables is missing, not just one. Alis passes those in at deploy time, and there&apos;s no `.tfvars` in the repo to stand in for them. In that case nothing is broken — run `alis deploy marvel.sm.helloworld.v1 --json` instead of invoking Terraform by hand.
+
+Your wording (&quot;a missing variable&quot;, singular) points at the first case. Paste the error line naming the variable and I&apos;ll confirm, and I can apply the edit if you want it.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-discovery-narration</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">probe-at-most-once</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 1x (expected 0..1)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:66.7%"></span></span>
+<span class="num">66.7%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:66.7%"></span></span>
+<span class="num">66.7%</span>
+<span class="muted num">11 turns · $0.34 · 08:13:02 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">concrete-diagnosis</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t actually run `terraform init/validate` to reproduce — the Bash permission was denied in this session — so this is from reading the three files. Here&apos;s what I found.
+
+## It&apos;s not a missing declaration
+
+Every `var.*` reference resolves to a declaration. Cross-checking `infra/cloudrun.tf` and `infra/main.tf` against `infra/variables.tf`:
+
+`ALIS_OS_NEURON`, `ALIS_REGION`, `ALIS_OS_PRODUCT_PROJECT`, `ALIS_OS_NEURON_VERSION_COMMIT_SHA`, `ALIS_OS_PROJECT`, `ALIS_RUN_HASH`, `ALIS_PRODUCT_CONFIG`, `ALIS_MANAGED_SPANNER_PROJECT`, `ALIS_MANAGED_SPANNER_INSTANCE`, `ALIS_MANAGED_SPANNER_DB` — all ten are declared. So you should *not* be seeing `Reference to undeclared input variable`.
+
+## It&apos;s a missing *value*
+
+Every variable in `infra/variables.tf:2-16` is declared bare — `variable &quot;X&quot; {}` — with no `default` and no `type`. In Terraform that makes all sixteen **required**, and there&apos;s no `terraform.tfvars`, no `*.auto.tfvars`, and no `-var-file` in the directory. So the error is almost certainly:
+
+```
+Error: No value for required variable
+  on variables.tf line N:
+   N: variable &quot;ALIS_...&quot; {}
+The root module input variable &quot;ALIS_...&quot; is not set, and has no default value.
+```
+
+Two common triggers:
+
+**1. You&apos;re running `terraform plan`/`apply` by hand.** These values are injected by the Alis deploy pipeline (as `-var` flags or `TF_VAR_*` env vars), not stored in the repo. Running Terraform directly in `infra/` will always demand all sixteen. The same applies to the `backend &quot;gcs&quot;` block in `infra/main.tf:12-15` — `provided_at_runtime_by_alis` is a placeholder, so a manual `terraform init` fails too.
+
+**2. A variable is in the wrong section.** `variables.tf` has an &quot;Alis Provided Variables&quot; header covering all sixteen, and an empty &quot;# Custom Variables&quot; section at line 19. The platform only injects its own known set. The ones I&apos;d check first, because they&apos;re the least likely to be platform-injected and most likely to actually be neuron-specific config:
+
+- `ALIS_MANAGED_SPANNER_PROJECT`
+- `ALIS_MANAGED_SPANNER_INSTANCE`
+- `ALIS_MANAGED_SPANNER_DB`
+- `ALIS_RUN_HASH`
+- `ALIS_PRODUCT_CONFIG`
+
+If the error names one of these, it belongs under &quot;# Custom Variables&quot; and needs a value — either a `default`, or wired up in your neuron&apos;s deployment config.
+
+## Quickest way to narrow it
+
+Paste me the exact error and I&apos;ll point at the line. Or, if you want a local plan to work at all, give the variables defaults:
+
+```hcl
+variable &quot;ALIS_MANAGED_SPANNER_DB&quot; {
+  type    = string
+  default = &quot;&quot;
+}
+```
+
+One caveat on that: adding defaults to genuinely platform-provided variables will mask real injection failures at deploy time — you&apos;d get an empty string silently instead of a loud error. I&apos;d only default the custom ones.
+
+Want me to add the `type = string` annotations and split the two sections properly? That won&apos;t fix the missing value on its own, but it&apos;ll make the next failure name the variable more clearly.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-discovery-narration</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">probe-at-most-once</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..1)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>why is terraform complaining about a missing variable?</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">concrete-diagnosis</span><span class="badge">llm</span></div>
+<div class="md"><p>The user asked why Terraform is complaining about a missing variable. The working directory holds one Alis Build Go neuron whose <code>infra/variables.tf</code> declares platform variables (<code>ALIS_OS_PROJECT</code>, <code>ALIS_OS_PRODUCT_PROJECT</code>, <code>ALIS_OS_NEURON</code>, ...) with no defaults. No error text was provided.</p>
+<p>Pass only if ALL hold:</p>
+<ol>
+<li>It grounds the answer in the repo: it refers to the variables declared in <code>infra/variables.tf</code> (or the <code>var.ALIS_OS_*</code> references in the <code>.tf</code> files) rather than answering purely generically.</li>
+<li>It gives the right cause: those variables have no defaults and are supplied by the platform at deploy time (Alis Build's Deploy step / <code>alis deploy</code>), so running <code>terraform plan</code> or <code>apply</code> by hand in <code>infra/</code> reports them missing. A generic "declare it, or pass it via tfvars / -var / TF_VAR_" answer on its own does NOT satisfy this point.</li>
+<li>It gives a sound direction. Any of these is acceptable: deploy through the platform (<code>alis deploy</code>) instead of a local plan; identify a declared variable the platform would not inject for this neuron (e.g. the <code>ALIS_MANAGED_SPANNER_*</code> trio in a neuron that uses no Spanner) and remove or supply it; or ask for the exact error line to pin the variable. It must NOT tell the user to hard-code project ids or other real values as defaults in <code>variables.tf</code>.</li>
+<li>It does NOT mention searching or probing a skill catalog or registry, "no skill found", or "discovery".</li>
+</ol>
+<p>Fail if any is violated.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-discovery-narration</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;(running|run|probing|probe|checking|check(ed)?|used|using|invoked?)\\s+(the\\s+)?(skill\\s+)?(discovery|discover\\b|catalog|registry)|alis skills (suggest|search)|no (matching|relevant|suitable|tracing|migration|\\w+) skill (in|found|covers|available)|(couldn&apos;t|could not|didn&apos;t|did not|unable to) (find|check|search|reach) (a|any|the) (skill|registry|catalog)|not logged in|alis login|UNAUTHENTICATED|registry search&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;not_contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">probe-at-most-once</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills suggest&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>1</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-3">
+<div class="case-head">
+<h2>03-package-wont-resolve</h2>
+<span class="muted mono">evals/03-package-wont-resolve</span>
+<span class="spacer"></span>
+
+<span class="delta delta-pos">↑ +66.7 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">20 turns · $0.54 · 08:14:08 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">cli-not-hand-edit</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t run anything — Bash is denied in this session&apos;s permission mode, so `go build`, `alis packages list`, and even `alis &lt;cmd&gt; --help` all came back blocked. Everything below is from reading the files.
+
+## What I found
+
+There&apos;s a concrete inconsistency in `Dockerfile` that would break resolution of exactly this module:
+
+- `Dockerfile:6` authenticates Artifact Registry for **`europe-west1` only**:
+  ```
+  RUN go run github.com/.../auth@v0.1.0 add-locations --locations=europe-west1
+  ```
+- `Dockerfile:15` points `GOPROXY` at an internal registry in **`africa-south1`**:
+  ```
+  https://africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal
+  ```
+
+`add-locations` writes `.netrc` credentials per location, so `africa-south1-go.pkg.dev` is unauthenticated. Go only falls through to the next `GOPROXY` entry on 404/410 — a 401/403 is a hard stop, so `internal.sm.marvel.build/protobuf` fails outright rather than trying `proxy.golang.org`. The second proxy on that line (`openprotos-go`) *is* europe-west1, which is probably why only the internal stubs break.
+
+The one-line fix would be `--locations=africa-south1,europe-west1`.
+
+## The other candidate
+
+&quot;Won&apos;t resolve after define&quot; can also mean the pin is simply stale: `go.mod:10` and `go.sum:37` both sit at `internal.sm.marvel.build/protobuf v1.22.8`. If Define just published a newer version, `helloworld.go` would fail on the new symbols rather than on fetching. That fix is `alis packages upgrade internal.sm.marvel.build/protobuf --json` — not a hand-edit of `go.mod`.
+
+## What I need
+
+The two causes have unrelated fixes, so rather than guess: **can you paste the actual error?** A `403 Forbidden` / `missing .netrc entry` line points at the Dockerfile; an `undefined: pb.Something` or &quot;no matching versions&quot; points at the pin.
+
+Alternatively, if you re-run with Bash permitted for `go build ./...` and `alis packages list --json`, I can confirm it directly in one pass.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">probe-at-most-once</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 1x (expected 0..1)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">uses-alis-packages</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched alis (packages (install|upgrade|add)|define\b[^\n]*--install)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:33.3%"></span></span>
+<span class="num">33.3%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:33.3%"></span></span>
+<span class="num">33.3%</span>
+<span class="muted num">14 turns · $0.54 · 08:15:46 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">cli-not-hand-edit</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can read files but can&apos;t run `go`/`alis` (Bash denied those calls) and have no edit tool in this session, so here&apos;s the diagnosis plus the exact changes to apply.
+
+## Most likely cause: your internal AR region is never authenticated
+
+`Dockerfile:6` only adds credentials for **europe-west1**:
+
+```dockerfile
+RUN go run .../auth@v0.1.0 add-locations --locations=europe-west1
+```
+
+But `Dockerfile:15` sources your service&apos;s generated stubs from **africa-south1**:
+
+```
+GOPROXY=https://africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal,
+        https://europe-west1-go.pkg.dev/alis-org-777777/openprotos-go,...
+```
+
+`add-locations` writes a `~/.netrc` `machine` entry per location, so `africa-south1-go.pkg.dev` is hit unauthenticated. Artifact Registry answers 403/410, and the go command surfaces that as the package simply not resolving. This matches your symptom precisely: `open.alis.services` (europe-west1) resolves, *your* `internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1` does not.
+
+Fix `Dockerfile:6`:
+
+```dockerfile
+RUN go run github.com/GoogleCloudPlatform/artifact-registry-go-tools/cmd/auth@v0.1.0 add-locations --locations=africa-south1,europe-west1
+```
+
+Locally, run the same thing once so your own `~/.netrc` covers both, then export what the Dockerfile exports:
+
+```bash
+export GOPROXY=https://africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal,https://europe-west1-go.pkg.dev/alis-org-777777/openprotos-go,https://proxy.golang.org,direct
+export GONOSUMDB=internal.sm.marvel.build,open.alis.services
+```
+
+One trap worth calling out: do **not** reach for `GOPRIVATE` here. It implies `GONOPROXY`, which makes Go skip the proxy and try a direct VCS fetch of `internal.sm.marvel.build` — not a real repo host, so it fails every time. The generated setup deliberately uses `GONOSUMDB` alone to bypass only the checksum database while keeping the AR proxy in play.
+
+## Second thing to check: the version pin
+
+`go.mod:10` and `go.sum` pin `internal.sm.marvel.build/protobuf v1.22.8`. `alis proto define` only writes the proto definition — the Go stub doesn&apos;t exist in any published module version until the proto is published and the protobuf module is rebuilt. So if v1.22.8 predates your `marvel/sm/helloworld/v1` proto, the import fails regardless of auth.
+
+After confirming the proto is published, bump it:
+
+```bash
+go get internal.sm.marvel.build/protobuf@latest
+go mod tidy
+```
+
+This matters for the image build too, since `Dockerfile:19` uses `-mod=readonly` — the container build will not pick up a new version on its own; `go.mod` has to carry it.
+
+## How to tell the two apart
+
+Run `go list -m -versions internal.sm.marvel.build/protobuf`. If it errors on auth/404, it&apos;s the region problem. If it lists versions but the newest is still `v1.22.8`, the proto hasn&apos;t been published yet.
+
+Minor, unrelated: `Dockerfile:5` sets `GOPROXY=proxy.golang.org` with no scheme; Go wants a full URL there (`https://proxy.golang.org`). It&apos;s ahead of the `add-locations` step, so it may be masking a clearer error message from that first `go run`.
+
+Want me to apply the `Dockerfile` change? I&apos;d need edit permissions, and running the `go get` bump would need Bash unblocked for `go`.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">probe-at-most-once</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..1)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">uses-alis-packages</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in last_message</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>the generated go package for my service will not resolve after define</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">cli-not-hand-edit</span><span class="badge">llm</span></div>
+<div class="md"><p>The user's generated Go package (from Alis Build's Define step) is not resolving in their service.</p>
+<p>Pass only if ALL hold:</p>
+<ol>
+<li>The primary fix routes through the <code>alis</code> CLI: <code>alis packages install</code> / <code>alis packages upgrade</code> / <code>alis packages add</code>, or re-running <code>alis define ... --install</code>. Verifying that Define was run against a pushed commit is also acceptable as part of the diagnosis.</li>
+<li>It does NOT propose, as the fix, hand-editing the module pin in <code>go.mod</code> (e.g. <code>sed</code> on go.mod, manually bumping a pseudo-version) or hand-rolling private registry setup (manually setting GOPRIVATE/GONOSUMDB/netrc). Mentioning these only to say the CLI handles them is fine.</li>
+<li>It does NOT narrate skill discovery ("checked the catalog", "no skill found", "running discovery").</li>
+<li>It does not deflect entirely; it may ask one clarifying question (language, package id, the exact error) but must still give the CLI-based direction.</li>
+</ol>
+<p>Fail if any is violated.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">probe-at-most-once</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills suggest&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>1</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">uses-alis-packages</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;alis (packages (install|upgrade|add)|define\\b[^\\n]*--install)&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case case-regressed" id="case-4">
+<div class="case-head">
+<h2>04-legacy-proto-migrate</h2>
+<span class="muted mono">evals/04-legacy-proto-migrate</span>
+<span class="spacer"></span>
+
+<span class="delta delta-neg">↓ -16.7 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">50%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">17 turns · $0.50 · 08:17:47 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">names-legacy-import</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched internal\.sm\.marvel\.build/protobuf</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">no-discovery-narration</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern found (expected absent)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-unprompted-registry-search</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">per-neuron-via-cli</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I&apos;ve mapped the change surface but I&apos;m blocked on the one fact that determines it. Here&apos;s where things stand.
+
+## What the service looks like today
+
+`marvel.sm.helloworld.v1` depends on a single **product-level** Go module:
+
+```
+go.mod:         internal.sm.marvel.build/protobuf v1.22.8
+helloworld.go:  pb &quot;internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1&quot;
+server.go:      pb &quot;internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1&quot;
+```
+
+That one module carries the protos for the whole `sm` product; the neuron only uses the `marvel/sm/helloworld/v1` subtree. The `Dockerfile` also hardcodes the matching registry and sumdb exclusion:
+
+```
+GOPROXY=https://africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal,...
+GONOSUMDB=internal.sm.marvel.build,open.alis.services
+```
+
+So a migration touches four places: the two import lines, the `go.mod` require, and the two Dockerfile env lines. The `pb.*` symbols themselves (`HelloRequest`, `RegisterHelloWorldServiceServer`, …) come from proto package `marvel.sm.helloworld.v1` and almost certainly keep their names — the module path is what moves.
+
+## What&apos;s blocking
+
+I need the **target package path and version** from the registry, and I can&apos;t reach it:
+
+1. **The CLI isn&apos;t authenticated.** `alis skills list --json` exits 4 with `UNAUTHENTICATED: not logged in — run alis login, then retry`.
+2. **`alis packages` is blocked by the current permission mode.** `alis packages list --json` and `alis packages --help` are both denied outright in don&apos;t-ask mode.
+
+One correction to my earlier step: I first ran `alis skills suggest` and treated the empty `{&quot;suggestions&quot;: null}` as &quot;no skill covers this.&quot; That reading was wrong — the catalog probe returns empty because the session is unauthenticated, not because no migration skill exists. There may well be a registry skill for exactly this; I just can&apos;t see it.
+
+I&apos;m deliberately not guessing the new path. The plausible candidates (`internal.sm.marvel.build/helloworld/protobuf`, `internal.sm.marvel.build/protobuf/helloworld`, a neuron-scoped module, …) are indistinguishable from anything in this repo, and a wrong guess means a `go.mod` pin that won&apos;t resolve. Hand-editing the pin is also exactly what this project&apos;s guidance rules out — `alis packages` owns the private-registry credentials and version resolution.
+
+## What I need from you
+
+Either:
+
+- **Run `alis login`** and allow `alis packages` in this session, and I&apos;ll resolve the correct package, re-pin via `alis packages add`/`upgrade`, rewrite the imports, and fix the Dockerfile registry lines; or
+- **Tell me the target module path** if you already know it, and I&apos;ll make all the edits and leave the pin for you to apply with `alis packages`.
+
+One thing worth confirming either way: whether the Dockerfile&apos;s `GOPROXY` still points at `marvel-sm-product-orr/protobuf-go-internal` after the migration, or whether neuron-level packages publish to a different repository. If the registry moves and that line doesn&apos;t, the build fails inside Docker rather than locally, which is a slow way to find out.</pre>
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">probe-at-most-once</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 2x (expected 0..1)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">uses-alis-packages</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched alis (packages (upgrade|add|install)|define\b[^\n]*--install)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:66.7%"></span></span>
+<span class="num">66.7%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:66.7%"></span></span>
+<span class="num">66.7%</span>
+<span class="muted num">24 turns · $0.68 · 08:19:15 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">names-legacy-import</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched internal\.sm\.marvel\.build/protobuf</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-discovery-narration</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-unprompted-registry-search</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">per-neuron-via-cli</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I mapped the service fully, but I&apos;ve hit a hard blocker before making any edits. Here&apos;s where things stand.
+
+## What the legacy usage looks like
+
+Everything routes through one **product-level** Go module, `internal.sm.marvel.build/protobuf` (v1.22.8) — a single module covering the whole `marvel-sm` product, with the neuron&apos;s protos as a subpackage:
+
+| Touchpoint | Current state |
+|---|---|
+| `helloworld.go:6` | `pb &quot;internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1&quot;` |
+| `server.go:11` | same import |
+| `go.mod:10` | `require internal.sm.marvel.build/protobuf v1.22.8` |
+| `go.sum` | two hashes for that module |
+| `Dockerfile:16` | `GOPROXY=https://africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal,...` |
+| `Dockerfile:17` | `GONOSUMDB=internal.sm.marvel.build,open.alis.services` |
+
+Only `HelloRequest`, `HelloResponse`, `HelloWorldServiceServer`, `UnimplementedHelloWorldServiceServer` and `RegisterHelloWorldServiceServer` are consumed, so the code-side change is purely the two import lines. `infra/cloudrun.tf:8` annotates the gRPC service as `marvel.sm.helloworld.v1.HelloWorldService`, which is a proto *package* name and stays valid regardless.
+
+## The blocker
+
+I can&apos;t determine the **target** import path, and I won&apos;t guess it — a wrong module path gives you a service that doesn&apos;t compile plus a `go.mod`/`GOPROXY` pointing at a module that doesn&apos;t exist, which is worse than not starting.
+
+I tried to resolve it and each avenue is closed in this session:
+- **`alis` CLI** — present at `/Users/newtonnthiga/.alis/bin/alis`, but the permission mode denies running it (even `alis --help`).
+- **Network** — `curl` to the alis docs is denied, so I can&apos;t read the migration guide.
+- **`go` / `git`** — denied, so I can&apos;t resolve the module or check history for a prior neuron that already migrated.
+- **Filesystem** — reads are confined to the working directory; there&apos;s no vendor dir, module cache, or `alis.yaml`/neuron config here, and nothing outside `cwd` is readable.
+- **Editing** — worth flagging separately: no `Edit`/`Write`/`Grep` tools are exposed in this session either, so applying the change means Bash redirection, which may also be denied.
+
+The two plausible shapes I can see from the evidence point in different directions: either the neuron protos moved to a per-neuron module that *keeps* the same import path (`internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1` as its own module — in which case only `go.mod`/`go.sum` change and the imports don&apos;t), or they moved to a new neuron-scoped domain, which changes all six touchpoints above. Your phrasing (&quot;proto *imports*&quot;) suggests the latter, but that&apos;s an inference, not something I can confirm.
+
+## What I need
+
+One of these and I&apos;ll apply the whole migration across all six touchpoints in one pass:
+
+1. The target import path for this neuron&apos;s protos (e.g. what a already-migrated neuron in `marvel-sm` uses), plus the module version, **or**
+2. Permission to run the `alis` CLI and/or `go`, and I&apos;ll resolve it myself and verify the build.
+
+If the new module also lives in a different Artifact Registry repo, the `GOPROXY`/`GONOSUMDB` lines in the Dockerfile need that too — worth including in your answer.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">probe-at-most-once</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..1)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">uses-alis-packages</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in last_message</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>migrate this service off the legacy product-level proto imports</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">names-legacy-import</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;internal\\.sm\\.marvel\\.build/protobuf&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-discovery-narration</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;(running|run|probing|probe|checking|check(ed)?|used|using|invoked?)\\s+(the\\s+)?(skill\\s+)?(discovery|discover\\b|catalog|registry)|alis skills (suggest|search)|no (matching|relevant|suitable|tracing|migration|\\w+) skill (in|found|covers|available)|(couldn&apos;t|could not|didn&apos;t|did not|unable to) (find|check|search|reach) (a|any|the) (skill|registry|catalog)|not logged in|alis login|UNAUTHENTICATED|registry search&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;not_contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-unprompted-registry-search</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills search&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>0</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">per-neuron-via-cli</span><span class="badge">llm</span></div>
+<div class="md"><p>The user asked to migrate "this service" off legacy product-level proto imports. The working directory holds one Go neuron: <code>go.mod</code> (module <code>marvel.sm.helloworld.v1</code>) requires <code>internal.sm.marvel.build/protobuf</code>, and <code>helloworld.go</code> imports <code>internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1</code>. That is the legacy product-level package. The agent has no Write/Edit tools, so the deliverable is a precise plan.</p>
+<p>Pass only if ALL hold:</p>
+<ol>
+<li>It identifies the concrete legacy import: names <code>internal.sm.marvel.build/protobuf</code> (in <code>go.mod</code> and/or <code>helloworld.go</code>) as what has to go.</li>
+<li>It states the target correctly: the per-neuron generated package for this neuron (an <code>alis.build/...</code> Go module for <code>marvel.sm.helloworld.v1</code>), with the import path and the <code>pb</code> alias updated in <code>helloworld.go</code>.</li>
+<li>Package plumbing goes through the <code>alis</code> CLI: <code>alis packages upgrade</code> / <code>add</code> / <code>install</code> (or Define with <code>--install</code>) as the way to bring in the new module and drop the old requirement. It does NOT propose <code>sed</code>/hand-editing <code>go.mod</code> pins as the mechanism, and does not tell the user to <code>go get</code> the private module by hand.</li>
+<li>It does NOT narrate skill discovery: no "no skill found", "checked the catalog", "registry search", "not logged in".</li>
+</ol>
+<p>Fail if any is violated.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">probe-at-most-once</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills suggest&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>1</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">uses-alis-packages</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;alis (packages (upgrade|add|install)|define\\b[^\\n]*--install)&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case case-regressed" id="case-5">
+<div class="case-head">
+<h2>05-wake-tracing</h2>
+<span class="muted mono">evals/05-wake-tracing</span>
+<span class="spacer"></span>
+
+<span class="delta delta-neg">↓ -25.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">50%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">18 turns · $0.44 · 08:22:00 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">no-discovery-narration</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern found (expected absent)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-unprompted-registry-search</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-weak-match-load</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">tracing-plan-no-weak-load</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I&apos;ve hit a wall and want to flag it before writing code that would likely be wrong.
+
+**What I found** — this is the `marvel.sm.helloworld.v1` neuron: a gRPC server on Cloud Run (`server.go:35`), using the platform&apos;s `go.alis.build/alog` for logging, with Terraform under `infra/`.
+
+**What&apos;s blocking me** — two things, and they compound:
+
+1. **Bash permissions.** The session is in &quot;don&apos;t ask&quot; mode and is denying everything past my first couple of calls. `alis packages --help`, `alis docs`, and even a plain `ls` on the Go module cache were all rejected. The only alis command that got through was the skill probe.
+2. **Not logged in.** `alis skills list` came back `UNAUTHENTICATED` (&quot;run `alis login`&quot;), so the private registry is unreachable regardless of permissions.
+
+**Why that stops me rather than slows me down.** Since this neuron uses `go.alis.build/alog` rather than a raw logger, there&apos;s a good chance the platform ships a matching tracing package that handles span/log correlation for you — but I can&apos;t confirm that without `alis packages`. The two possible answers lead to completely different work:
+
+- If a first-party package exists, tracing is likely a few lines wiring it into `main()` and the existing `unaryInterceptor`.
+- If not, it&apos;s hand-rolled OpenTelemetry: SDK, the GCP Cloud Trace exporter, an `otelgrpc` stats handler, and a shutdown flush — roughly five new modules.
+
+I don&apos;t want to guess and hand you code written against an API that may not exist. And even if I picked right, I can&apos;t add the dependencies: `alis packages add` is denied, and hand-editing `go.mod` is exactly what the platform rules say not to do.
+
+The same unknown gates the infra side. Writing spans needs `roles/cloudtrace.agent` on the runtime service account, but `infra/cloudrun.tf:56` uses the platform-managed `alis-build@${ALIS_OS_PROJECT}` SA — the landing zone may already grant that, and adding a binding for a managed SA from a neuron&apos;s Terraform could conflict with it.
+
+**To unblock, I need one of:**
+
+- You run `alis login`, and allow `alis packages` / `alis docs` so I can find the right package myself; **or**
+- You tell me which package to use (e.g. if there&apos;s a `go.alis.build/otel` or tracing built into `alog`), and I&apos;ll write it against that; **or**
+- You confirm there&apos;s no first-party option and you want plain OpenTelemetry + the Cloud Trace exporter — I&apos;ll write the full wiring, though you&apos;ll need to run the dependency install yourself.
+
+Which way do you want to go?</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:75.0%"></span></span>
+<span class="num">75%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:75.0%"></span></span>
+<span class="num">75%</span>
+<span class="muted num">21 turns · $0.86 · 08:23:25 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-discovery-narration</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-unprompted-registry-search</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-weak-match-load</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">tracing-plan-no-weak-load</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t write to the repo — this session has no Edit/Write tool, and Bash is in &quot;don&apos;t ask&quot; deny mode (only a few `ls` calls got through), so `cat &gt; file`, `go get`, and `go mod tidy` all fail. **If you enable file writes I&apos;ll apply this directly.** In the meantime, here is the complete change.
+
+### What I&apos;m setting up
+
+OpenTelemetry tracing exported to **Cloud Trace**, wired into the gRPC server via the `otelgrpc` stats handler so every RPC gets a server span automatically, with W3C propagation so calls between neurons stitch into one trace.
+
+Two assumptions, since I couldn&apos;t check anything: I found no alis-native tracing package in `go.sum` or the code, so this uses the standard OTel + GCP exporter stack — if alis has a house library for this, say so and I&apos;ll switch. And the new dependency versions below are unverified guesses; `go mod tidy` will correct them and fill `go.sum`.
+
+### New file: `tracing.go`
+
+```go
+package main
+
+import (
+	&quot;context&quot;
+	&quot;os&quot;
+	&quot;strconv&quot;
+	&quot;time&quot;
+
+	texporter &quot;github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace&quot;
+	&quot;go.alis.build/alog&quot;
+	&quot;go.opentelemetry.io/otel&quot;
+	&quot;go.opentelemetry.io/otel/attribute&quot;
+	&quot;go.opentelemetry.io/otel/propagation&quot;
+	&quot;go.opentelemetry.io/otel/sdk/resource&quot;
+	sdktrace &quot;go.opentelemetry.io/otel/sdk/trace&quot;
+)
+
+// tracer is used for custom spans within this neuron. Spans for incoming grpc
+// calls are created by the otelgrpc stats handler registered in server.go.
+var tracer = otel.Tracer(&quot;marvel.sm.helloworld.v1&quot;)
+
+// setupTracing exports spans to Google Cloud Trace and returns a shutdown func
+// that flushes anything still buffered.
+//
+// If no project can be resolved (i.e. running locally) the global tracer is left
+// as the default no-op so that the server still starts.
+func setupTracing(ctx context.Context) func() {
+	// Propagate trace context onto outgoing calls to other neurons.
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
+	projectID := os.Getenv(&quot;ALIS_OS_PROJECT&quot;)
+	if projectID == &quot;&quot; {
+		projectID = os.Getenv(&quot;GOOGLE_CLOUD_PROJECT&quot;)
+	}
+	if projectID == &quot;&quot; {
+		alog.Warn(ctx, &quot;ALIS_OS_PROJECT not set, tracing disabled&quot;)
+		return func() {}
+	}
+
+	exporter, err := texporter.New(texporter.WithProjectID(projectID))
+	if err != nil {
+		// Tracing is not worth refusing to serve traffic over.
+		alog.Errorf(ctx, &quot;cloud trace exporter: %v&quot;, err)
+		return func() {}
+	}
+
+	res, err := resource.Merge(resource.Default(), resource.NewWithAttributes(
+		resource.Default().SchemaURL(),
+		attribute.String(&quot;service.name&quot;, serviceName()),
+		attribute.String(&quot;service.version&quot;, os.Getenv(&quot;K_REVISION&quot;)),
+	))
+	if err != nil {
+		alog.Errorf(ctx, &quot;build trace resource: %v&quot;, err)
+		res = resource.Default()
+	}
+
+	provider := sdktrace.NewTracerProvider(
+		sdktrace.WithResource(res),
+		sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.TraceIDRatioBased(samplingRatio(ctx)))),
+		// Cloudrun only guarantees CPU during a request (cpu_idle = true), so keep
+		// the batch window short and rely on the shutdown flush for the remainder.
+		sdktrace.WithBatcher(exporter, sdktrace.WithBatchTimeout(5*time.Second)),
+	)
+	otel.SetTracerProvider(provider)
+
+	return func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := provider.Shutdown(shutdownCtx); err != nil {
+			alog.Errorf(shutdownCtx, &quot;shutdown tracer provider: %v&quot;, err)
+		}
+	}
+}
+
+// serviceName returns the neuron name, falling back to the module name locally.
+func serviceName() string {
+	if name := os.Getenv(&quot;K_SERVICE&quot;); name != &quot;&quot; {
+		return name
+	}
+	return &quot;marvel.sm.helloworld.v1&quot;
+}
+
+// samplingRatio is the fraction of traces to record, set by OTEL_TRACE_SAMPLING_RATIO.
+// Everything is sampled when not running on cloudrun.
+func samplingRatio(ctx context.Context) float64 {
+	if os.Getenv(&quot;K_SERVICE&quot;) == &quot;&quot; {
+		return 1.0
+	}
+	ratio := 0.1
+	if v := os.Getenv(&quot;OTEL_TRACE_SAMPLING_RATIO&quot;); v != &quot;&quot; {
+		parsed, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			alog.Warnf(ctx, &quot;OTEL_TRACE_SAMPLING_RATIO must be a float, defaulting to %v&quot;, ratio)
+		} else {
+			ratio = parsed
+		}
+	}
+	return ratio
+}
+```
+
+### `server.go`
+
+`main` gains the tracer provider and a SIGTERM handler — without the graceful stop, Cloud Run kills the instance and buffered spans are lost. Note `alog.Fatalf` on the `net.Listen` error still bypasses the deferred flush, which is fine since no spans exist yet; the `Serve` error becomes `alog.Error` so the flush runs.
+
+```go
+import (
+	&quot;context&quot;
+	&quot;net&quot;
+	&quot;os&quot;
+	&quot;os/signal&quot;
+	&quot;strconv&quot;
+	&quot;syscall&quot;
+
+	&quot;go.alis.build/alog&quot;
+	&quot;go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc&quot;
+	&quot;go.opentelemetry.io/otel/trace&quot;
+	&quot;google.golang.org/grpc&quot;
+	pb &quot;internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1&quot;
+)
+
+func main() {
+	ctx := context.Background()
+
+	// Configure tracing before serving so startup is covered too.
+	shutdownTracing := setupTracing(ctx)
+	defer shutdownTracing()
+
+	// Create grpc server and register implemented grpc services
+	grpcServer := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.UnaryInterceptor(unaryInterceptor),
+	)
+	pb.RegisterHelloWorldServiceServer(grpcServer, HelloWorldServer)
+
+	// Start the server
+	port := &quot;:8080&quot;
+	listener, err := net.Listen(&quot;tcp&quot;, port)
+	if err != nil {
+		alog.Fatalf(ctx, &quot;net.Listen: %v&quot;, err.Error())
+	}
+
+	// Cloudrun sends SIGTERM before tearing an instance down: stop accepting new
+	// requests so the deferred shutdown can flush buffered spans.
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, os.Interrupt)
+	go func() {
+		&lt;-stop
+		alog.Notice(ctx, &quot;stopping server&quot;)
+		grpcServer.GracefulStop()
+	}()
+
+	alog.Notice(ctx, &quot;starting server on &quot;+port)
+	if err = grpcServer.Serve(listener); err != nil {
+		alog.Error(ctx, err.Error())
+	}
+}
+```
+
+And in `unaryInterceptor`, attach the error to the span. The stats handler creates the span before interceptors run, so `SpanFromContext` returns the server span:
+
+```go
+	h, err := handler(ctx, req)
+	if err != nil {
+		alog.Debugf(ctx, &quot;%s&quot;, req)
+		alog.Warn(ctx, err.Error())
+		// otelgrpc records the grpc status code; add the error detail.
+		trace.SpanFromContext(ctx).RecordError(err)
+	}
+	return h, err
+```
+
+### `helloworld.go`
+
+The child-span pattern to copy into real handlers:
+
+```go
+func (s *HelloWorldServerType) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
+	_, span := tracer.Start(ctx, &quot;SayHello.greet&quot;)
+	defer span.End()
+
+	return &amp;pb.HelloResponse{
+		Message: &quot;Hello, &quot; + req.Name + &quot;!&quot;,
+	}, nil
+}
+```
+
+Pass the returned `ctx` (not `_`) into anything downstream — Spanner, other neurons — so those spans nest.
+
+### `go.mod`
+
+Add to the direct require block. OTel is pinned to `v1.36.0` to match what `go.sum` already resolves transitively:
+
+```
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.27.0
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0
+	go.opentelemetry.io/otel v1.36.0
+	go.opentelemetry.io/otel/sdk v1.36.0
+	go.opentelemetry.io/otel/trace v1.36.0
+```
+
+### `infra/cloudrun.tf`
+
+Make the sample rate tunable without a redeploy of code — add to the `containers` env list:
+
+```hcl
+      env {
+        name  = &quot;OTEL_TRACE_SAMPLING_RATIO&quot;
+        value = var.OTEL_TRACE_SAMPLING_RATIO
+      }
+```
+
+and under `# Custom Variables` in `infra/variables.tf`:
+
+```hcl
+variable &quot;OTEL_TRACE_SAMPLING_RATIO&quot; {
+  default = &quot;0.1&quot;
+}
+```
+
+### What you&apos;ll need to run and check
+
+1. `go mod tidy` — required; it fixes my guessed versions and writes the `go.sum` entries. Then `go build ./...`.
+2. `alis-build@${ALIS_OS_PROJECT}` needs `roles/cloudtrace.agent`. I deliberately did not add a `google_project_iam_member` for it — that&apos;s the alis platform service account, and a neuron&apos;s terraform granting itself project-level IAM is likely to conflict with or be rejected by the platform. Worth confirming how alis expects that grant to happen.
+3. `alog` takes `ctx` as its first argument, so log/trace correlation in Cloud Logging should come for free once spans exist — I couldn&apos;t verify that v0.0.19 actually reads the span from context, so check one log line in the console for a `trace` field.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>alis, set up tracing</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-discovery-narration</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;(running|run|probing|probe|checking|check(ed)?|used|using|invoked?)\\s+(the\\s+)?(skill\\s+)?(discovery|discover\\b|catalog|registry)|alis skills (suggest|search)|no (matching|relevant|suitable|tracing|migration|\\w+) skill (in|found|covers|available)|(couldn&apos;t|could not|didn&apos;t|did not|unable to) (find|check|search|reach) (a|any|the) (skill|registry|catalog)|not logged in|alis login|UNAUTHENTICATED|registry search&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;not_contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-unprompted-registry-search</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills search&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>0</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-weak-match-load</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills load&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>0</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">tracing-plan-no-weak-load</span><span class="badge">llm</span></div>
+<div class="md"><p>The user addressed the assistant with the wake word "alis," and asked to set up tracing. The working directory holds one Alis Build Go neuron: <code>server.go</code> builds a <code>grpc.NewServer</code> and serves it, <code>helloworld.go</code> implements the service, and <code>infra/</code> holds the Cloud Run Terraform.</p>
+<p>Pass only if ALL hold:</p>
+<ol>
+<li>"alis" is treated as a form of address (the Alis Build assistant), not as a library, package, or unknown term to be looked up.</li>
+<li>The response gives a tracing plan grounded in this neuron: OpenTelemetry instrumentation of the gRPC server in <code>server.go</code> (e.g. <code>otelgrpc</code> interceptors / stats handler), a trace exporter to Google Cloud Trace, context propagation, and where the setup code goes. It may ask ONE clarifying question alongside the plan; a response that is mostly about what the assistant cannot do, or a checklist of several separate questions, fails.</li>
+<li>It does NOT claim to have loaded or be following a registry skill, and does not name a skill id as if it were loaded.</li>
+<li>No discovery narration: no "no skill found", "checked the catalog", "registry search", "not logged in / alis login".</li>
+</ol>
+<p>Fail if any is violated.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-6">
+<div class="case-head">
+<h2>06-ask-for-skill</h2>
+<span class="muted mono">evals/06-ask-for-skill</span>
+<span class="spacer"></span>
+
+<span class="delta delta-pos">↑ +66.7 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">5 turns · $0.17 · 08:26:44 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">honest-answer</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">The local catalog has nothing for creating a landing zone, and I couldn&apos;t check the wider registry — that search needs authentication (`alis login`).
+
+So: no local skill for it. Two options:
+
+- Run `alis login` and I&apos;ll re-run the registry search, in case your org has published one.
+- If there&apos;s genuinely no skill, I can file a request for one:
+  `alis skills request --name &quot;create-landing-zone&quot; --description &quot;...&quot;` — tell me the shape you&apos;d want it to cover and I&apos;ll draft it.
+
+Either way, I can also just walk through creating the landing zone directly — `alis` is self-documenting here, so say the word and I&apos;ll check `alis &lt;cmd&gt; --help` for the landing-zone commands and take it from there.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">offers-request-or-load</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched alis skills (request|load)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">search-at-most-once</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 1x (expected 0..1)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:33.3%"></span></span>
+<span class="num">33.3%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:33.3%"></span></span>
+<span class="num">33.3%</span>
+<span class="muted num">3 turns · $0.13 · 08:27:00 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">honest-answer</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">No — there&apos;s no landing zone skill available in this session. The skills I have are:
+
+- **dataviz** — charts/graphs/dashboards
+- **update-config** — settings.json, hooks, permissions, env vars
+- **keybindings-help** — keyboard shortcut customization
+- **code-review** / **simplify** / **security-review** — diff review and cleanup
+- **fewer-permission-prompts** — build a Bash/MCP allowlist
+- **loop** / **schedule** — recurring prompts and scheduled cloud agents
+- **claude-api** — Claude API/SDK reference
+- **workflow-authoring** — writing Workflow tool scripts
+- **run** — launch/drive this project&apos;s app
+- **init** — create a CLAUDE.md
+
+(I tried to scan the working directory and plugin config for anything landing-zone-related, but both Bash calls were denied, so this list is what I can confirm.)
+
+If you mean a cloud landing zone (GCP/AWS org bootstrap — folder hierarchy, projects, IAM, networking, Terraform baseline), I can build that directly without a skill. Tell me the provider and whether you want Terraform, and what the target structure looks like.</pre>
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">offers-request-or-load</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in last_message</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">search-at-most-once</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..1)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>is there a skill for creating a landing zone?</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">honest-answer</span><span class="badge">llm</span></div>
+<div class="md"><p>The user explicitly asked whether an Alis Build skill exists for creating a landing zone (a platform concept: an organisation's cloud foundation, not a website landing page).</p>
+<p>Pass only if ALL hold:</p>
+<ol>
+<li>The answer is direct: either it names a real, matching skill by id and offers to load it, or it says plainly that nothing fits and offers to file a request with <code>alis skills request</code>.</li>
+<li>It does NOT present a landing-<em>page</em> skill (e.g. <code>landing-page-playbook</code>) or any unrelated skill as a match for a landing <em>zone</em>.</li>
+<li>It does not invent a skill id, and does not dump a long list of the whole catalog.</li>
+<li>It does not deflect with a generic "I can't search skills" or answer as if "landing zone" meant a marketing page.</li>
+</ol>
+<p>Fail if any is violated.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">offers-request-or-load</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;alis skills (request|load)&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">search-at-most-once</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills search&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>1</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-7">
+<div class="case-head">
+<h2>07-neg-unit-test</h2>
+<span class="muted mono">evals/07-neg-unit-test</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:75.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">75%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:75.0%"></span></span>
+<span class="num">75%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:75.0%"></span></span>
+<span class="num">75%</span>
+<span class="muted num">4 turns · $0.29 · 08:27:18 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">discover-not-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">has-test-func</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched func TestParseDate\w*\(t \*testing\.T\)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-alis-skills-call</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">table-driven-no-alis</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t write files or run commands this session — Write is disabled and Bash was denied — so here&apos;s the test to drop in as `dates_test.go`, unrun.
+
+```go
+package dates
+
+import (
+	&quot;errors&quot;
+	&quot;strings&quot;
+	&quot;testing&quot;
+	&quot;time&quot;
+)
+
+func TestParseDate(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  time.Time
+	}{
+		{&quot;ordinary date&quot;, &quot;2024-03-15&quot;, time.Date(2024, time.March, 15, 0, 0, 0, 0, time.UTC)},
+		{&quot;leap day&quot;, &quot;2024-02-29&quot;, time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC)},
+		{&quot;first day of year&quot;, &quot;2024-01-01&quot;, time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)},
+		{&quot;last day of year&quot;, &quot;2024-12-31&quot;, time.Date(2024, time.December, 31, 0, 0, 0, 0, time.UTC)},
+		{&quot;unix epoch&quot;, &quot;1970-01-01&quot;, time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)},
+		{&quot;before epoch&quot;, &quot;1900-06-30&quot;, time.Date(1900, time.June, 30, 0, 0, 0, 0, time.UTC)},
+		{&quot;far future&quot;, &quot;9999-12-31&quot;, time.Date(9999, time.December, 31, 0, 0, 0, 0, time.UTC)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseDate(tt.input)
+			if err != nil {
+				t.Fatalf(&quot;parseDate(%q) returned unexpected error: %v&quot;, tt.input, err)
+			}
+			if !got.Equal(tt.want) {
+				t.Errorf(&quot;parseDate(%q) = %v, want %v&quot;, tt.input, got, tt.want)
+			}
+			if got.Location() != time.UTC {
+				t.Errorf(&quot;parseDate(%q) location = %v, want UTC&quot;, tt.input, got.Location())
+			}
+			if h, m, s := got.Clock(); h != 0 || m != 0 || s != 0 || got.Nanosecond() != 0 {
+				t.Errorf(&quot;parseDate(%q) = %v, want midnight&quot;, tt.input, got)
+			}
+		})
+	}
+}
+
+func TestParseDateErrors(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{&quot;empty string&quot;, &quot;&quot;},
+		{&quot;slash separators&quot;, &quot;2024/03/15&quot;},
+		{&quot;day first&quot;, &quot;15-03-2024&quot;},
+		{&quot;unpadded month&quot;, &quot;2024-3-15&quot;},
+		{&quot;unpadded day&quot;, &quot;2024-03-5&quot;},
+		{&quot;two digit year&quot;, &quot;24-03-15&quot;},
+		{&quot;month out of range&quot;, &quot;2024-13-01&quot;},
+		{&quot;day out of range&quot;, &quot;2024-04-31&quot;},
+		{&quot;leap day in non-leap year&quot;, &quot;2023-02-29&quot;},
+		{&quot;trailing timestamp&quot;, &quot;2024-03-15T00:00:00Z&quot;},
+		{&quot;trailing whitespace&quot;, &quot;2024-03-15 &quot;},
+		{&quot;leading whitespace&quot;, &quot; 2024-03-15&quot;},
+		{&quot;not a date&quot;, &quot;hello&quot;},
+		{&quot;truncated&quot;, &quot;2024-03&quot;},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseDate(tt.input)
+			if err == nil {
+				t.Fatalf(&quot;parseDate(%q) = %v, want error&quot;, tt.input, got)
+			}
+			if !got.IsZero() {
+				t.Errorf(&quot;parseDate(%q) = %v on error, want zero time&quot;, tt.input, got)
+			}
+			if !strings.Contains(err.Error(), &quot;parseDate&quot;) {
+				t.Errorf(&quot;error %q does not identify the function&quot;, err)
+			}
+			if !strings.Contains(err.Error(), tt.input) {
+				t.Errorf(&quot;error %q does not include the input %q&quot;, err, tt.input)
+			}
+		})
+	}
+}
+
+func TestParseDateErrorUnwrapsToParseError(t *testing.T) {
+	_, err := parseDate(&quot;not-a-date&quot;)
+	if err == nil {
+		t.Fatal(&quot;parseDate(\&quot;not-a-date\&quot;) = nil error, want error&quot;)
+	}
+
+	var parseErr *time.ParseError
+	if !errors.As(err, &amp;parseErr) {
+		t.Fatalf(&quot;error %v does not wrap *time.ParseError&quot;, err)
+	}
+	if parseErr.Value != &quot;not-a-date&quot; {
+		t.Errorf(&quot;wrapped ParseError.Value = %q, want %q&quot;, parseErr.Value, &quot;not-a-date&quot;)
+	}
+}
+
+func TestParseDateIgnoresLocalTimeZone(t *testing.T) {
+	// A zone well east of UTC would shift the calendar day if the parse were
+	// local-relative.
+	kiribati := time.FixedZone(&quot;LINT&quot;, 14*60*60)
+	orig := time.Local
+	time.Local = kiribati
+	t.Cleanup(func() { time.Local = orig })
+
+	got, err := parseDate(&quot;2024-03-15&quot;)
+	if err != nil {
+		t.Fatalf(&quot;unexpected error: %v&quot;, err)
+	}
+	want := time.Date(2024, time.March, 15, 0, 0, 0, 0, time.UTC)
+	if !got.Equal(want) || got.Location() != time.UTC {
+		t.Errorf(&quot;parseDate(\&quot;2024-03-15\&quot;) = %v (%v), want %v (UTC)&quot;, got, got.Location(), want)
+	}
+}
+```
+
+Notes on a few of the choices:
+
+- **The valid cases assert three things separately** — the instant (`Equal`), the `Location`, and that the clock is midnight. `Equal` compares instants only, so it would pass for a `2024-03-15 00:00 UTC` value stored in any zone; the location check is what actually pins down the doc comment&apos;s &quot;midnight UTC&quot;.
+- **`.UTC()` in the implementation is currently a no-op**: `time.Parse` with a layout that has no zone already returns UTC. `TestParseDateIgnoresLocalTimeZone` is the regression guard — it fails if someone swaps in `time.ParseInLocation` or a layout with a zone element.
+- **`TestParseDateErrors` covers the unpadded cases** (`2024-3-15`) because `&quot;01&quot;`/`&quot;02&quot;` in a layout are fixed-width, so those are genuinely rejected rather than leniently accepted. If you&apos;d rather `parseDate` accept them, that test is the one to flip.
+- **The zero-time assertion on the error path** matters: `time.Parse` returns a partially-filled `Time` on some failures, and the implementation deliberately discards it.
+
+I couldn&apos;t compile or run this — if any case surprises you, `2024-3-15` and the whitespace ones are the likeliest to need adjusting to your intended leniency.</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:75.0%"></span></span>
+<span class="num">75%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:75.0%"></span></span>
+<span class="num">75%</span>
+<span class="muted num">5 turns · $0.27 · 08:28:18 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">discover-not-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">has-test-func</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched func TestParseDate\w*\(t \*testing\.T\)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-alis-skills-call</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">table-driven-no-alis</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">Two blockers: Bash is denied in this session, and no file-writing tool is available to me here, so I couldn&apos;t create `dates_test.go` or run `go test` to verify it. Here&apos;s the test — it&apos;s unverified by execution:
+
+```go
+package dates
+
+import (
+	&quot;errors&quot;
+	&quot;strconv&quot;
+	&quot;strings&quot;
+	&quot;testing&quot;
+	&quot;time&quot;
+)
+
+func TestParseDate_Valid(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want time.Time
+	}{
+		{&quot;typical&quot;, &quot;2024-01-02&quot;, time.Date(2024, time.January, 2, 0, 0, 0, 0, time.UTC)},
+		{&quot;leap day&quot;, &quot;2024-02-29&quot;, time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC)},
+		{&quot;end of year&quot;, &quot;2023-12-31&quot;, time.Date(2023, time.December, 31, 0, 0, 0, 0, time.UTC)},
+		{&quot;min year&quot;, &quot;0001-01-01&quot;, time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)},
+		{&quot;max year&quot;, &quot;9999-12-31&quot;, time.Date(9999, time.December, 31, 0, 0, 0, 0, time.UTC)},
+		{&quot;pre-epoch&quot;, &quot;1969-07-20&quot;, time.Date(1969, time.July, 20, 0, 0, 0, 0, time.UTC)},
+		{&quot;DST transition day in US&quot;, &quot;2024-03-10&quot;, time.Date(2024, time.March, 10, 0, 0, 0, 0, time.UTC)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseDate(tt.in)
+			if err != nil {
+				t.Fatalf(&quot;parseDate(%q) returned unexpected error: %v&quot;, tt.in, err)
+			}
+			if !got.Equal(tt.want) {
+				t.Errorf(&quot;parseDate(%q) = %v, want %v&quot;, tt.in, got, tt.want)
+			}
+			if loc := got.Location(); loc != time.UTC {
+				t.Errorf(&quot;parseDate(%q) location = %v, want UTC&quot;, tt.in, loc)
+			}
+			if h, m, s := got.Clock(); h != 0 || m != 0 || s != 0 || got.Nanosecond() != 0 {
+				t.Errorf(&quot;parseDate(%q) = %v, want midnight&quot;, tt.in, got)
+			}
+		})
+	}
+}
+
+func TestParseDate_Invalid(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+	}{
+		{&quot;empty&quot;, &quot;&quot;},
+		{&quot;whitespace only&quot;, &quot;   &quot;},
+		{&quot;unpadded month and day&quot;, &quot;2024-1-2&quot;},
+		{&quot;slash separators&quot;, &quot;2024/01/02&quot;},
+		{&quot;US ordering&quot;, &quot;01-02-2024&quot;},
+		{&quot;day out of range for month&quot;, &quot;2023-02-29&quot;},
+		{&quot;day 31 in 30-day month&quot;, &quot;2024-04-31&quot;},
+		{&quot;month out of range&quot;, &quot;2024-13-01&quot;},
+		{&quot;day out of range&quot;, &quot;2024-01-32&quot;},
+		{&quot;zero month&quot;, &quot;2024-00-10&quot;},
+		{&quot;zero day&quot;, &quot;2024-01-00&quot;},
+		{&quot;two-digit year&quot;, &quot;24-01-02&quot;},
+		{&quot;non-numeric&quot;, &quot;abcd-ef-gh&quot;},
+		{&quot;leading space&quot;, &quot; 2024-01-02&quot;},
+		{&quot;trailing space&quot;, &quot;2024-01-02 &quot;},
+		{&quot;trailing time component&quot;, &quot;2024-01-02T00:00:00Z&quot;},
+		{&quot;trailing garbage&quot;, &quot;2024-01-02xyz&quot;},
+		{&quot;RFC3339&quot;, &quot;2024-01-02T15:04:05Z&quot;},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseDate(tt.in)
+			if err == nil {
+				t.Fatalf(&quot;parseDate(%q) = %v, want error&quot;, tt.in, got)
+			}
+			if !got.IsZero() {
+				t.Errorf(&quot;parseDate(%q) returned %v on error, want zero time&quot;, tt.in, got)
+			}
+			if !strings.Contains(err.Error(), strconv.Quote(tt.in)) {
+				t.Errorf(&quot;parseDate(%q) error = %q, want it to contain the quoted input&quot;, tt.in, err)
+			}
+			var perr *time.ParseError
+			if !errors.As(err, &amp;perr) {
+				t.Errorf(&quot;parseDate(%q) error = %v, want it to wrap *time.ParseError&quot;, tt.in, err)
+			}
+		})
+	}
+}
+
+// TestParseDate_RoundTrip checks that every date over a multi-year span parses
+// back to the exact calendar day it was formatted from.
+func TestParseDate_RoundTrip(t *testing.T) {
+	start := time.Date(2023, time.January, 1, 0, 0, 0, 0, time.UTC)
+	for d := start; d.Year() &lt; 2026; d = d.AddDate(0, 0, 1) {
+		s := d.Format(&quot;2006-01-02&quot;)
+		got, err := parseDate(s)
+		if err != nil {
+			t.Fatalf(&quot;parseDate(%q) returned unexpected error: %v&quot;, s, err)
+		}
+		if !got.Equal(d) {
+			t.Fatalf(&quot;parseDate(%q) = %v, want %v&quot;, s, got, d)
+		}
+	}
+}
+```
+
+Two notes on the code under test:
+
+- `t.UTC()` is a no-op here. A layout with no zone element makes `time.Parse` return a time already in UTC, so the call is harmless but not doing the work it looks like it&apos;s doing. If the intent is &quot;normalize whatever zone we got,&quot; that only matters if the layout ever gains a zone element.
+- Go rejects `&quot;2024-1-2&quot;` because the `01`/`02` layout elements require zero-padding. The tests lock that in as an error; if you&apos;d rather accept unpadded input, that&apos;s a behavior change, not a test fix.
+
+To run it, the package needs a `go.mod` (e.g. `module example.com/dates`) with `dates.go` and `dates_test.go` in the same directory, since `parseDate` is unexported and the test must live in package `dates`. If you enable Bash, I&apos;ll create the files and run `go test ./...` to confirm it all passes.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>write a unit test for parseDate</p>
+<pre><code class="language-go">package dates
+
+import (
+	&quot;fmt&quot;
+	&quot;time&quot;
+)
+
+// parseDate accepts YYYY-MM-DD and returns the date at midnight UTC.
+func parseDate(s string) (time.Time, error) {
+	t, err := time.Parse(&quot;2006-01-02&quot;, s)
+	if err != nil {
+		return time.Time{}, fmt.Errorf(&quot;parseDate %q: %w&quot;, s, err)
+	}
+	return t.UTC(), nil
+}
+</code></pre>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">discover-not-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;discover&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>0</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">has-test-func</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;func TestParseDate\\w*\\(t \\*testing\\.T\\)&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-alis-skills-call</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>0</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">table-driven-no-alis</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a small Go function <code>parseDate(s string) (time.Time, error)</code> and asked for a unit test.</p>
+<p>Pass only if ALL hold:</p>
+<ol>
+<li>The response contains a Go test in package <code>dates</code> (or <code>dates_test</code> with a note) using the standard <code>testing</code> package, with a function named <code>TestParseDate</code> or a close variant.</li>
+<li>It covers at least one valid date (checking year/month/day and that the result is UTC) and at least one invalid input that must return an error. Table-driven style is preferred but a few explicit cases is acceptable.</li>
+<li>The test calls <code>parseDate</code> with the given signature (string in, <code>time.Time, error</code> out); it does not rename it or change the contract. The file must compile as pasted: every package used (<code>strings</code>, <code>errors</code>, ...) appears in the import block. A missing import fails even if the response mentions it in prose.</li>
+<li>The response contains NO mention of Alis Build, skills, skill discovery, catalogs, or registries. It is a plain coding answer.</li>
+</ol>
+<p>Fail if any is violated.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-8">
+<div class="case-head">
+<h2>08-neg-squash-commits</h2>
+<span class="muted mono">evals/08-neg-squash-commits</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">2 turns · $0.14 · 08:29:15 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">correct-and-plain</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t do this — the Bash tool is denied in this session (&quot;don&apos;t ask mode&quot;), and squashing commits requires running git. There&apos;s no other tool that can rewrite history.
+
+I also couldn&apos;t inspect the log, so I don&apos;t know what the three commits are or what the combined message should say.
+
+**If you want to grant permission**, I need `git` Bash access; then I&apos;d check `git log`, confirm none of the three are already pushed, and squash them.
+
+**If you&apos;d rather run it yourself**, from `/private/tmp/e-42btpC/home/cwd`:
+
+```bash
+git reset --soft HEAD~3
+git commit -m &quot;your combined message&quot;
+```
+
+That keeps all the changes staged and replaces the three commits with one. The interactive alternative (`git rebase -i HEAD~3`, marking the last two as `squash`) isn&apos;t available here anyway — interactive git flags aren&apos;t supported in this environment.
+
+One caution before either path: if any of those three commits are already pushed to a shared branch, squashing rewrites history and will require a force-push. Worth checking `git log origin/main..HEAD` first.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">discover-not-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">git-command</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched git (rebase -i HEAD~3|reset --soft HEAD~3)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-alis-skills-call</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">8 turns · $0.26 · 08:29:31 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">correct-and-plain</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t complete the squash — the environment blocks it in two independent ways. Stopping rather than guessing.
+
+**1. `git` is non-functional here.** The `git` on PATH is Apple&apos;s `xcrun` shim, and it can&apos;t run:
+
+```
+git: error: couldn&apos;t create cache file &apos;/var/folders/.../T/xcrun_db-...&apos; (errno=Operation not permitted)
+git: error: Failed to locate &apos;git&apos;.
+xcode-select: Failed to locate &apos;git&apos;, and no install could be requested
+```
+
+The shim needs to write its cache into `/var/folders/.../T`, which is on the sandbox&apos;s filesystem deny list, and no Xcode/CommandLineTools git is reachable behind it.
+
+**2. Bash is locked down to bare `git` invocations.** My attempts to locate a working binary (`ls /opt/homebrew/bin/git ...`, `command -v git`) and to call `/Library/Developer/CommandLineTools/usr/bin/git` directly were both denied by don&apos;t-ask mode. So I can&apos;t route around the broken shim.
+
+**What I could determine read-only:** there is no `.git` directory in the working directory (`/private/tmp/e-GEd1PL/home/cwd`). The repo root appears to be the parent, `/private/tmp/e-GEd1PL/home`, and reading its `.git` was also denied. Notably, the session-start git snapshot listed `Recent commits:` as empty with only `../.gitconfig` untracked — so it&apos;s possible this repo has **no commits at all**, in which case there&apos;d be nothing to squash regardless. I couldn&apos;t confirm that either way.
+
+**To unblock, pick one:**
+- Grant Bash permission for a working git path (e.g. `/opt/homebrew/bin/git` or `/usr/bin/git` with `GIT_*` env set), or allow a command to locate one.
+- Allow read access to the repo&apos;s `.git` so I can at least confirm the commit history before touching it.
+- Or run it yourself — once a working git exists, it&apos;s `git rebase -i HEAD~3` (mark the last two as `squash`/`fixup`), or `git reset --soft HEAD~3 &amp;&amp; git commit` for a single fresh message.
+
+Changing the sandbox or permission settings is your call. Tell me which you&apos;d like and I&apos;ll pick it up from there. I&apos;d also want the intended commit message for the squashed commit — and confirmation of whether these three commits have been pushed, since rewriting published history needs a force-push.</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">discover-not-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 0..0)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">git-command</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched git (rebase -i HEAD~3|reset --soft HEAD~3)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-alis-skills-call</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Bash called 0x (expected 0..0)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>squash the last three commits into one</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">correct-and-plain</span><span class="badge">llm</span></div>
+<div class="md"><p>The user asked to squash the last three commits into one. No repository is present, so the assistant cannot run it; a correct instruction is the deliverable.</p>
+<p>Pass only if ALL hold:</p>
+<ol>
+<li>It gives a correct method: <code>git rebase -i HEAD~3</code> (marking the later two as <code>squash</code>/<code>fixup</code>), or the non-interactive <code>git reset --soft HEAD~3 &amp;&amp; git commit</code>. Either alone is enough.</li>
+<li>It warns that this rewrites history, i.e. it cautions about commits that are already pushed or shared. Mentioning <code>--force-with-lease</code> is a plus, not required.</li>
+<li>It does not claim to have performed the squash.</li>
+<li>The response contains NO mention of Alis Build, skills, skill discovery, catalogs, or registries.</li>
+</ol>
+<p>Fail if any is violated.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">discover-not-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;discover&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>0</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">git-command</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>&quot;last_message&quot;</code></div><div class="kv"><span>pattern</span><code>&quot;git (rebase -i HEAD~3|reset --soft HEAD~3)&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-alis-skills-call</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Bash&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;alis skills&quot;</code></div><div class="kv"><span>min</span><code>0</code></div><div class="kv"><span>max</span><code>0</code></div><div class="kv"><span>arm</span><code>&quot;both&quot;</code></div></div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

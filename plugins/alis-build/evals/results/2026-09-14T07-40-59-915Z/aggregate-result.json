@@ -1,0 +1,1375 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.270",
+  "startedAt": "2026-09-14T07:40:59.915Z",
+  "durationSeconds": 1287,
+  "costUsd": 6.503592499999999,
+  "partial": false,
+  "suite": {
+    "root": "/Volumes/ExternalSSD/Projects/github.com/alis-build/claude-plugin/plugins/alis-build",
+    "ablation": "with-without",
+    "judgeModel": "sonnet",
+    "threshold": 1,
+    "concurrency": 1,
+    "plugins": [
+      {
+        "name": "alis-build",
+        "version": "0.22.0",
+        "path": "/Volumes/ExternalSSD/Projects/github.com/alis-build/claude-plugin/plugins/alis-build"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "01-pubsub-invoice",
+      "dir": "evals/01-pubsub-invoice",
+      "source": "mixed",
+      "promptMarkdown": "set up a pub/sub topic that fires whenever an invoice is created",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 15,
+      "graders": [
+        {
+          "name": "discover-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "discover",
+            "min": 1
+          }
+        },
+        {
+          "name": "event-handler-design",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user asked for a Pub/Sub topic that fires when an invoice is created, on the Alis Build platform. The working directory holds one Go neuron (module `marvel.sm.helloworld.v1`, with `server.go`, `go.mod` and `infra/`). It has no invoice resource.\n\nPass only if ALL of these hold:\n1. The plan is Alis Build shaped: the event is declared on the protobuf contract in the org's define repo and the topic is produced by Define (`alis define ... --install`) as a platform artifact, and the consuming side is a neuron-side Pub/Sub event handler (Cloud Run push endpoint, Terraform under `infra/`). Naming a `<neuron-id>-events` service, `/HandleEvent`, or `infra/events.tf` is a plus, not required.\n2. It does NOT propose raw `gcloud pubsub topics create` / generic Terraform for a standalone topic plus a hand-written subscriber as the primary plan, and does not ask \"which cloud / which message broker\".\n3. It notices the current neuron is `helloworld` and has no invoice resource, and either asks one targeted question (which neuron owns invoices / where the invoice contract lives in the define repo) or plans the handler for this neuron explicitly. Either is fine if framed by the plan in 1.\n4. It does NOT narrate skill discovery or its failures: no \"no skill found\", \"probed the catalog\", \"registry search failed\", \"not logged in / run alis login\". If a skill was loaded it is mentioned in at most one short clause.\n\nFail if any of 1-4 is violated.",
+          "config": {
+            "criteria": "The user asked for a Pub/Sub topic that fires when an invoice is created, on the Alis Build platform. The working directory holds one Go neuron (module `marvel.sm.helloworld.v1`, with `server.go`, `go.mod` and `infra/`). It has no invoice resource.\n\nPass only if ALL of these hold:\n1. The plan is Alis Build shaped: the event is declared on the protobuf contract in the org's define repo and the topic is produced by Define (`alis define ... --install`) as a platform artifact, and the consuming side is a neuron-side Pub/Sub event handler (Cloud Run push endpoint, Terraform under `infra/`). Naming a `<neuron-id>-events` service, `/HandleEvent`, or `infra/events.tf` is a plus, not required.\n2. It does NOT propose raw `gcloud pubsub topics create` / generic Terraform for a standalone topic plus a hand-written subscriber as the primary plan, and does not ask \"which cloud / which message broker\".\n3. It notices the current neuron is `helloworld` and has no invoice resource, and either asks one targeted question (which neuron owns invoices / where the invoice contract lives in the define repo) or plans the handler for this neuron explicitly. Either is fine if framed by the plan in 1.\n4. It does NOT narrate skill discovery or its failures: no \"no skill found\", \"probed the catalog\", \"registry search failed\", \"not logged in / run alis login\". If a skill was loaded it is mentioned in at most one short clause.\n\nFail if any of 1-4 is violated.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "no-discovery-narration",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "(running|run|probing|probe|checking|check(ed)?|used|using|invoked?)\\s+(the\\s+)?(skill\\s+)?(discovery|discover\\b|catalog|registry)|alis skills (suggest|search)|no (matching|relevant|suitable|tracing|migration|\\w+) skill (in|found|covers|available)|(couldn't|could not|didn't|did not|unable to) (find|check|search|reach) (a|any|the) (skill|registry|catalog)|not logged in|alis login|UNAUTHENTICATED|registry search",
+            "flags": "i",
+            "match": "not_contains"
+          }
+        },
+        {
+          "name": "no-unprompted-registry-search",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills search",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.3333333333333333,
+            "passed": false,
+            "turns": 14,
+            "costUsd": 0.39890050000000005,
+            "judgeCostUsd": 0.009732000000000001,
+            "durationSeconds": 76,
+            "startedAt": "2026-09-14T07:40:59.941Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-RZ1nIu/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "discover-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "event-handler-design",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I've hit two blockers that need you, so let me lay out what I found rather than guess.\n\n## What's in this directory\n\n`/private/tmp/e-RZ1nIu/home/cwd` is the neuron build folder for **`marvel.sm.helloworld.v1`** — org `marvel`, product `sm`, neuron `helloworld`. It exposes exactly one service, `HelloWorldService` (`server.go:36`), and `infra/` holds just `main.tf`, `variables.tf`, and a Cloud Run service. There is no Invoice resource, message, or service anywhere in it.\n\n## Why I can't just add a topic here\n\nOn Alis, Pub/Sub topics aren't hand-written Terraform — they're platform artifacts generated by **Define** from the protobuf contract in the org's define repo (`~/alis.build/marvel/define`). Dropping a `google_pubsub_topic` into `infra/cloudrun.tf` would create a resource the platform doesn't know about: Define wouldn't generate the message type or the typed publisher/handler, and the next `alis define` run wouldn't reconcile it. So the change belongs in the contract, not in this folder.\n\n## The two blockers\n\n**1. I don't know where `Invoice` lives.** \"Fires whenever an invoice is created\" implies an existing Invoice resource with a create RPC — but it isn't in this neuron. It's either in another `marvel.sm` neuron, a different product, or doesn't exist yet. Which it is changes the work substantially: wiring a topic to an existing `CreateInvoice` is a small contract edit, whereas building the Invoice resource first is a much larger job.\n\n**2. Permissions.** Bash is restricted to this directory and to `alis skills` only:\n\n- `ls /private/tmp/e-RZ1nIu/home` — denied, so I can't locate or read the define repo\n- `alis --help`, `alis define --help` — denied, so I can't run Define or inspect the contract\n\nI probed the skill registry first (`alis skills suggest`) and nothing matched, so this would be hand-rolled work regardless.\n\n## What I'd do once unblocked\n\n1. Find the `Invoice` contract in `~/alis.build/marvel/define` and confirm the create RPC.\n2. Declare the topic + event message on that contract in the `.proto`.\n3. Commit and push the define repo — Define pins to a pushed commit.\n4. `alis define marvel.sm --json --install` to provision the topic and regenerate `internal.sm.marvel.build/protobuf`.\n5. Publish from the create handler, then commit, push, and `alis build` / `alis deploy` the affected neuron.\n\nCan you tell me where `Invoice` lives — or confirm it needs building from scratch? And if you want me to run this end to end, I'll need Bash access to the define repo path and the `alis` CLI beyond `alis skills`."
+              },
+              {
+                "name": "no-discovery-narration",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern found (expected absent)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-unprompted-registry-search",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.6666666666666666,
+            "passed": false,
+            "turns": 16,
+            "costUsd": 0.439675,
+            "judgeCostUsd": 0.010698,
+            "durationSeconds": 96,
+            "startedAt": "2026-09-14T07:42:15.881Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-TjAo7w/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "event-handler-design",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I dug through the repo before touching anything. Here's the problem: **there's no invoice anywhere in this codebase.**\n\nThe whole neuron is:\n\n- `helloworld.go` — one RPC, `SayHello`, on `marvel.sm.helloworld.v1.HelloWorldService`\n- `server.go` — gRPC bootstrap\n- `infra/` — `main.tf` (providers + GCS backend), `cloudrun.tf` (the Cloud Run service), `variables.tf` (Alis-provided vars only)\n\nNo invoice resource, no `CreateInvoice` RPC, no Spanner table, nothing publishing today. So the \"fires whenever an invoice is created\" half of this has nothing to hook into here, and dropping a topic into this neuron's Terraform would provision a real GCP resource in `marvel-sm` under a service that has nothing to do with invoices.\n\n**Which neuron owns invoice creation?** That answer changes the work materially:\n\n1. **Invoices live in another neuron** (e.g. a billing/invoicing service) — then the topic belongs in *that* neuron's `infra/`, and the publish call goes in its `CreateInvoice` handler. Nothing changes in this repo. This is my guess at what you actually want.\n2. **You want invoices built here** — that's a much bigger ask than a topic: proto stubs in `internal.sm.marvel.build/protobuf`, a `CreateInvoice` implementation, storage, *then* the topic. Worth saying out loud so it isn't a surprise.\n3. **You just want the topic provisioned now** and will wire the publisher yourself — I'll add it here and you get the plumbing without the trigger.\n\nIf it's (3), or once you point me at the right neuron for (1), here's what I'd add as `infra/pubsub.tf`:\n\n```hcl\nresource \"google_pubsub_topic\" \"invoice_created\" {\n  name     = \"invoice-created\"\n  project  = var.ALIS_OS_PROJECT\n  provider = google\n\n  message_retention_duration = \"604800s\" # 7 days\n}\n\nresource \"google_pubsub_topic_iam_member\" \"invoice_created_publisher\" {\n  topic    = google_pubsub_topic.invoice_created.name\n  project  = var.ALIS_OS_PROJECT\n  role     = \"roles/pubsub.publisher\"\n  member   = \"serviceAccount:alis-build@${var.ALIS_OS_PROJECT}.iam.gserviceaccount.com\"\n  provider = google\n}\n```\n\nThat reuses the same `alis-build@` service account the Cloud Run service already runs as (`infra/cloudrun.tf:56`), so the publish is authorized with no extra identity. The publisher side is then a `pubsub.NewClient` + `Topic(\"invoice-created\").Publish(...)` in whichever handler creates the invoice, plus a `PUBSUB_TOPIC_INVOICE_CREATED` env var on the container if you'd rather not hardcode the name.\n\nTwo things I'd want from you either way: the **topic naming convention** for your product (I've assumed a plain `invoice-created`; if Alis expects a product-prefixed or FQN-style name like `marvel-sm-invoice-created`, tell me and I'll match it), and whether you want a **subscription** created alongside it or just the bare topic for consumers to attach to later."
+              },
+              {
+                "name": "no-discovery-narration",
+                "passed": true,
+                "weight": 1,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-unprompted-registry-search",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.3333333333333333,
+        "passRate": 0,
+        "scoreWithout": 0.6666666666666666,
+        "passRateWithout": 0,
+        "delta": -0.3333333333333333
+      }
+    },
+    {
+      "name": "02-terraform-missing-var",
+      "dir": "evals/02-terraform-missing-var",
+      "source": "mixed",
+      "promptMarkdown": "why is terraform complaining about a missing variable?",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 15,
+      "graders": [
+        {
+          "name": "concrete-diagnosis",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user asked why Terraform is complaining about a missing variable. The working directory holds one Alis Build Go neuron whose `infra/variables.tf` declares platform variables (`ALIS_OS_PROJECT`, `ALIS_OS_PRODUCT_PROJECT`, `ALIS_OS_NEURON`, ...) with no defaults. No error text was provided.\n\nPass only if ALL hold:\n1. It grounds the answer in the repo: it refers to the variables declared in `infra/variables.tf` (or the `var.ALIS_OS_*` references in the `.tf` files) rather than answering purely generically.\n2. It gives the right cause: those variables have no defaults and are supplied by the platform at deploy time (Alis Build's Deploy step / `alis deploy`), so running `terraform plan` or `apply` by hand in `infra/` reports them missing. A generic \"declare it, or pass it via tfvars / -var / TF_VAR_\" answer on its own does NOT satisfy this point.\n3. It gives the right direction: deploy through `alis deploy` (or, if the user really wants a local plan, supply the ALIS_OS_* values explicitly). It does not tell the user to hard-code project ids as defaults in `variables.tf` as the fix.\n4. It does NOT mention searching or probing a skill catalog or registry, \"no skill found\", or \"discovery\".\n\nFail if any is violated.",
+          "config": {
+            "criteria": "The user asked why Terraform is complaining about a missing variable. The working directory holds one Alis Build Go neuron whose `infra/variables.tf` declares platform variables (`ALIS_OS_PROJECT`, `ALIS_OS_PRODUCT_PROJECT`, `ALIS_OS_NEURON`, ...) with no defaults. No error text was provided.\n\nPass only if ALL hold:\n1. It grounds the answer in the repo: it refers to the variables declared in `infra/variables.tf` (or the `var.ALIS_OS_*` references in the `.tf` files) rather than answering purely generically.\n2. It gives the right cause: those variables have no defaults and are supplied by the platform at deploy time (Alis Build's Deploy step / `alis deploy`), so running `terraform plan` or `apply` by hand in `infra/` reports them missing. A generic \"declare it, or pass it via tfvars / -var / TF_VAR_\" answer on its own does NOT satisfy this point.\n3. It gives the right direction: deploy through `alis deploy` (or, if the user really wants a local plan, supply the ALIS_OS_* values explicitly). It does not tell the user to hard-code project ids as defaults in `variables.tf` as the fix.\n4. It does NOT mention searching or probing a skill catalog or registry, \"no skill found\", or \"discovery\".\n\nFail if any is violated.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "no-discovery-narration",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "(running|run|probing|probe|checking|check(ed)?|used|using|invoked?)\\s+(the\\s+)?(skill\\s+)?(discovery|discover\\b|catalog|registry)|alis skills (suggest|search)|no (matching|relevant|suitable|tracing|migration|\\w+) skill (in|found|covers|available)|(couldn't|could not|didn't|did not|unable to) (find|check|search|reach) (a|any|the) (skill|registry|catalog)|not logged in|alis login|UNAUTHENTICATED|registry search",
+            "flags": "i",
+            "match": "not_contains"
+          }
+        },
+        {
+          "name": "probe-at-most-once",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills suggest",
+            "min": 0,
+            "max": 1,
+            "arm": "both"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.6666666666666666,
+            "passed": false,
+            "turns": 15,
+            "costUsd": 0.45569400000000004,
+            "judgeCostUsd": 0.010578000000000004,
+            "durationSeconds": 90,
+            "startedAt": "2026-09-14T07:43:51.573Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-zseR4D/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "concrete-diagnosis",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "Bash is locked down in this session (don't-ask mode), so I couldn't run `alis docs` or reproduce the plan. But the static analysis is conclusive enough to answer.\n\n## It's not an undeclared variable — it's a required variable with no value\n\nI cross-checked every `var.*` reference against the declarations:\n\n- `infra/main.tf:19,23,27` → `ALIS_OS_PROJECT`\n- `infra/cloudrun.tf` → `ALIS_OS_NEURON`, `ALIS_REGION`, `ALIS_OS_PRODUCT_PROJECT`, `ALIS_OS_NEURON_VERSION_COMMIT_SHA`, `ALIS_OS_PROJECT`, `ALIS_RUN_HASH`, `ALIS_PRODUCT_CONFIG`, `ALIS_MANAGED_SPANNER_{PROJECT,INSTANCE,DB}`\n\nAll ten are declared in `infra/variables.tf`. So the error is *not* `Reference to undeclared input variable` — it's `No value for required variable`. Every variable in that file is declared as `variable \"X\" {}` with an empty body, which means no default, which means **required**. Alis injects values at deploy time, and any one it doesn't inject blows up the plan.\n\n## The most likely culprit: the Spanner trio\n\n`infra/variables.tf:12-14` declares `ALIS_MANAGED_SPANNER_PROJECT`, `_INSTANCE`, and `_DB`, and `infra/cloudrun.tf:33-44` wires them into the container env. But this neuron doesn't use Spanner at all:\n\n- `go.mod` has no Spanner dependency — just `alog`, `grpc`, and the generated protobuf package\n- `helloworld.go:15-19` is a pure string handler; `server.go` opens no database\n\nAlis only injects the `ALIS_MANAGED_SPANNER_*` values when the product actually has a managed Spanner database provisioned. No database, no values — and three required variables go unsatisfied. This looks like boilerplate carried over from a template that assumed Spanner.\n\nThe fix is to delete lines 12-14 of `infra/variables.tf` and the three `env` blocks at `infra/cloudrun.tf:33-44`. (The alternative — provisioning a Spanner DB — makes no sense for a service that never queries one.)\n\n## Two other candidates, if it's not Spanner\n\n- **`ALIS_PRODUCT_CONFIG`** (`variables.tf:16`, used at `cloudrun.tf:29-32`) — only injected if the product has config defined. Empty product config would produce the same error.\n- **`ALIS_OS_GOOGLE_CUSTOMER_ID`** (`variables.tf:10`) — required but referenced nowhere. Along with `ALIS_OS_VERSION`, `ALIS_OS_ORG_PROJECT`, `ALIS_OS_DOMAIN`, and `ALIS_OS_ORG_BACKEND_PRODUCT_PREFIX`, it's dead weight that still has to be satisfied. Unused does not mean optional.\n\nCan you paste the `Error: No value for required variable` line? It names the variable and the `variables.tf` line number, which pins it immediately — I'd rather not strip the Spanner wiring on a guess. If it does name a Spanner variable, say the word and I'll make both edits."
+              },
+              {
+                "name": "no-discovery-narration",
+                "passed": true,
+                "weight": 1,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "probe-at-most-once",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 1x (expected 0..1)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.6666666666666666,
+            "passed": false,
+            "turns": 13,
+            "costUsd": 0.44673799999999997,
+            "judgeCostUsd": 0.009654,
+            "durationSeconds": 99,
+            "startedAt": "2026-09-14T07:45:21.916Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-bXBkL1/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "concrete-diagnosis",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "You didn't paste the error, but the config tells a pretty clear story. Here's what I found reading all three files in `infra/`.\n\n## It's not an undeclared-variable error\n\nEvery `var.*` reference in `main.tf` and `cloudrun.tf` has a matching `variable` block in `variables.tf`. So the message isn't \"Reference to undeclared input variable\" — it's almost certainly:\n\n```\nError: No value for required variable\n```\n\n## Why: all 15 variables are required, and nothing in the repo supplies them\n\nEvery declaration in `infra/variables.tf:2-16` is the bare form:\n\n```hcl\nvariable \"ALIS_MANAGED_SPANNER_DB\" {}\n```\n\nNo `default`, so Terraform treats each one as **required**. There's no `terraform.tfvars`, no `*.auto.tfvars`, and no `TF_VAR_*` in the Dockerfile — the values come entirely from the Alis pipeline passing `-var` at deploy time. Any declared variable that Alis doesn't inject fails the plan.\n\n## The likely culprits: the three Spanner variables\n\n```\ninfra/variables.tf:12-14   ALIS_MANAGED_SPANNER_PROJECT / _INSTANCE / _DB\ninfra/cloudrun.tf:33-44    injected as Cloud Run env vars\n```\n\n`ALIS_MANAGED_SPANNER_*` is only injected when the neuron's product config actually declares a managed Spanner database. This neuron doesn't use Spanner at all — `go.mod` has no Spanner client (just `alog`, `grpc`, `protobuf`), and neither `server.go` nor `helloworld.go` touches a database. That pattern says `infra/` was copied from a Spanner-backed neuron template, so it demands variables this neuron's config never provisions.\n\n## Fix\n\nDrop lines 12-14 from `infra/variables.tf` and the three corresponding `env` blocks at `infra/cloudrun.tf:33-44`. If you *do* want Spanner here, the fix is the other direction: declare the managed Spanner resource in the product config so Alis injects the values.\n\n**Secondary suspects** if it's not Spanner: `ALIS_OS_VERSION`, `ALIS_OS_ORG_PROJECT`, `ALIS_OS_DOMAIN`, `ALIS_OS_ORG_BACKEND_PRODUCT_PREFIX`, and `ALIS_OS_GOOGLE_CUSTOMER_ID` are declared but never referenced anywhere. They're still required, so any one of them not being injected breaks the plan for zero benefit — safe to delete regardless.\n\nTwo caveats: Bash `grep`/`ls` got denied partway through, so I couldn't check for an `alis.yaml` or product config outside `infra/` to confirm what Alis actually injects for this neuron. And pasting the actual error line would pin the exact variable in one step. Want me to apply the Spanner removal?"
+              },
+              {
+                "name": "no-discovery-narration",
+                "passed": true,
+                "weight": 1,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "probe-at-most-once",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..1)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.6666666666666666,
+        "passRate": 0,
+        "scoreWithout": 0.6666666666666666,
+        "passRateWithout": 0,
+        "delta": 0
+      }
+    },
+    {
+      "name": "03-package-wont-resolve",
+      "dir": "evals/03-package-wont-resolve",
+      "source": "mixed",
+      "promptMarkdown": "the generated go package for my service will not resolve after define",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 15,
+      "graders": [
+        {
+          "name": "cli-not-hand-edit",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user's generated Go package (from Alis Build's Define step) is not resolving in their service.\n\nPass only if ALL hold:\n1. The primary fix routes through the `alis` CLI: `alis packages install` / `alis packages upgrade` / `alis packages add`, or re-running `alis define ... --install`. Verifying that Define was run against a pushed commit is also acceptable as part of the diagnosis.\n2. It does NOT propose, as the fix, hand-editing the module pin in `go.mod` (e.g. `sed` on go.mod, manually bumping a pseudo-version) or hand-rolling private registry setup (manually setting GOPRIVATE/GONOSUMDB/netrc). Mentioning these only to say the CLI handles them is fine.\n3. It does NOT narrate skill discovery (\"checked the catalog\", \"no skill found\", \"running discovery\").\n4. It does not deflect entirely; it may ask one clarifying question (language, package id, the exact error) but must still give the CLI-based direction.\n\nFail if any is violated.",
+          "config": {
+            "criteria": "The user's generated Go package (from Alis Build's Define step) is not resolving in their service.\n\nPass only if ALL hold:\n1. The primary fix routes through the `alis` CLI: `alis packages install` / `alis packages upgrade` / `alis packages add`, or re-running `alis define ... --install`. Verifying that Define was run against a pushed commit is also acceptable as part of the diagnosis.\n2. It does NOT propose, as the fix, hand-editing the module pin in `go.mod` (e.g. `sed` on go.mod, manually bumping a pseudo-version) or hand-rolling private registry setup (manually setting GOPRIVATE/GONOSUMDB/netrc). Mentioning these only to say the CLI handles them is fine.\n3. It does NOT narrate skill discovery (\"checked the catalog\", \"no skill found\", \"running discovery\").\n4. It does not deflect entirely; it may ask one clarifying question (language, package id, the exact error) but must still give the CLI-based direction.\n\nFail if any is violated.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "probe-at-most-once",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills suggest",
+            "min": 0,
+            "max": 1,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "uses-alis-packages",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "alis (packages (install|upgrade|add)|define\\b[^\\n]*--install)",
+            "flags": "i",
+            "match": "contains"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 16,
+            "costUsd": 0.4244405,
+            "judgeCostUsd": 0.0071460000000000065,
+            "durationSeconds": 68,
+            "startedAt": "2026-09-14T07:47:01.368Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-eL55Fm/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "cli-not-hand-edit",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "I hit a wall on tooling before I could reproduce it: Bash is denied for everything except a few read-only commands in this directory, so `go build`, `alis packages …`, and even `ls` outside the neuron folder all came back denied. Here's what the files tell me, and what I need from you to finish.\n\n## What I can see\n\n`go.mod:10` pins the generated package:\n\n```\ninternal.sm.marvel.build/protobuf v1.22.8\n```\n\nand both source files import a subpath of it:\n\n```go\npb \"internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1\"\n```\n\n`go.sum:37-38` has hashes for v1.22.8 only.\n\n## Most likely cause\n\nDefine publishes a **new version** of `internal.sm.marvel.build/protobuf` every time the contract changes. Your neuron is still pinned to v1.22.8 — the pre-define version — so whatever Define just added isn't in the module the Go toolchain resolves. That's the common shape of \"won't resolve after define\": either Define ran without `--install`, or it installed into the define repo but this build folder was never upgraded.\n\nThe second candidate is auth/DNS to the private registry (`internal.sm.marvel.build` is a private module host). The error text separates these cleanly:\n\n- `undefined: pb.Something` or `no required module provides package …/v1` → stale pin\n- `unknown revision`, `module … not found`, `410 Gone`, or a DNS failure → registry credentials or host resolution\n\n## What to run\n\nFrom this directory, and **not** by editing the pin by hand — `alis packages` is what wires up the private registry credentials:\n\n```\nalis packages upgrade internal.sm.marvel.build/protobuf --json\n```\n\nIf Define itself never installed the new version, re-run it with the install flag instead:\n\n```\nalis define marvel.sm.helloworld.v1 --json --install\n```\n\nI'd like to run the upgrade and then `go build ./...` to confirm, but I need Bash permission for `alis` and `go` in this folder. Either grant that and I'll take it from there, or paste the exact error you're seeing and I'll narrow it down further from the files."
+              },
+              {
+                "name": "probe-at-most-once",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 1x (expected 0..1)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "uses-alis-packages",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched alis (packages (install|upgrade|add)|define\\b[^\\n]*--install)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.3333333333333333,
+            "passed": false,
+            "turns": 18,
+            "costUsd": 0.5851165,
+            "judgeCostUsd": 0.009863999999999998,
+            "durationSeconds": 127,
+            "startedAt": "2026-09-14T07:48:09.457Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-9sHZ8F/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "cli-not-hand-edit",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I can't run `go`, `alis`, or read your Go env in this session — Bash commands beyond directory listing were denied (\"don't ask\" mode), so this is a read-only diagnosis from the files.\n\n## What I found\n\nThere are two separate things standing between you and a resolving `internal.sm.marvel.build/protobuf`.\n\n**1. `go.mod` is still pinned to the pre-`define` version**\n\n`go.mod:10` and `go.sum:37-38` pin `internal.sm.marvel.build/protobuf v1.22.8`. Defining a proto publishes a *new* version of that Go stub module; nothing in your neuron bumps the pin automatically. Until you bump it, `pb.HelloRequest`/`HelloResponse` resolve from the old v1.22.8 stubs and anything new is \"undefined\".\n\n```\ngo get internal.sm.marvel.build/protobuf@latest\ngo mod tidy\n```\n\n**2. `Dockerfile:6` authenticates the wrong Artifact Registry region**\n\n```dockerfile\nRUN go run .../cmd/auth@v0.1.0 add-locations --locations=europe-west1\n```\nbut `Dockerfile:15` pulls the internal stubs from **africa-south1**:\n```\nGOPROXY=https://africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal,https://europe-west1-go.pkg.dev/alis-org-777777/openprotos-go,...\n```\n\n`add-locations` only writes a `.netrc` entry for the regions you list, so `africa-south1-go.pkg.dev` is hit unauthenticated → 403 → the module never resolves in the container build. It should be:\n\n```dockerfile\nRUN go run github.com/GoogleCloudPlatform/artifact-registry-go-tools/cmd/auth@v0.1.0 add-locations --locations=africa-south1,europe-west1\n```\n\n(`europe-west1` alone is enough for the openprotos repo, which is why only the internal one breaks.)\n\n## Locally\n\nThe same auth gap likely explains the failure on your machine. Run once:\n\n```\ngo run github.com/GoogleCloudPlatform/artifact-registry-go-tools/cmd/auth@v0.1.0 add-locations --locations=africa-south1,europe-west1\ngo run github.com/GoogleCloudPlatform/artifact-registry-go-tools/cmd/auth@v0.1.0 refresh\nexport GOPROXY=https://africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal,https://europe-west1-go.pkg.dev/alis-org-777777/openprotos-go,https://proxy.golang.org,direct\nexport GONOSUMDB=internal.sm.marvel.build,open.alis.services\n```\n\nNote: use `GONOSUMDB`, not `GOPRIVATE`. `GOPRIVATE` would also set `GONOPROXY`, which makes Go bypass the proxy and try to fetch these modules over VCS — they only exist behind the Artifact Registry proxy, so that fails.\n\nThen `go get ...@latest && go mod tidy`.\n\nI can't apply the Dockerfile edit — I have no write tools here. If you want me to make the change, re-run with edit permissions and I'll do it; if `go get @latest` still can't find the new version after the auth fix, paste the error and it's probably that the proto define hasn't published yet."
+              },
+              {
+                "name": "probe-at-most-once",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..1)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "uses-alis-packages",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in last_message",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 0.3333333333333333,
+        "passRateWithout": 0,
+        "delta": 0.6666666666666667
+      }
+    },
+    {
+      "name": "04-legacy-proto-migrate",
+      "dir": "evals/04-legacy-proto-migrate",
+      "source": "mixed",
+      "promptMarkdown": "migrate this service off the legacy product-level proto imports",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 15,
+      "graders": [
+        {
+          "name": "names-legacy-import",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "internal\\.sm\\.marvel\\.build/protobuf",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "no-discovery-narration",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "(running|run|probing|probe|checking|check(ed)?|used|using|invoked?)\\s+(the\\s+)?(skill\\s+)?(discovery|discover\\b|catalog|registry)|alis skills (suggest|search)|no (matching|relevant|suitable|tracing|migration|\\w+) skill (in|found|covers|available)|(couldn't|could not|didn't|did not|unable to) (find|check|search|reach) (a|any|the) (skill|registry|catalog)|not logged in|alis login|UNAUTHENTICATED|registry search",
+            "flags": "i",
+            "match": "not_contains"
+          }
+        },
+        {
+          "name": "no-unprompted-registry-search",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills search",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "per-neuron-via-cli",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user asked to migrate \"this service\" off legacy product-level proto imports. The working directory holds one Go neuron: `go.mod` (module `marvel.sm.helloworld.v1`) requires `internal.sm.marvel.build/protobuf`, and `helloworld.go` imports `internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1`. That is the legacy product-level package. The agent has no Write/Edit tools, so the deliverable is a precise plan.\n\nPass only if ALL hold:\n1. It identifies the concrete legacy import: names `internal.sm.marvel.build/protobuf` (in `go.mod` and/or `helloworld.go`) as what has to go.\n2. It states the target correctly: the per-neuron generated package for this neuron (an `alis.build/...` Go module for `marvel.sm.helloworld.v1`), with the import path and the `pb` alias updated in `helloworld.go`.\n3. Package plumbing goes through the `alis` CLI: `alis packages upgrade` / `add` / `install` (or Define with `--install`) as the way to bring in the new module and drop the old requirement. It does NOT propose `sed`/hand-editing `go.mod` pins as the mechanism, and does not tell the user to `go get` the private module by hand.\n4. It does NOT narrate skill discovery: no \"no skill found\", \"checked the catalog\", \"registry search\", \"not logged in\".\n\nFail if any is violated.",
+          "config": {
+            "criteria": "The user asked to migrate \"this service\" off legacy product-level proto imports. The working directory holds one Go neuron: `go.mod` (module `marvel.sm.helloworld.v1`) requires `internal.sm.marvel.build/protobuf`, and `helloworld.go` imports `internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1`. That is the legacy product-level package. The agent has no Write/Edit tools, so the deliverable is a precise plan.\n\nPass only if ALL hold:\n1. It identifies the concrete legacy import: names `internal.sm.marvel.build/protobuf` (in `go.mod` and/or `helloworld.go`) as what has to go.\n2. It states the target correctly: the per-neuron generated package for this neuron (an `alis.build/...` Go module for `marvel.sm.helloworld.v1`), with the import path and the `pb` alias updated in `helloworld.go`.\n3. Package plumbing goes through the `alis` CLI: `alis packages upgrade` / `add` / `install` (or Define with `--install`) as the way to bring in the new module and drop the old requirement. It does NOT propose `sed`/hand-editing `go.mod` pins as the mechanism, and does not tell the user to `go get` the private module by hand.\n4. It does NOT narrate skill discovery: no \"no skill found\", \"checked the catalog\", \"registry search\", \"not logged in\".\n\nFail if any is violated.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "probe-at-most-once",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills suggest",
+            "min": 0,
+            "max": 1,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "uses-alis-packages",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "alis (packages (upgrade|add|install)|define\\b[^\\n]*--install)",
+            "flags": "i",
+            "match": "contains"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.6666666666666666,
+            "passed": false,
+            "turns": 19,
+            "costUsd": 0.5177385,
+            "judgeCostUsd": 0.010451999999999996,
+            "durationSeconds": 95,
+            "startedAt": "2026-09-14T07:50:15.978Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-Jba31B/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "names-legacy-import",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched internal\\.sm\\.marvel\\.build/protobuf",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-discovery-narration",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern found (expected absent)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-unprompted-registry-search",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "per-neuron-via-cli",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I've mapped the migration fully, but I'm blocked on executing it. Here's where things stand.\n\n## What's on legacy imports\n\nThe neuron is Go module `marvel.sm.helloworld.v1`, and it depends on the **product-level** proto module `internal.sm.marvel.build/protobuf v1.22.8` — the bundle carrying every proto package for product `marvel/sm`. Four places reference it:\n\n| File | Line | Reference |\n|---|---|---|\n| `helloworld.go` | 6 | `pb \"internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1\"` |\n| `server.go` | 11 | same import |\n| `go.mod` | 10 | `internal.sm.marvel.build/protobuf v1.22.8` |\n| `go.sum` | 37-38 | pin + hashes |\n\nPlus two build-time settings in the `Dockerfile` that are tied to the legacy module:\n- Line 15: `GOPROXY` points at `africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal` — the product-level registry.\n- Line 16: `GONOSUMDB=internal.sm.marvel.build,open.alis.services`.\n\nOnly `HelloWorldService` / `HelloRequest` / `HelloResponse` are actually used, so the code change itself is a one-line import swap in two files.\n\n## The blocker\n\nEvery command that can do this correctly is denied in this session:\n\n- `alis packages install|list` → denied\n- `alis docs`, `alis packages --help` → denied\n- Reads outside `/private/tmp/e-Jba31B/home/cwd` (so I can't inspect `~/alis.build/marvel/define` or the module cache) → denied\n\n`alis skills suggest` is permitted and returned no match, so there's no registry skill to route this through either.\n\nI don't want to guess my way past that. Two things have to come from the CLI rather than from me:\n\n1. **The new module path.** Per-package modules replace one bundle with one module per proto package, and I can't read the define repo or query the registry to confirm the exact path for `marvel.sm.helloworld.v1`. A wrong guess compiles against nothing and fails at `go build -mod=readonly` in Cloud Build.\n2. **The pin and the registry host.** Per-package modules are published to a *different* Artifact Registry repo than `protobuf-go-internal`, so `Dockerfile:15` has to change in lockstep. Hand-editing `go.mod`/`go.sum` is exactly what `alis packages` exists to prevent — it owns the private-registry credentials and version resolution.\n\n## To unblock\n\nApproving `alis packages` (and ideally `alis docs`) would let me finish in one pass. The command I'd run first:\n\n```\nalis packages install marvel.sm.helloworld.v1 --json\n```\n\nThen I'd swap the two imports, drop the legacy `require` via the CLI, and update the Dockerfile's `GOPROXY`/`GONOSUMDB` to the registry the install reports.\n\nAlternatively, if you tell me the target module path and its registry host directly, I can do the source and Dockerfile edits now — but `go.mod`/`go.sum` would still need `alis packages` to regenerate rather than me editing pins by hand.\n\nI've made no changes to the repo."
+              },
+              {
+                "name": "probe-at-most-once",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 1x (expected 0..1)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "uses-alis-packages",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched alis (packages (upgrade|add|install)|define\\b[^\\n]*--install)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.6666666666666666,
+            "passed": false,
+            "turns": 19,
+            "costUsd": 0.5743410000000001,
+            "judgeCostUsd": 0.010074,
+            "durationSeconds": 121,
+            "startedAt": "2026-09-14T07:51:50.724Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-1YTWKS/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "names-legacy-import",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched internal\\.sm\\.marvel\\.build/protobuf",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-discovery-narration",
+                "passed": true,
+                "weight": 1,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-unprompted-registry-search",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "per-neuron-via-cli",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I mapped the full migration surface, but I'm blocked on two things before I can do it. Here's where it stands.\n\n## What needs to change\n\nEvery reference to the legacy product-level module `internal.sm.marvel.build/protobuf`:\n\n| File | Line | Current |\n|---|---|---|\n| `server.go` | 11 | `pb \"internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1\"` |\n| `helloworld.go` | 6 | `pb \"internal.sm.marvel.build/protobuf/marvel/sm/helloworld/v1\"` |\n| `go.mod` | 10 | `internal.sm.marvel.build/protobuf v1.22.8` |\n| `go.sum` | 37-38 | hashes for the above (needs regeneration, not hand-editing) |\n| `Dockerfile` | 15 | `GOPROXY=https://africa-south1-go.pkg.dev/marvel-sm-product-orr/protobuf-go-internal,...` — the product-level registry |\n| `Dockerfile` | 16 | `GONOSUMDB=internal.sm.marvel.build,open.alis.services` |\n\nNote `infra/cloudrun.tf:8` annotates the service as `marvel.sm.helloworld.v1.HelloWorldService`. That's the proto *package* name, not the Go module path, so it stays as-is unless the protos themselves were also re-packaged — worth confirming, but I'd expect no change there.\n\n## Blocker 1: I need the target module path\n\nThe `pb` alias means the code body (`pb.HelloRequest`, `pb.RegisterHelloWorldServiceServer`) doesn't change — only the import line, the `go.mod` require, and the registry config. But I don't want to invent the replacement path: a wrong guess yields a repo that fails `go build` at the proxy fetch with no obvious signal that the path itself was fabricated. Tell me:\n\n1. The neuron-level module path that replaces `internal.sm.marvel.build/protobuf` (and its version), e.g. whether it's `internal.sm.marvel.build/helloworld/...` or something else in your org's convention.\n2. The Artifact Registry repo backing it, for the `GOPROXY` line — the current one (`marvel-sm-product-orr/protobuf-go-internal`) is explicitly the product-level repo.\n\nFastest way to settle both: the `go.mod` of any neuron in your org that's already migrated.\n\n## Blocker 2: I can't write files in this session\n\nThis session is in don't-ask mode, and I have no edit tool available — `Read`, `ls`, `find`, `grep`, and `cat` work, but writes (`printf > file`, `sed -i`), `go`, `git`, and network calls are all denied. So even with the target path I can't apply the edits or run `go mod tidy` to regenerate `go.sum`, which this migration does require (the `h1:` hashes for the new module can't be written by hand).\n\nIf you grant write access plus `go`, I'll do the whole migration and verify it builds. Otherwise, give me the target path and I'll hand you the exact diff to apply yourself."
+              },
+              {
+                "name": "probe-at-most-once",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..1)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "uses-alis-packages",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in last_message",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.6666666666666666,
+        "passRate": 0,
+        "scoreWithout": 0.6666666666666666,
+        "passRateWithout": 0,
+        "delta": 0
+      }
+    },
+    {
+      "name": "05-wake-tracing",
+      "dir": "evals/05-wake-tracing",
+      "source": "mixed",
+      "promptMarkdown": "alis, set up tracing",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 15,
+      "graders": [
+        {
+          "name": "no-discovery-narration",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "(running|run|probing|probe|checking|check(ed)?|used|using|invoked?)\\s+(the\\s+)?(skill\\s+)?(discovery|discover\\b|catalog|registry)|alis skills (suggest|search)|no (matching|relevant|suitable|tracing|migration|\\w+) skill (in|found|covers|available)|(couldn't|could not|didn't|did not|unable to) (find|check|search|reach) (a|any|the) (skill|registry|catalog)|not logged in|alis login|UNAUTHENTICATED|registry search",
+            "flags": "i",
+            "match": "not_contains"
+          }
+        },
+        {
+          "name": "no-unprompted-registry-search",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills search",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "no-weak-match-load",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills load",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "tracing-plan-no-weak-load",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user addressed the assistant with the wake word \"alis,\" and asked to set up tracing. The working directory holds one Alis Build Go neuron: `server.go` builds a `grpc.NewServer` and serves it, `helloworld.go` implements the service, and `infra/` holds the Cloud Run Terraform.\n\nPass only if ALL hold:\n1. \"alis\" is treated as a form of address (the Alis Build assistant), not as a library, package, or unknown term to be looked up.\n2. The response gives a tracing plan grounded in this neuron: OpenTelemetry instrumentation of the gRPC server in `server.go` (e.g. `otelgrpc` interceptors / stats handler), a trace exporter to Google Cloud Trace, context propagation, and where the setup code goes. It may ask ONE clarifying question alongside the plan; a response that is mostly about what the assistant cannot do, or a checklist of several separate questions, fails.\n3. It does NOT claim to have loaded or be following a registry skill, and does not name a skill id as if it were loaded.\n4. No discovery narration: no \"no skill found\", \"checked the catalog\", \"registry search\", \"not logged in / alis login\".\n\nFail if any is violated.",
+          "config": {
+            "criteria": "The user addressed the assistant with the wake word \"alis,\" and asked to set up tracing. The working directory holds one Alis Build Go neuron: `server.go` builds a `grpc.NewServer` and serves it, `helloworld.go` implements the service, and `infra/` holds the Cloud Run Terraform.\n\nPass only if ALL hold:\n1. \"alis\" is treated as a form of address (the Alis Build assistant), not as a library, package, or unknown term to be looked up.\n2. The response gives a tracing plan grounded in this neuron: OpenTelemetry instrumentation of the gRPC server in `server.go` (e.g. `otelgrpc` interceptors / stats handler), a trace exporter to Google Cloud Trace, context propagation, and where the setup code goes. It may ask ONE clarifying question alongside the plan; a response that is mostly about what the assistant cannot do, or a checklist of several separate questions, fails.\n3. It does NOT claim to have loaded or be following a registry skill, and does not name a skill id as if it were loaded.\n4. No discovery narration: no \"no skill found\", \"checked the catalog\", \"registry search\", \"not logged in / alis login\".\n\nFail if any is violated.",
+            "focus": "last_message"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.25,
+            "passed": false,
+            "turns": 19,
+            "costUsd": 0.7706130000000001,
+            "judgeCostUsd": 0.025734000000000007,
+            "durationSeconds": 179,
+            "startedAt": "2026-09-14T07:53:51.547Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-5ACvnx/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-discovery-narration",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern found (expected absent)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-unprompted-registry-search",
+                "passed": false,
+                "weight": 1,
+                "explanation": "Bash called 1x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-weak-match-load",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "tracing-plan-no-weak-load",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "No tracing skill matched the local catalog, and I couldn't check the registry — the CLI isn't logged in. Then I hit a harder wall: **file-editing tools are disabled in this session and Bash is denied for everything except a few reads**, so I can't apply changes or run `alis packages`. Here's the complete change set to apply — it's ready to paste.\n\n## What this sets up\n\nOpenTelemetry → Cloud Trace for the `marvel.sm.helloworld.v1` neuron: automatic spans per gRPC call, trace context propagated from Google's load balancer and from calling neurons, and a flush on SIGTERM so Cloud Run doesn't drop the last spans.\n\n## 1. Dependencies\n\nDon't hand-edit `go.mod`. After `alis login`:\n\n```\nalis packages add go.opentelemetry.io/otel --json\nalis packages add go.opentelemetry.io/otel/sdk --json\nalis packages add go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc --json\nalis packages add go.opentelemetry.io/contrib/detectors/gcp --json\nalis packages add github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace --json\nalis packages add github.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator --json\n```\n\nI couldn't confirm `alis packages add` argument form against `alis packages --help` (denied), so check it if the first one errors.\n\n## 2. New file `tracing.go`\n\n```go\npackage main\n\nimport (\n\t\"context\"\n\t\"os\"\n\t\"strconv\"\n\n\ttexporter \"github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace\"\n\tgcppropagator \"github.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator\"\n\t\"go.alis.build/alog\"\n\t\"go.opentelemetry.io/contrib/detectors/gcp\"\n\t\"go.opentelemetry.io/otel\"\n\t\"go.opentelemetry.io/otel/propagation\"\n\t\"go.opentelemetry.io/otel/sdk/resource\"\n\tsdktrace \"go.opentelemetry.io/otel/sdk/trace\"\n\tsemconv \"go.opentelemetry.io/otel/semconv/v1.26.0\"\n\t\"go.opentelemetry.io/otel/trace\"\n)\n\n// tracerName identifies the instrumentation scope of spans this neuron creates\n// itself, as opposed to the ones otelgrpc creates for each incoming RPC.\nconst tracerName = \"marvel.sm.helloworld.v1\"\n\n// Tracer returns the tracer for spans created by this neuron's own code, e.g.\n// ctx, span := Tracer().Start(ctx, \"lookupUser\"); defer span.End()\nfunc Tracer() trace.Tracer {\n\treturn otel.Tracer(tracerName)\n}\n\n// initTracing configures the global tracer provider to export spans to Cloud\n// Trace in the neuron's own project. The returned function flushes buffered\n// spans and must be called before the process exits.\n//\n// Tracing is skipped when ALIS_OS_PROJECT is unset, which is the case for a\n// local run outside the alis environment. The global no-op tracer stays in\n// place there, so instrumented code keeps working without credentials.\nfunc initTracing(ctx context.Context) (func(context.Context) error, error) {\n\tnoop := func(context.Context) error { return nil }\n\n\tprojectID := os.Getenv(\"ALIS_OS_PROJECT\")\n\tif projectID == \"\" {\n\t\talog.Debug(ctx, \"ALIS_OS_PROJECT is not set, tracing is disabled\")\n\t\treturn noop, nil\n\t}\n\n\texporter, err := texporter.New(texporter.WithProjectID(projectID))\n\tif err != nil {\n\t\treturn noop, err\n\t}\n\n\t// Resource detection records which Cloud Run service, revision and region a\n\t// span came from. Off GCP the detector fails and returns a partial resource,\n\t// which is still worth keeping.\n\tres, err := resource.New(ctx,\n\t\tresource.WithDetectors(gcp.NewDetector()),\n\t\tresource.WithTelemetrySDK(),\n\t\tresource.WithAttributes(\n\t\t\tsemconv.ServiceNameKey.String(serviceName()),\n\t\t\tsemconv.ServiceVersionKey.String(os.Getenv(\"K_REVISION\")),\n\t\t),\n\t)\n\tif err != nil {\n\t\talog.Warnf(ctx, \"partial otel resource detection: %v\", err)\n\t}\n\tif res == nil {\n\t\tres = resource.Default()\n\t}\n\n\ttp := sdktrace.NewTracerProvider(\n\t\tsdktrace.WithBatcher(exporter),\n\t\tsdktrace.WithResource(res),\n\t\t// ParentBased keeps a trace whole: once an upstream caller decides to\n\t\t// sample, every downstream neuron in that trace samples too.\n\t\tsdktrace.WithSampler(sdktrace.ParentBased(sdktrace.TraceIDRatioBased(sampleRatio(ctx)))),\n\t)\n\totel.SetTracerProvider(tp)\n\n\t// Accept both the W3C traceparent header used between neurons and the\n\t// X-Cloud-Trace-Context header Google's load balancers add on ingress.\n\totel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(\n\t\tgcppropagator.CloudTraceOneWayPropagator{},\n\t\tpropagation.TraceContext{},\n\t\tpropagation.Baggage{},\n\t))\n\n\treturn tp.Shutdown, nil\n}\n\n// serviceName is the Cloud Run service name, which alis sets to the neuron name.\nfunc serviceName() string {\n\tif name := os.Getenv(\"K_SERVICE\"); name != \"\" {\n\t\treturn name\n\t}\n\treturn tracerName\n}\n\n// sampleRatio is the fraction of traces to record, from OTEL_TRACE_SAMPLE_RATIO.\n// Local runs record everything; on Cloud Run the default matches cloudrun.tf.\nfunc sampleRatio(ctx context.Context) float64 {\n\traw := os.Getenv(\"OTEL_TRACE_SAMPLE_RATIO\")\n\tif raw == \"\" {\n\t\tif os.Getenv(\"K_SERVICE\") == \"\" {\n\t\t\treturn 1.0\n\t\t}\n\t\treturn 0.1\n\t}\n\tratio, err := strconv.ParseFloat(raw, 64)\n\tif err != nil {\n\t\talog.Warnf(ctx, \"OTEL_TRACE_SAMPLE_RATIO %q is not a number, sampling all traces\", raw)\n\t\treturn 1.0\n\t}\n\treturn ratio\n}\n```\n\n## 3. `server.go` — replace `main` and the interceptor\n\nAdd imports `os/signal`, `syscall`, `time`, `go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc`, `go.opentelemetry.io/otel/codes`, `go.opentelemetry.io/otel/trace`. The `init()` block stays as-is.\n\n```go\nfunc main() {\n\tctx := context.Background()\n\n\tshutdownTracing, err := initTracing(ctx)\n\tif err != nil {\n\t\talog.Fatalf(ctx, \"initTracing: %v\", err)\n\t}\n\n\t// The stats handler is otelgrpc's current API; UnaryServerInterceptor is\n\t// deprecated. It coexists with the existing logging interceptor.\n\tgrpcServer := grpc.NewServer(\n\t\tgrpc.StatsHandler(otelgrpc.NewServerHandler()),\n\t\tgrpc.UnaryInterceptor(unaryInterceptor),\n\t)\n\tpb.RegisterHelloWorldServiceServer(grpcServer, HelloWorldServer)\n\n\tport := \":8080\"\n\tlistener, err := net.Listen(\"tcp\", port)\n\tif err != nil {\n\t\talog.Fatalf(ctx, \"net.Listen: %v\", err.Error())\n\t}\n\n\t// Cloud Run sends SIGTERM before tearing an instance down. Drain in-flight\n\t// RPCs so their spans finish, then flush what the batcher is holding.\n\tstop := make(chan os.Signal, 1)\n\tsignal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)\n\tgo func() {\n\t\t<-stop\n\t\talog.Notice(ctx, \"shutting down\")\n\t\tgrpcServer.GracefulStop()\n\t}()\n\n\talog.Notice(ctx, \"starting server on \"+port)\n\tif err = grpcServer.Serve(listener); err != nil {\n\t\talog.Fatal(ctx, err.Error())\n\t}\n\n\tflushCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)\n\tdefer cancel()\n\tif err := shutdownTracing(flushCtx); err != nil {\n\t\talog.Warnf(ctx, \"flushing traces: %v\", err)\n\t}\n}\n\n// Unary interceptor that logs failures and marks them on the request's span.\nfunc unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {\n\n\t// Call the handler\n\th, err := handler(ctx, req)\n\tif err != nil {\n\t\talog.Debugf(ctx, \"%s\", req)\n\t\talog.Warn(ctx, err.Error())\n\n\t\tspan := trace.SpanFromContext(ctx)\n\t\tspan.RecordError(err)\n\t\tspan.SetStatus(codes.Error, err.Error())\n\t}\n\treturn h, err\n}\n```\n\n## 4. `infra/cloudrun.tf` — add one env var\n\nInside the existing `containers` block, alongside the other `env` entries:\n\n```hcl\n      env {\n        name  = \"OTEL_TRACE_SAMPLE_RATIO\"\n        value = \"0.1\"\n      }\n```\n\n## Two things to know\n\n**`cpu_idle = true` throttles the exporter.** Your Cloud Run config only allocates CPU during requests, so the batch span processor's background flush can stall between requests and spans arrive late (or at shutdown). On a low-traffic neuron that's usually tolerable; if traces look missing, either set `cpu_idle = false` or shorten the batch timeout with `sdktrace.WithBatchTimeout`. I left it alone since it changes your cost profile.\n\n**IAM and API.** The `alis-build@` service account needs `roles/cloudtrace.agent` and the Cloud Trace API enabled on the neuron project. Alis may already grant this at the landing-zone level — I couldn't check, and I'd rather not add a `google_project_iam_member` that fights alis-managed IAM. If the first deploy logs permission errors from the exporter, that's the cause.\n\nThen: commit, push, `alis build marvel.sm.helloworld.v1 --json --deploy -e <env>`, and call `SayHello` from the playground — the trace shows up in Cloud Trace under the neuron's service name.\n\nIf you re-enable file writes I'll apply all of this directly and run the build."
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.75,
+            "passed": false,
+            "turns": 24,
+            "costUsd": 0.674312,
+            "judgeCostUsd": 0.023244,
+            "durationSeconds": 137,
+            "startedAt": "2026-09-14T07:56:50.448Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-TMdDOA/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-discovery-narration",
+                "passed": true,
+                "weight": 1,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-unprompted-registry-search",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-weak-match-load",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "tracing-plan-no-weak-load",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I dug through the repo (Go gRPC neuron on Cloud Run, `alog` for logging, Terraform in `infra/`). Two things up front:\n\n**I can't apply the changes in this session.** There's no Edit/Write tool available to me here, and every Bash write (`touch`, `printf >`, redirects) is denied under the current permission mode. Network is blocked too, so I couldn't check `pkg.go.dev` or the module cache to confirm API signatures. So below is the full change set for you to paste in — everything is written and ready, nothing is stubbed.\n\n**One thing to verify first:** your `go.sum` already pins `go.opentelemetry.io/otel`, `otel/sdk`, `otel/trace` and `otel/sdk/metric` — pulled in transitively by `go.alis.build/alog v0.0.19`. That means alog likely ships its own OTel setup helper. Check `pkg.go.dev/go.alis.build/alog` before adding the hand-rolled provider below; if it exposes a setup function, use that instead so you don't end up with two `TracerProvider`s and duplicate spans.\n\n---\n\n## 1. New file: `tracing.go`\n\n```go\npackage main\n\nimport (\n\t\"context\"\n\t\"os\"\n\t\"strconv\"\n\n\ttexporter \"github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace\"\n\tgcppropagator \"github.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator\"\n\t\"go.opentelemetry.io/contrib/detectors/gcp\"\n\t\"go.opentelemetry.io/otel\"\n\t\"go.opentelemetry.io/otel/propagation\"\n\t\"go.opentelemetry.io/otel/sdk/resource\"\n\tsdktrace \"go.opentelemetry.io/otel/sdk/trace\"\n\tsemconv \"go.opentelemetry.io/otel/semconv/v1.26.0\"\n)\n\n// tracer is the package-level tracer used by the service handlers.\nvar tracer = otel.Tracer(\"marvel.sm.helloworld.v1\")\n\n// setupTracing configures the global TracerProvider to export to Google Cloud\n// Trace. It returns a shutdown func that flushes any pending spans.\n//\n// Outside Cloud Run (local dev) tracing is a no-op so we don't need creds.\nfunc setupTracing(ctx context.Context) (func(context.Context) error, error) {\n\tnoop := func(context.Context) error { return nil }\n\tif os.Getenv(\"K_SERVICE\") == \"\" {\n\t\treturn noop, nil\n\t}\n\n\texporter, err := texporter.New(\n\t\ttexporter.WithProjectID(os.Getenv(\"ALIS_OS_PROJECT\")),\n\t)\n\tif err != nil {\n\t\treturn noop, err\n\t}\n\n\tres, err := resource.New(ctx,\n\t\tresource.WithDetectors(gcp.NewDetector()),\n\t\tresource.WithTelemetrySDK(),\n\t\tresource.WithAttributes(\n\t\t\tsemconv.ServiceName(os.Getenv(\"K_SERVICE\")),\n\t\t\tsemconv.ServiceVersion(os.Getenv(\"K_REVISION\")),\n\t\t),\n\t)\n\tif err != nil {\n\t\treturn noop, err\n\t}\n\n\ttp := sdktrace.NewTracerProvider(\n\t\tsdktrace.WithBatcher(exporter),\n\t\tsdktrace.WithResource(res),\n\t\tsdktrace.WithSampler(sdktrace.ParentBased(\n\t\t\tsdktrace.TraceIDRatioBased(sampleRatio()),\n\t\t)),\n\t)\n\totel.SetTracerProvider(tp)\n\n\t// TraceContext handles the W3C `traceparent` header; the Cloud Trace\n\t// one-way propagator reads Google's `X-Cloud-Trace-Context` on the way in\n\t// without writing it back out.\n\totel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(\n\t\tpropagation.TraceContext{},\n\t\tpropagation.Baggage{},\n\t\tgcppropagator.CloudTraceOneWayPropagator{},\n\t))\n\n\ttracer = tp.Tracer(\"marvel.sm.helloworld.v1\")\n\treturn tp.Shutdown, nil\n}\n\n// sampleRatio reads OTEL_TRACE_SAMPLE_RATIO, defaulting to 10% of root traces.\nfunc sampleRatio() float64 {\n\tv := os.Getenv(\"OTEL_TRACE_SAMPLE_RATIO\")\n\tif v == \"\" {\n\t\treturn 0.1\n\t}\n\tratio, err := strconv.ParseFloat(v, 64)\n\tif err != nil || ratio < 0 || ratio > 1 {\n\t\treturn 0.1\n\t}\n\treturn ratio\n}\n```\n\n## 2. `server.go` — instrument the gRPC server and flush on shutdown\n\nAdd imports `os/signal`, `syscall`, `time`, and `go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc`, then replace `main`:\n\n```go\nfunc main() {\n\tctx := context.Background()\n\n\tshutdownTracing, err := setupTracing(ctx)\n\tif err != nil {\n\t\t// Tracing is best-effort: log and keep serving.\n\t\talog.Warnf(ctx, \"setup tracing: %v\", err)\n\t}\n\n\t// otelgrpc's stats handler starts a server span per RPC and extracts any\n\t// incoming trace context, so this must be registered on the server itself.\n\tgrpcServer := grpc.NewServer(\n\t\tgrpc.StatsHandler(otelgrpc.NewServerHandler()),\n\t\tgrpc.UnaryInterceptor(unaryInterceptor),\n\t)\n\tpb.RegisterHelloWorldServiceServer(grpcServer, HelloWorldServer)\n\n\tport := \":8080\"\n\talog.Notice(ctx, \"starting server on \"+port)\n\tlistener, err := net.Listen(\"tcp\", port)\n\tif err != nil {\n\t\talog.Fatalf(ctx, \"net.Listen: %v\", err.Error())\n\t}\n\n\t// Cloud Run sends SIGTERM before tearing the instance down; drain in-flight\n\t// RPCs and flush buffered spans before exiting.\n\tstop := make(chan os.Signal, 1)\n\tsignal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)\n\tgo func() {\n\t\t<-stop\n\t\tgrpcServer.GracefulStop()\n\t}()\n\n\tif err = grpcServer.Serve(listener); err != nil {\n\t\talog.Fatal(ctx, err.Error())\n\t}\n\n\tflushCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)\n\tdefer cancel()\n\tif err := shutdownTracing(flushCtx); err != nil {\n\t\talog.Warnf(ctx, \"flush traces: %v\", err)\n\t}\n}\n```\n\nAlso record errors on the span in your existing interceptor, so failed RPCs show up red in Cloud Trace:\n\n```go\nfunc unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {\n\th, err := handler(ctx, req)\n\tif err != nil {\n\t\tspan := trace.SpanFromContext(ctx)\n\t\tspan.RecordError(err)\n\t\tspan.SetStatus(codes.Error, err.Error())\n\n\t\talog.Debugf(ctx, \"%s\", req)\n\t\talog.Warn(ctx, err.Error())\n\t}\n\treturn h, err\n}\n```\n(imports: `go.opentelemetry.io/otel/codes`, `go.opentelemetry.io/otel/trace`)\n\n## 3. `helloworld.go` — child spans in handlers\n\n`otelgrpc` gives you one span per RPC for free. Add child spans only where there's real work worth timing (Spanner calls, downstream neurons). The pattern:\n\n```go\nfunc (s *HelloWorldServerType) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {\n\tctx, span := tracer.Start(ctx, \"SayHello\")\n\tdefer span.End()\n\tspan.SetAttributes(attribute.String(\"hello.name\", req.Name))\n\n\treturn &pb.HelloResponse{\n\t\tMessage: \"Hello, \" + req.Name + \"!\",\n\t}, nil\n}\n```\n\n## 4. `go.mod` — new direct dependencies\n\n```\ngithub.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace\ngithub.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator\ngo.opentelemetry.io/contrib/detectors/gcp\ngo.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc\ngo.opentelemetry.io/otel\ngo.opentelemetry.io/otel/sdk\ngo.opentelemetry.io/otel/trace\n```\n\nRun `go mod tidy` — the `otel` core packages are already in `go.sum` at v1.36.0 via alog, so pick contrib versions compatible with that line.\n\n## 5. `infra/cloudrun.tf` — sampling knob\n\nAdd alongside the existing env blocks:\n\n```hcl\n      env {\n        name  = \"OTEL_TRACE_SAMPLE_RATIO\"\n        value = \"0.1\"\n      }\n```\n\n**Permissions:** the runtime SA `alis-build@${var.ALIS_OS_PROJECT}` needs `roles/cloudtrace.agent` to write spans. On alis.build that SA is usually broadly privileged already, so I'd check the existing IAM binding before adding one — I couldn't verify it from here.\n\n---\n\nIf you re-run this with write permissions (or in a normal permission mode), I'll apply all of it and run `go build` to confirm it compiles."
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.25,
+        "passRate": 0,
+        "scoreWithout": 0.75,
+        "passRateWithout": 0,
+        "delta": -0.5
+      }
+    },
+    {
+      "name": "06-ask-for-skill",
+      "dir": "evals/06-ask-for-skill",
+      "source": "prose",
+      "promptMarkdown": "is there a skill for creating a landing zone?",
+      "runsPerCase": 3,
+      "timeoutSeconds": 180,
+      "maxTurns": 8,
+      "graders": [
+        {
+          "name": "honest-answer",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user explicitly asked whether an Alis Build skill exists for creating a landing zone (a platform concept: an organisation's cloud foundation, not a website landing page).\n\nPass only if ALL hold:\n1. The answer is direct: either it names a real, matching skill by id and offers to load it, or it says plainly that nothing fits and offers to file a request with `alis skills request`.\n2. It does NOT present a landing-*page* skill (e.g. `landing-page-playbook`) or any unrelated skill as a match for a landing *zone*.\n3. It does not invent a skill id, and does not dump a long list of the whole catalog.\n4. It does not deflect with a generic \"I can't search skills\" or answer as if \"landing zone\" meant a marketing page.\n\nFail if any is violated.",
+          "config": {
+            "criteria": "The user explicitly asked whether an Alis Build skill exists for creating a landing zone (a platform concept: an organisation's cloud foundation, not a website landing page).\n\nPass only if ALL hold:\n1. The answer is direct: either it names a real, matching skill by id and offers to load it, or it says plainly that nothing fits and offers to file a request with `alis skills request`.\n2. It does NOT present a landing-*page* skill (e.g. `landing-page-playbook`) or any unrelated skill as a match for a landing *zone*.\n3. It does not invent a skill id, and does not dump a long list of the whole catalog.\n4. It does not deflect with a generic \"I can't search skills\" or answer as if \"landing zone\" meant a marketing page.\n\nFail if any is violated.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "offers-request-or-load",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "alis skills (request|load)",
+            "flags": "i",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "search-at-most-once",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills search",
+            "min": 0,
+            "max": 1,
+            "arm": "both"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 5,
+            "costUsd": 0.16291950000000002,
+            "judgeCostUsd": 0.0034320000000000184,
+            "durationSeconds": 19,
+            "startedAt": "2026-09-14T07:59:07.444Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-nTuO3P/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "honest-answer",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "No — nothing matched locally, and the registry search couldn't run.\n\n- The local catalog probe for \"create a landing zone\" returned no suggestions.\n- The registry search failed with `UNAUTHENTICATED` — you're not logged in. Run `alis login` and I can retry the registry search, since a published team skill wouldn't show up in the local probe.\n\nIn the meantime I can either help create the landing zone directly with the CLI, or file a request for one:\n\n```\nalis skills request --name \"create-landing-zone\" --description \"...\"\n```\n\nWant me to do either?"
+              },
+              {
+                "name": "offers-request-or-load",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched alis skills (request|load)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "search-at-most-once",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 1x (expected 0..1)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.3333333333333333,
+            "passed": false,
+            "turns": 3,
+            "costUsd": 0.131061,
+            "judgeCostUsd": 0.004434000000000021,
+            "durationSeconds": 16,
+            "startedAt": "2026-09-14T07:59:26.095Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-vPfk86/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "honest-answer",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "No — there's no landing zone skill available in this session. The skills I have access to are all Claude Code tooling/authoring ones (`dataviz`, `update-config`, `keybindings-help`, `code-review`, `simplify`, `fewer-permission-prompts`, `loop`, `schedule`, `claude-api`, `workflow-authoring`, `run`, `init`, `security-review`) — nothing for cloud landing zones or infrastructure bootstrapping.\n\nI tried to scan the plugin/skill directories for anything unlisted, but both Bash calls were denied by the permission prompt, so the built-in listing is all I can confirm.\n\nA couple of directions if you want to go further:\n- Tell me which cloud and framework you mean (GCP with Terraform/`gcloud`, AWS Control Tower, Azure CALZ) and I can build the landing zone directly.\n- If this is something you'll do repeatedly, I can author a project skill for it under `.claude/skills/` so it's invokable as `/landing-zone` next time."
+              },
+              {
+                "name": "offers-request-or-load",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in last_message",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "search-at-most-once",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..1)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 0.3333333333333333,
+        "passRateWithout": 0,
+        "delta": 0.6666666666666667
+      }
+    },
+    {
+      "name": "07-neg-unit-test",
+      "dir": "evals/07-neg-unit-test",
+      "source": "prose",
+      "promptMarkdown": "write a unit test for parseDate\n\n```go\npackage dates\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\n// parseDate accepts YYYY-MM-DD and returns the date at midnight UTC.\nfunc parseDate(s string) (time.Time, error) {\n\tt, err := time.Parse(\"2006-01-02\", s)\n\tif err != nil {\n\t\treturn time.Time{}, fmt.Errorf(\"parseDate %q: %w\", s, err)\n\t}\n\treturn t.UTC(), nil\n}\n```",
+      "runsPerCase": 3,
+      "timeoutSeconds": 120,
+      "maxTurns": 5,
+      "graders": [
+        {
+          "name": "discover-not-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "discover",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "has-test-func",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "func TestParseDate\\w*\\(t \\*testing\\.T\\)",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "no-alis-skills-call",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "table-driven-no-alis",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user pasted a small Go function `parseDate(s string) (time.Time, error)` and asked for a unit test.\n\nPass only if ALL hold:\n1. The response contains a Go test in package `dates` (or `dates_test` with a note) using the standard `testing` package, with a function named `TestParseDate` or a close variant.\n2. It covers at least one valid date (checking year/month/day and that the result is UTC) and at least one invalid input that must return an error. Table-driven style is preferred but a few explicit cases is acceptable.\n3. The test calls `parseDate` with the given signature (string in, `time.Time, error` out); it does not rename it or change the contract.\n4. The response contains NO mention of Alis Build, skills, skill discovery, catalogs, or registries. It is a plain coding answer.\n\nFail if any is violated.",
+          "config": {
+            "criteria": "The user pasted a small Go function `parseDate(s string) (time.Time, error)` and asked for a unit test.\n\nPass only if ALL hold:\n1. The response contains a Go test in package `dates` (or `dates_test` with a note) using the standard `testing` package, with a function named `TestParseDate` or a close variant.\n2. It covers at least one valid date (checking year/month/day and that the result is UTC) and at least one invalid input that must return an error. Table-driven style is preferred but a few explicit cases is acceptable.\n3. The test calls `parseDate` with the given signature (string in, `time.Time, error` out); it does not rename it or change the contract.\n4. The response contains NO mention of Alis Build, skills, skill discovery, catalogs, or registries. It is a plain coding answer.\n\nFail if any is violated.",
+            "focus": "last_message"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.75,
+            "passed": false,
+            "turns": 4,
+            "costUsd": 0.240879,
+            "judgeCostUsd": 0.012510000000000021,
+            "durationSeconds": 44,
+            "startedAt": "2026-09-14T07:59:42.206Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-VkqtaY/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "discover-not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "has-test-func",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched func TestParseDate\\w*\\(t \\*testing\\.T\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-alis-skills-call",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "table-driven-no-alis",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "Bash is denied in this session and I have no file-write tool available, so I couldn't create the file or run `go test`. Here's the test — save it as `dates_test.go` next to the source, in `package dates`:\n\n```go\npackage dates\n\nimport (\n\t\"errors\"\n\t\"testing\"\n\t\"time\"\n)\n\nfunc TestParseDate(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   string\n\t\twant time.Time\n\t}{\n\t\t{\"basic\", \"2024-01-02\", time.Date(2024, time.January, 2, 0, 0, 0, 0, time.UTC)},\n\t\t{\"leap day\", \"2024-02-29\", time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC)},\n\t\t{\"first day of epoch year\", \"1970-01-01\", time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)},\n\t\t{\"end of year\", \"2023-12-31\", time.Date(2023, time.December, 31, 0, 0, 0, 0, time.UTC)},\n\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tgot, err := parseDate(tt.in)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"parseDate(%q) returned unexpected error: %v\", tt.in, err)\n\t\t\t}\n\t\t\tif !got.Equal(tt.want) {\n\t\t\t\tt.Errorf(\"parseDate(%q) = %v, want %v\", tt.in, got, tt.want)\n\t\t\t}\n\t\t\tif got.Location() != time.UTC {\n\t\t\t\tt.Errorf(\"parseDate(%q) location = %v, want UTC\", tt.in, got.Location())\n\t\t\t}\n\t\t\t// Guard the \"midnight\" half of the contract independently of the instant.\n\t\t\tif h, m, s := got.Clock(); h != 0 || m != 0 || s != 0 || got.Nanosecond() != 0 {\n\t\t\t\tt.Errorf(\"parseDate(%q) clock = %02d:%02d:%02d.%09d, want midnight\",\n\t\t\t\t\ttt.in, h, m, s, got.Nanosecond())\n\t\t\t}\n\t\t})\n\t}\n}\n\nfunc TestParseDateErrors(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   string\n\t}{\n\t\t{\"empty\", \"\"},\n\t\t{\"slashes\", \"2024/01/02\"},\n\t\t{\"US order\", \"01-02-2024\"},\n\t\t{\"unpadded month and day\", \"2024-1-2\"},\n\t\t{\"month out of range\", \"2024-13-01\"},\n\t\t{\"day out of range\", \"2024-01-32\"},\n\t\t{\"non-leap year Feb 29\", \"2023-02-29\"},\n\t\t{\"trailing time component\", \"2024-01-02T00:00:00Z\"},\n\t\t{\"trailing whitespace\", \"2024-01-02 \"},\n\t\t{\"not a date\", \"hello\"},\n\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tgot, err := parseDate(tt.in)\n\t\t\tif err == nil {\n\t\t\t\tt.Fatalf(\"parseDate(%q) = %v, want error\", tt.in, got)\n\t\t\t}\n\t\t\tif !got.IsZero() {\n\t\t\t\tt.Errorf(\"parseDate(%q) returned %v on error, want zero time\", tt.in, got)\n\t\t\t}\n\t\t})\n\t}\n}\n\nfunc TestParseDateErrorWrapsParseError(t *testing.T) {\n\tconst in = \"not-a-date\"\n\n\t_, err := parseDate(in)\n\tif err == nil {\n\t\tt.Fatalf(\"parseDate(%q) = nil error, want error\", in)\n\t}\n\n\tvar pe *time.ParseError\n\tif !errors.As(err, &pe) {\n\t\tt.Errorf(\"parseDate(%q) error does not wrap *time.ParseError: %v\", in, err)\n\t}\n\tif want := `parseDate \"` + in + `\"`; !strings.Contains(err.Error(), want) {\n\t\tt.Errorf(\"parseDate(%q) error = %q, want it to contain %q\", in, err.Error(), want)\n\t}\n}\n```\n\nThat last function needs `\"strings\"` added to the import block.\n\nA few notes on what the tests pin down:\n\n- **`.UTC()` is a no-op here.** `time.Parse` with a zone-less layout already returns UTC, so the location assertion is really a regression guard — it would catch someone switching to `time.ParseInLocation` with `time.Local`.\n- **Midnight is asserted separately from the instant.** `got.Equal(want)` compares instants; the `Clock()` check documents the \"at midnight\" part of the doc comment on its own.\n- **Error assertions avoid stdlib error strings.** They check the `parseDate %q:` prefix the function itself adds and that `%w` wrapping survives via `errors.As` — so a Go version tweaking `time.ParseError`'s wording won't break the suite.\n- **Zero value on error** is asserted because the function explicitly returns `time.Time{}` rather than the partially-parsed `t`.\n\nI'd run `go test ./...` in the package directory to confirm; I wasn't able to execute it."
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 4,
+            "costUsd": 0.35338899999999995,
+            "judgeCostUsd": 0.019061999999999996,
+            "durationSeconds": 75,
+            "startedAt": "2026-09-14T08:00:26.698Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-UdMRm2/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "discover-not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "has-test-func",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched func TestParseDate\\w*\\(t \\*testing\\.T\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-alis-skills-call",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "table-driven-no-alis",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "Write is disabled too, so I can't put this on disk — here it is to paste into `dates/dates_test.go` (same package, since `parseDate` is unexported):\n\n```go\npackage dates\n\nimport (\n\t\"errors\"\n\t\"strings\"\n\t\"testing\"\n\t\"time\"\n)\n\nfunc TestParseDate(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   string\n\t\twant time.Time\n\t}{\n\t\t{\"typical date\", \"2023-03-14\", time.Date(2023, time.March, 14, 0, 0, 0, 0, time.UTC)},\n\t\t{\"first of month\", \"2023-01-01\", time.Date(2023, time.January, 1, 0, 0, 0, 0, time.UTC)},\n\t\t{\"last day of year\", \"2023-12-31\", time.Date(2023, time.December, 31, 0, 0, 0, 0, time.UTC)},\n\t\t{\"leap day\", \"2024-02-29\", time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC)},\n\t\t{\"unix epoch\", \"1970-01-01\", time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)},\n\t\t{\"pre-epoch\", \"1900-06-15\", time.Date(1900, time.June, 15, 0, 0, 0, 0, time.UTC)},\n\t\t{\"far future\", \"9999-12-31\", time.Date(9999, time.December, 31, 0, 0, 0, 0, time.UTC)},\n\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tgot, err := parseDate(tt.in)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"parseDate(%q) returned unexpected error: %v\", tt.in, err)\n\t\t\t}\n\t\t\tif !got.Equal(tt.want) {\n\t\t\t\tt.Errorf(\"parseDate(%q) = %v, want %v\", tt.in, got, tt.want)\n\t\t\t}\n\t\t\t// Equal compares instants, so assert the location separately:\n\t\t\t// callers rely on the result being wall-clock midnight in UTC.\n\t\t\tif loc := got.Location(); loc != time.UTC {\n\t\t\t\tt.Errorf(\"parseDate(%q) location = %v, want UTC\", tt.in, loc)\n\t\t\t}\n\t\t\tif h, m, s := got.Clock(); h != 0 || m != 0 || s != 0 || got.Nanosecond() != 0 {\n\t\t\t\tt.Errorf(\"parseDate(%q) clock = %02d:%02d:%02d.%09d, want midnight\", tt.in, h, m, s, got.Nanosecond())\n\t\t\t}\n\t\t})\n\t}\n}\n\nfunc TestParseDateErrors(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   string\n\t}{\n\t\t{\"empty string\", \"\"},\n\t\t{\"blank string\", \"   \"},\n\t\t{\"not a date\", \"hello\"},\n\t\t{\"slashes instead of dashes\", \"2023/03/14\"},\n\t\t{\"US ordering\", \"03-14-2023\"},\n\t\t{\"two-digit year\", \"23-03-14\"},\n\t\t{\"unpadded month\", \"2023-3-14\"},\n\t\t{\"unpadded day\", \"2023-03-4\"},\n\t\t{\"month out of range\", \"2023-13-01\"},\n\t\t{\"zero month\", \"2023-00-10\"},\n\t\t{\"day out of range\", \"2023-02-30\"},\n\t\t{\"zero day\", \"2023-03-00\"},\n\t\t{\"non-leap Feb 29\", \"2023-02-29\"},\n\t\t{\"missing day component\", \"2023-03\"},\n\t\t{\"trailing time\", \"2023-03-14T00:00:00Z\"},\n\t\t{\"trailing whitespace\", \"2023-03-14 \"},\n\t\t{\"leading whitespace\", \" 2023-03-14\"},\n\t\t{\"trailing garbage\", \"2023-03-14xyz\"},\n\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tgot, err := parseDate(tt.in)\n\t\t\tif err == nil {\n\t\t\t\tt.Fatalf(\"parseDate(%q) = %v, want error\", tt.in, got)\n\t\t\t}\n\t\t\tif !got.IsZero() {\n\t\t\t\tt.Errorf(\"parseDate(%q) returned %v on error, want zero time\", tt.in, got)\n\t\t\t}\n\t\t\tif !strings.Contains(err.Error(), \"parseDate\") {\n\t\t\t\tt.Errorf(\"parseDate(%q) error %q does not name the function\", tt.in, err)\n\t\t\t}\n\t\t\tif !strings.Contains(err.Error(), tt.in) {\n\t\t\t\tt.Errorf(\"parseDate(%q) error %q does not include the input\", tt.in, err)\n\t\t\t}\n\t\t})\n\t}\n}\n\n// The error must stay unwrappable so callers can inspect the parse failure.\nfunc TestParseDateErrorWrapsParseError(t *testing.T) {\n\t_, err := parseDate(\"nope\")\n\tif err == nil {\n\t\tt.Fatal(`parseDate(\"nope\") = nil error, want error`)\n\t}\n\tvar parseErr *time.ParseError\n\tif !errors.As(err, &parseErr) {\n\t\tt.Fatalf(\"parseDate error %v (%T) does not wrap *time.ParseError\", err, err)\n\t}\n\tif parseErr.Value != \"nope\" {\n\t\tt.Errorf(\"wrapped ParseError.Value = %q, want %q\", parseErr.Value, \"nope\")\n\t}\n}\n\n// parseDate normalizes to UTC, so the process time zone must not affect results.\nfunc TestParseDateIgnoresLocalTimeZone(t *testing.T) {\n\torig := time.Local\n\tt.Cleanup(func() { time.Local = orig })\n\n\tfor _, name := range []string{\"UTC\", \"America/Los_Angeles\", \"Asia/Tokyo\", \"Pacific/Kiritimati\"} {\n\t\tloc, err := time.LoadLocation(name)\n\t\tif err != nil {\n\t\t\tt.Skipf(\"time zone database unavailable: %v\", err)\n\t\t}\n\t\ttime.Local = loc\n\n\t\tgot, err := parseDate(\"2023-03-14\")\n\t\tif err != nil {\n\t\t\tt.Fatalf(\"parseDate with Local=%s returned error: %v\", name, err)\n\t\t}\n\t\twant := time.Date(2023, time.March, 14, 0, 0, 0, 0, time.UTC)\n\t\tif !got.Equal(want) || got.Location() != time.UTC {\n\t\t\tt.Errorf(\"parseDate with Local=%s = %v (%v), want %v (UTC)\", name, got, got.Location(), want)\n\t\t}\n\t}\n}\n\nfunc TestParseDateRoundTrip(t *testing.T) {\n\tconst layout = \"2006-01-02\"\n\tfor d := time.Date(2023, time.January, 1, 0, 0, 0, 0, time.UTC); d.Year() == 2023; d = d.AddDate(0, 0, 1) {\n\t\ts := d.Format(layout)\n\t\tgot, err := parseDate(s)\n\t\tif err != nil {\n\t\t\tt.Fatalf(\"parseDate(%q) returned error: %v\", s, err)\n\t\t}\n\t\tif !got.Equal(d) {\n\t\t\tt.Fatalf(\"parseDate(%q) = %v, want %v\", s, got, d)\n\t\t}\n\t\tif out := got.Format(layout); out != s {\n\t\t\tt.Fatalf(\"parseDate(%q).Format(layout) = %q, want %q\", s, out, s)\n\t\t}\n\t}\n}\n```\n\nTwo notes on coverage decisions:\n\n- `got.Equal(want)` alone would pass for a correct instant in the wrong location, so the location and clock-field checks are separate assertions — that's what actually pins down \"midnight UTC\".\n- The error cases assert behavior (non-nil error, zero time, input echoed, `*time.ParseError` recoverable via `errors.As`) rather than exact message text, so they survive Go changing its parse-error wording.\n\nCaveat I couldn't rule out by running: the expected failures for `\"2023-3-14\"`, `\"2023-02-30\"`, and `\"2023-02-29\"` rest on `time.Parse` requiring zero-padded fields for the `01`/`02` layout elements and validating day-of-month. I'm confident that's current behavior, but `go test ./dates` is the real check.\n\nSeparately: `t.UTC()` in `parseDate` is a no-op — `time.Parse` with a zone-less layout already returns a UTC time. Harmless, and `TestParseDateIgnoresLocalTimeZone` passes either way."
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.75,
+        "passRate": 0,
+        "scoreWithout": 1,
+        "passRateWithout": 1,
+        "delta": -0.25
+      }
+    },
+    {
+      "name": "08-neg-squash-commits",
+      "dir": "evals/08-neg-squash-commits",
+      "source": "prose",
+      "promptMarkdown": "squash the last three commits into one",
+      "runsPerCase": 3,
+      "timeoutSeconds": 120,
+      "maxTurns": 5,
+      "graders": [
+        {
+          "name": "correct-and-plain",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user asked to squash the last three commits into one. No repository is present, so the assistant cannot run it; a correct instruction is the deliverable.\n\nPass only if ALL hold:\n1. It gives a correct method: `git rebase -i HEAD~3` (marking the later two as `squash`/`fixup`), or the non-interactive `git reset --soft HEAD~3 && git commit`. Either alone is enough.\n2. It warns that this rewrites history, i.e. it cautions about commits that are already pushed or shared. Mentioning `--force-with-lease` is a plus, not required.\n3. It does not claim to have performed the squash.\n4. The response contains NO mention of Alis Build, skills, skill discovery, catalogs, or registries.\n\nFail if any is violated.",
+          "config": {
+            "criteria": "The user asked to squash the last three commits into one. No repository is present, so the assistant cannot run it; a correct instruction is the deliverable.\n\nPass only if ALL hold:\n1. It gives a correct method: `git rebase -i HEAD~3` (marking the later two as `squash`/`fixup`), or the non-interactive `git reset --soft HEAD~3 && git commit`. Either alone is enough.\n2. It warns that this rewrites history, i.e. it cautions about commits that are already pushed or shared. Mentioning `--force-with-lease` is a plus, not required.\n3. It does not claim to have performed the squash.\n4. The response contains NO mention of Alis Build, skills, skill discovery, catalogs, or registries.\n\nFail if any is violated.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "discover-not-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "discover",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "git-command",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "git (rebase -i HEAD~3|reset --soft HEAD~3)",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "no-alis-skills-call",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.15216299999999996,
+            "judgeCostUsd": 0.004883999999999972,
+            "durationSeconds": 18,
+            "startedAt": "2026-09-14T08:01:42.144Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-eK3MGL/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "correct-and-plain",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "I can't do this — Bash is denied in this session (\"don't ask mode\"), and rewriting git history requires running git. There's no file-editing path to squash commits; the read/write tools can't touch refs or objects safely.\n\nTwo things to note:\n\n1. **Permission needed.** To proceed I'd need Bash access for `git log` (to see what the three commits are) and `git reset --soft HEAD~3 && git commit` (or an equivalent non-interactive rebase — `git rebase -i` isn't supported in this environment).\n\n2. **The repo may have nothing to squash.** The session's opening git snapshot listed \"Recent commits:\" as empty, with the only change being an untracked `../.gitconfig`. If that's accurate, there are no commits on `main` at all and the request can't apply. I couldn't confirm this, since checking also requires Bash.\n\nIf you want to run it yourself, the squash without an interactive editor is:\n\n```\ngit reset --soft HEAD~3\ngit commit -m \"your combined message\"\n```\n\nThat keeps all three commits' changes staged and replaces them with one commit. Note this rewrites history, so if those commits were already pushed, the branch would need a force-push.\n\nLet me know if you'd like to enable Bash, and I'll check the log first and pick up the actual commit messages for the combined one."
+              },
+              {
+                "name": "discover-not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "git-command",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched git (rebase -i HEAD~3|reset --soft HEAD~3)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-alis-skills-call",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.5,
+            "passed": false,
+            "turns": 6,
+            "costUsd": 0.17561200000000002,
+            "judgeCostUsd": 0.0024480000000000335,
+            "durationSeconds": 27,
+            "startedAt": "2026-09-14T08:01:59.775Z",
+            "error": "exit 1: Reached maximum number of turns (5)",
+            "tracePath": "/private/tmp/e-ewIAkX/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "correct-and-plain",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I'll look at the repo state first."
+              },
+              {
+                "name": "discover-not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "git-command",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in last_message",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-alis-skills-call",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 0.5,
+        "passRateWithout": 0,
+        "delta": 0.5
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 8,
+    "casesPassed": 3,
+    "overallScore": 0.7083333333333333,
+    "overallPassRate": 0.375,
+    "meanDelta": 0.09375000000000003
+  }
+}

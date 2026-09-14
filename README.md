@@ -150,3 +150,13 @@ executable, because prompts include mutation-shaped work. Each prompt gets empty
 stdin. Scores inspect actual tool events, including `skills suggest`; quiet no-match
 results are valid. Failures, denials, missing final results and incomplete case counts
 fail evaluation. Response text mentioning discovery is not tool-use evidence.
+
+Uplift evaluation of the `discover` skill (with-plugin vs without-plugin Δ) lives in
+`plugins/alis-build/evals/`. From `plugins/alis-build/`:
+
+```sh
+claude plugin eval . --ablation with-without --scaffold --judge-model sonnet --allow-tools "Bash(alis skills *)" -j 4 --no-publish
+```
+
+It costs real API money (~$19.50 per full run) and needs a neuron fixture on disk;
+see `plugins/alis-build/evals/README.md` for preconditions and case descriptions.

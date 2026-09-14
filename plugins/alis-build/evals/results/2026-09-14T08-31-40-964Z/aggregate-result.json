@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.270",
+  "startedAt": "2026-09-14T08:31:40.964Z",
+  "durationSeconds": 108,
+  "costUsd": 0.5419075,
+  "partial": false,
+  "suite": {
+    "root": "/Volumes/ExternalSSD/Projects/github.com/alis-build/claude-plugin/plugins/alis-build",
+    "ablation": "with-without",
+    "judgeModel": "sonnet",
+    "caseFilter": "07-neg-unit-test",
+    "threshold": 1,
+    "concurrency": 1,
+    "plugins": [
+      {
+        "name": "alis-build",
+        "version": "0.22.0",
+        "path": "/Volumes/ExternalSSD/Projects/github.com/alis-build/claude-plugin/plugins/alis-build"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "07-neg-unit-test",
+      "dir": "evals/07-neg-unit-test",
+      "source": "prose",
+      "promptMarkdown": "write a unit test for parseDate\n\n```go\npackage dates\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\n// parseDate accepts YYYY-MM-DD and returns the date at midnight UTC.\nfunc parseDate(s string) (time.Time, error) {\n\tt, err := time.Parse(\"2006-01-02\", s)\n\tif err != nil {\n\t\treturn time.Time{}, fmt.Errorf(\"parseDate %q: %w\", s, err)\n\t}\n\treturn t.UTC(), nil\n}\n```",
+      "runsPerCase": 3,
+      "timeoutSeconds": 120,
+      "maxTurns": 8,
+      "graders": [
+        {
+          "name": "discover-not-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "discover",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "has-test-func",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "func TestParseDate\\w*\\(t \\*testing\\.T\\)",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "invalid-input-case",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "err == nil\\s*\\{",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "no-alis-skills-call",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Bash",
+            "input_match": "alis skills",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        },
+        {
+          "name": "table-driven-no-alis",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user pasted a small Go function `parseDate(s string) (time.Time, error)` and asked for a unit test. The agent has no Write tool, so the test is delivered in the message.\n\nPass only if ALL hold:\n1. The response contains a Go test file for package `dates` (or `dates_test` with a note) using the standard `testing` package, with at least one function named `TestParseDate` or a close variant (`TestParseDate_Valid`, `TestParseDateErrors`, ...).\n2. It exercises at least one valid `YYYY-MM-DD` input, asserting the parsed date and that the result is in UTC, and at least one invalid input that must return an error.\n3. It calls `parseDate` with the given signature (a string in, `time.Time` and `error` out) and does not rename it or change its contract.\n4. The response contains NO mention of Alis Build, skills, skill discovery, catalogs, or registries. It is a plain coding answer.\n\nDo not fail the response for style, for the number of cases, or for anything you cannot verify from the text. Fail only if one of 1-4 is clearly violated.",
+          "config": {
+            "criteria": "The user pasted a small Go function `parseDate(s string) (time.Time, error)` and asked for a unit test. The agent has no Write tool, so the test is delivered in the message.\n\nPass only if ALL hold:\n1. The response contains a Go test file for package `dates` (or `dates_test` with a note) using the standard `testing` package, with at least one function named `TestParseDate` or a close variant (`TestParseDate_Valid`, `TestParseDateErrors`, ...).\n2. It exercises at least one valid `YYYY-MM-DD` input, asserting the parsed date and that the result is in UTC, and at least one invalid input that must return an error.\n3. It calls `parseDate` with the given signature (a string in, `time.Time` and `error` out) and does not rename it or change its contract.\n4. The response contains NO mention of Alis Build, skills, skill discovery, catalogs, or registries. It is a plain coding answer.\n\nDo not fail the response for style, for the number of cases, or for anything you cannot verify from the text. Fail only if one of 1-4 is clearly violated.",
+            "focus": "last_message"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 4,
+            "costUsd": 0.31738249999999996,
+            "judgeCostUsd": 0.015203999999999999,
+            "durationSeconds": 61,
+            "startedAt": "2026-09-14T08:31:40.986Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-MgOTiB/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "discover-not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "has-test-func",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched func TestParseDate\\w*\\(t \\*testing\\.T\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "invalid-input-case",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched err == nil\\s*\\{",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-alis-skills-call",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "table-driven-no-alis",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "Write and Bash are both unavailable in this session, so I can't create the file or run `go test` — here's the test to drop in at `dates/dates_test.go`:\n\n```go\npackage dates\n\nimport (\n\t\"errors\"\n\t\"strings\"\n\t\"testing\"\n\t\"time\"\n)\n\nfunc TestParseDate(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   string\n\t\twant time.Time\n\t}{\n\t\t{\n\t\t\tname: \"ordinary date\",\n\t\t\tin:   \"2024-03-17\",\n\t\t\twant: time.Date(2024, time.March, 17, 0, 0, 0, 0, time.UTC),\n\t\t},\n\t\t{\n\t\t\tname: \"leap day\",\n\t\t\tin:   \"2024-02-29\",\n\t\t\twant: time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC),\n\t\t},\n\t\t{\n\t\t\tname: \"first day of year\",\n\t\t\tin:   \"2021-01-01\",\n\t\t\twant: time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),\n\t\t},\n\t\t{\n\t\t\tname: \"last day of year\",\n\t\t\tin:   \"2021-12-31\",\n\t\t\twant: time.Date(2021, time.December, 31, 0, 0, 0, 0, time.UTC),\n\t\t},\n\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tgot, err := parseDate(tt.in)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"parseDate(%q) returned unexpected error: %v\", tt.in, err)\n\t\t\t}\n\t\t\tif !got.Equal(tt.want) {\n\t\t\t\tt.Errorf(\"parseDate(%q) = %v, want %v\", tt.in, got, tt.want)\n\t\t\t}\n\t\t\t// Equal only compares instants, so assert the zone and wall clock\n\t\t\t// that callers will actually format and store.\n\t\t\tif loc := got.Location(); loc != time.UTC {\n\t\t\t\tt.Errorf(\"parseDate(%q) location = %v, want UTC\", tt.in, loc)\n\t\t\t}\n\t\t\tif h, m, s := got.Clock(); h != 0 || m != 0 || s != 0 || got.Nanosecond() != 0 {\n\t\t\t\tt.Errorf(\"parseDate(%q) time of day = %02d:%02d:%02d.%09d, want midnight\",\n\t\t\t\t\ttt.in, h, m, s, got.Nanosecond())\n\t\t\t}\n\t\t})\n\t}\n}\n\nfunc TestParseDateErrors(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   string\n\t}{\n\t\t{name: \"empty string\", in: \"\"},\n\t\t{name: \"not a date\", in: \"yesterday\"},\n\t\t{name: \"unpadded month and day\", in: \"2024-3-7\"},\n\t\t{name: \"month out of range\", in: \"2024-13-01\"},\n\t\t{name: \"day out of range for month\", in: \"2024-02-30\"},\n\t\t{name: \"not a leap year\", in: \"2023-02-29\"},\n\t\t{name: \"slash separators\", in: \"2024/03/17\"},\n\t\t{name: \"US ordering\", in: \"03-17-2024\"},\n\t\t{name: \"trailing time component\", in: \"2024-03-17T00:00:00Z\"},\n\t\t{name: \"leading whitespace\", in: \" 2024-03-17\"},\n\t\t{name: \"trailing whitespace\", in: \"2024-03-17 \"},\n\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tgot, err := parseDate(tt.in)\n\t\t\tif err == nil {\n\t\t\t\tt.Fatalf(\"parseDate(%q) = %v, want error\", tt.in, got)\n\t\t\t}\n\t\t\tif !got.IsZero() {\n\t\t\t\tt.Errorf(\"parseDate(%q) returned %v on error, want zero time\", tt.in, got)\n\t\t\t}\n\t\t})\n\t}\n}\n\nfunc TestParseDateErrorWrapsParseError(t *testing.T) {\n\tconst in = \"not-a-date\"\n\n\t_, err := parseDate(in)\n\tif err == nil {\n\t\tt.Fatalf(\"parseDate(%q) = nil error, want error\", in)\n\t}\n\n\t// The message should name the function and echo the offending input so the\n\t// error is actionable without the caller re-reading the input.\n\tif msg, want := err.Error(), `parseDate \"`+in+`\"`; !strings.Contains(msg, want) {\n\t\tt.Errorf(\"parseDate(%q) error = %q, want it to contain %q\", in, msg, want)\n\t}\n\n\tvar parseErr *time.ParseError\n\tif !errors.As(err, &parseErr) {\n\t\tt.Errorf(\"parseDate(%q) error = %v, want it to wrap *time.ParseError\", in, err)\n\t}\n}\n\nfunc TestParseDateRoundTrip(t *testing.T) {\n\tconst in = \"1999-12-31\"\n\n\tgot, err := parseDate(in)\n\tif err != nil {\n\t\tt.Fatalf(\"parseDate(%q) returned unexpected error: %v\", in, err)\n\t}\n\tif formatted := got.Format(\"2006-01-02\"); formatted != in {\n\t\tt.Errorf(\"parseDate(%q) formatted back to %q, want %q\", in, formatted, in)\n\t}\n}\n```\n\nWhat it covers:\n\n- **Happy path** — value equality plus two things `Equal` alone won't catch: the returned `Location` is UTC, and the clock is exactly midnight.\n- **Rejections** — wrong separators, wrong field order, unpadded components (`2006-01-02` uses fixed-width `01`/`02`, so `2024-3-7` is a parse failure), out-of-range month/day, non-leap Feb 29, surrounding whitespace, and an RFC 3339 string with a trailing time. Each also asserts the returned `time.Time` is zero rather than partially filled.\n- **Error contract** — the `%q` input appears in the message and `%w` keeps `*time.ParseError` reachable through `errors.As`.\n\nTwo things worth flagging about the code under test: `t.UTC()` is a no-op here, since a layout with no zone already parses into UTC — harmless, but it may read as stronger normalization than it is. And the whitespace cases pass today purely because `time.Parse` is strict; if you'd rather accept trimmed input, that's a behavior decision to make before these tests pin it down."
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.224525,
+            "judgeCostUsd": 0.012857999999999998,
+            "durationSeconds": 47,
+            "startedAt": "2026-09-14T08:32:42.289Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-34uNvV/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "discover-not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "has-test-func",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched func TestParseDate\\w*\\(t \\*testing\\.T\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "invalid-input-case",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched err == nil\\s*\\{",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-alis-skills-call",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Bash called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "table-driven-no-alis",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "I don't have a file-writing tool in this session and Bash was denied, so I can't create the file or run `go test` — here's the test to drop in alongside the source (same `dates` package, since `parseDate` is unexported):\n\n```go\npackage dates\n\nimport (\n\t\"errors\"\n\t\"strconv\"\n\t\"strings\"\n\t\"testing\"\n\t\"time\"\n)\n\nfunc TestParseDate(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   string\n\t\twant time.Time\n\t}{\n\t\t{\"epoch\", \"1970-01-01\", time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)},\n\t\t{\"ordinary date\", \"2024-03-17\", time.Date(2024, time.March, 17, 0, 0, 0, 0, time.UTC)},\n\t\t{\"leap day\", \"2024-02-29\", time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC)},\n\t\t{\"last day of year\", \"2023-12-31\", time.Date(2023, time.December, 31, 0, 0, 0, 0, time.UTC)},\n\t\t{\"pre-epoch\", \"1900-01-01\", time.Date(1900, time.January, 1, 0, 0, 0, 0, time.UTC)},\n\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tgot, err := parseDate(tt.in)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"parseDate(%q) returned unexpected error: %v\", tt.in, err)\n\t\t\t}\n\t\t\t// Equal compares instants only, so check the location separately.\n\t\t\tif !got.Equal(tt.want) {\n\t\t\t\tt.Errorf(\"parseDate(%q) = %v, want %v\", tt.in, got, tt.want)\n\t\t\t}\n\t\t\tif loc := got.Location(); loc != time.UTC {\n\t\t\t\tt.Errorf(\"parseDate(%q) location = %v, want UTC\", tt.in, loc)\n\t\t\t}\n\t\t\tif h, m, s := got.Clock(); h != 0 || m != 0 || s != 0 || got.Nanosecond() != 0 {\n\t\t\t\tt.Errorf(\"parseDate(%q) time of day = %02d:%02d:%02d.%09d, want midnight\",\n\t\t\t\t\ttt.in, h, m, s, got.Nanosecond())\n\t\t\t}\n\t\t})\n\t}\n}\n\nfunc TestParseDateInvalid(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   string\n\t}{\n\t\t{\"empty\", \"\"},\n\t\t{\"wrong layout\", \"03/17/2024\"},\n\t\t{\"unpadded month and day\", \"2024-3-7\"},\n\t\t{\"month out of range\", \"2024-13-01\"},\n\t\t{\"day out of range for month\", \"2023-02-29\"},\n\t\t{\"trailing time\", \"2024-03-17T00:00:00Z\"},\n\t\t{\"trailing whitespace\", \"2024-03-17 \"},\n\t\t{\"not a date\", \"tomorrow\"},\n\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tgot, err := parseDate(tt.in)\n\t\t\tif err == nil {\n\t\t\t\tt.Fatalf(\"parseDate(%q) = %v, want error\", tt.in, got)\n\t\t\t}\n\t\t\tif !got.IsZero() {\n\t\t\t\tt.Errorf(\"parseDate(%q) = %v alongside error, want zero time\", tt.in, got)\n\t\t\t}\n\t\t\tif quoted := strconv.Quote(tt.in); !strings.Contains(err.Error(), quoted) {\n\t\t\t\tt.Errorf(\"parseDate(%q) error = %q, want it to mention %s\", tt.in, err, quoted)\n\t\t\t}\n\t\t\tvar parseErr *time.ParseError\n\t\t\tif !errors.As(err, &parseErr) {\n\t\t\t\tt.Errorf(\"parseDate(%q) error = %v, want it to wrap *time.ParseError\", tt.in, err)\n\t\t\t}\n\t\t})\n\t}\n}\n```\n\nWhat it pins down beyond the happy path:\n\n- **Location, not just instant.** `time.Time.Equal` ignores location, so a `parseDate` that returned the same instant in `time.Local` would pass an `Equal` check alone. The explicit `Location() != time.UTC` assertion is what actually covers the doc comment's \"midnight UTC\". (As written, the `.UTC()` call is a no-op — `time.Parse` with a zone-less layout already yields UTC — but the assertion keeps that true if the layout ever gains a zone.)\n- **The zero time on failure**, which callers may rely on.\n- **Error contract**: the message includes the quoted input, and the underlying `*time.ParseError` survives the `%w` wrap, so callers can `errors.As` it.\n\nTwo cases worth confirming against your intent rather than just locking in: `\"2024-3-7\"` (unpadded) and `\"2024-03-17T00:00:00Z\"` both fail with the `2006-01-02` layout. If you'd rather accept either, that's a change to `parseDate`, and I'd move those rows to the success table."
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 1,
+        "passRateWithout": 1,
+        "delta": 0
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 1,
+    "casesPassed": 1,
+    "overallScore": 1,
+    "overallPassRate": 1,
+    "meanDelta": 0
+  }
+}
