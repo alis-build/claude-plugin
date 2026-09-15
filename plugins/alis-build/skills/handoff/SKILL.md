@@ -1,41 +1,30 @@
 ---
 name: handoff
-description: Move the current local Claude Code conversation and unfinished Alis build/Define work to an enrolled Alis workstation and continue there. Use for "resume on my workstation", "hand this session over", or when the user explicitly wants to close their laptop while work continues on their workstation.
-disable-model-invocation: false
+description: Continue the current claude CLI session on an enrolled Alis workstation in herdr. Use when the user wants to hand off work or close their laptop while it continues remotely.
 ---
 
-# Resume on my workstation
+Use the Alis coordinator; never copy agent homes, kill processes, invent session IDs,
+or launch a second continuation yourself. This skill applies to the native CLI;
+IDE and desktop app sessions need a verified CLI registration.
 
-Use the CLI handoff coordinator. Never copy ~/.claude wholesale, kill a process,
-invent a session id, or start a second Claude instance yourself.
+1. Use the current session ID from hook context (or the agent's session environment).
+   Run `alis workstation handoff targets --json`; select the only enrolled target
+   in this organisation, or ask which target if several qualify.
+2. Native continuation preserves the conversation. Do not generate a recap or a
+   long handoff prompt. The default is “Continue where you left off.” If a local
+   background task must be stopped, preserve its recoverable output first. Record
+   exact Alis operation IDs in the conversation; remote Define/Build/Deploy work
+   continues independently, so its local watcher can stop without cancelling it.
+3. Run `alis workstation handoff --agent claude --session <id> --to <alias> --json`.
+4. End this turn after the coordinator returns. It waits for a recoverable
+   boundary and opens an independent progress window. Polling from this source
+   turn prevents the boundary. Keep the laptop open until `safe_to_close: true`.
 
-1. Identify the current session from `${CLAUDE_SESSION_ID}`. If unavailable,
-   use the exact session id from the current hook context; never choose "last".
-2. Run `alis workstation handoff targets --json`. The destination must be an
-   enrolled workstation in the current organisation. If several qualify, ask
-   which one; use the only eligible workstation automatically.
-3. Compose a concise continuation instruction: remaining task, user constraints,
-   completed external actions that must not be repeated, and next useful action.
-   Wait for any tools or agents you started to finish. Recurring/background
-   work must finish or be explicitly stopped before a safe handoff is possible.
-4. Run one standalone command:
-   `alis workstation handoff --session <session-id> --to <enrolled-alias> --instruction '<continuation instruction>' --json`.
-   Apply normal literal shell quoting to the instruction. This starts a detached
-   coordinator; the current Claude turn must end before transfer can proceed.
-5. Give the user the returned status command, explain that the laptop must stay
-   open until status reports `safe_to_close: true`, then end this turn. Do not
-   poll from this Claude turn: doing so would prevent its own safe boundary.
-
-Status is `alis workstation handoff status <handoff-id> --json`, run from a
-separate local terminal. Its destination URL opens the persistent terminal.
-Claude may need workspace trust or permissions there; do not bypass them.
-Cancellation is `alis workstation handoff cancel <handoff-id> --json`; it stops
-the remote continuation and only releases the local claim after acknowledgement.
-
-V1 requires native Claude Code on macOS/Linux, matching supported Claude versions,
-Python 3.9+, the handoff-enabled plugin on both machines, an enrolled SSH alias,
-and Claude already authenticated on the workstation. It carries the paired
-build/Define repos, including local commits and uncommitted non-ignored files.
-Submodules, live processes, ignored dependencies/secrets, and reverse transfer
-are unsupported. Original local work is retained. Never treat an unknown remote
-status as permission to restart locally.
+Use `alis workstation handoff status <id> --watch --json` from another terminal.
+Use `alis workstation handoff open <id>` to open the continuation in herdr.
+Spaces use `alis.os`, tabs `cli.v1`, with one pane per continuation. Paired build
+and Define worktrees isolate simultaneous handoffs; local files stay intact.
+Normal destination trust and permission prompts still apply. Unknown background
+work blocks handoff rather than being abandoned. `cancel <id>` releases the source
+claim only once any launched remote continuation has acknowledged cancellation.
+Uncertain remote status never permits starting a second copy locally.
