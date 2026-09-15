@@ -136,6 +136,13 @@ Discovery is skill-native: describe platform-shaped work in your own words and t
 
 ## Troubleshooting
 
+If Claude asks you to paste a support ticket or tries to reconstruct private
+registry settings, ask it to read `alis docs specialist` and
+`alis packages install --help`. Referenced tickets should be read before changes
+are proposed; local package setup during Build should use `alis packages install`.
+These rules are included in both the startup primer and the refresher for resumed
+or compacted sessions.
+
 If the primer or commands do not appear, confirm that the plugin install completed successfully:
 
 ```sh
@@ -147,6 +154,11 @@ If you installed or changed the plugin inside an already-running Claude Code ses
 ```text
 /reload-plugins
 ```
+
+Check that the Alis plugin is enabled in Claude's `/plugin` manager and that
+`ALIS_PRIMER=off` has not intentionally disabled guidance. Start a new session
+inside the service folder after correcting setup. Installing the `alis` CLI
+alone does not install or activate Claude's Alis plugin.
 
 If `alis` commands fail with an auth error, run `alis login` (or `alis authorise <org>.<product>` for git/package credentials) and retry.
 
