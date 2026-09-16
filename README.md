@@ -170,7 +170,8 @@ Run `RELEASE_GUARD_STRICT=1 tests/release-guard.sh`, the two shell hook tests,
 `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_behavior.py`, and
 `tests/routing-eval.sh --dry-run`. Behavioral tests use temporary homes and stub
 executables; no deployment, uninstall or message is sent.
-Also run `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_handoff.py` for lifecycle,
+Also run `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_handoff.py` for the bash
+lifecycle hook (`hooks/handoff.sh`, stub `alis` on PATH),
 source-claim and permission-routing checks.
 
 Live routing evaluation is opt-in: `tests/routing-eval.sh --live /path/to/disposable-fixture
