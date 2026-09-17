@@ -106,6 +106,22 @@ Guarded actions (`--confirm-production`, `--approve`, `--yes`, block uninstall a
 
 ## Skills
 
+### See the frontend
+
+The `frontend-preview` skill shows a service's web frontend in
+[terminal-browser](https://terminal-browser.com), a real browser drawn in a
+terminal pane beside Claude, and drives it: it runs `alis preview --json`,
+then `terminal-browser action` to snapshot, click, fill and read the console,
+and ends with `terminal-browser action done`. Select an element in the browser
+and press ctrl+g to send it to Claude as the thing to change. With the dev
+server on a workstation, `alis preview --ssh alis-<org>-<id>` keeps the
+browser on the laptop and routes its traffic through the workstation.
+
+It needs terminal-browser (`alis setup` offers it; `terminal-browser setup`
+links its own skill) and a terminal that draws kitty graphics and can split:
+Ghostty, kitty, WezTerm, tmux or herdr. A workstation's browser terminal cannot
+draw it, so there `alis preview` returns the port's public address instead.
+
 ### Resume on my workstation
 
 Use `/alis:handoff` to move a local Claude session and its unfinished
