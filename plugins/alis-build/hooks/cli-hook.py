@@ -136,6 +136,7 @@ def main():
     try:
         payload = json.load(sys.stdin)
         if not isinstance(payload, dict): return
+        if "cli" in str(payload.get("alis_module", "")).split(): return  # served by the function-hooks module
         response = decide(payload)
         if response:
             observe("claude-plugin-health.json", permissionMode=payload.get("permission_mode", "unknown"), approvalSource="native-confirmation-and-cli-tier")

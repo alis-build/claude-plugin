@@ -29,6 +29,7 @@ def main():
     try:
         payload = json.load(sys.stdin)
         if not isinstance(payload, dict) or payload.get("source", "startup") not in ("startup", "clear"): return
+        if "sync" in str(payload.get("alis_module", "")).split(): return  # served by the function-hooks module
         signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
         sync()
     except (ValueError, TypeError, OSError):

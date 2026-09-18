@@ -5,6 +5,11 @@
 
 payload=$(cat 2>/dev/null)
 
+# Function-hooks handshake: the module lists the jobs it serves in
+# alis_module; when "handoff" is among them this script has nothing to do.
+alis_module_re='"alis_module"[[:space:]]*:[[:space:]]*"([^"]* )?handoff( [^"]*)?"'
+[[ $payload =~ $alis_module_re ]] && exit 0
+
 if command -v alis >/dev/null 2>&1; then
   if out=$(printf '%s' "$payload" | alis workstation handoff _hook 2>/dev/null); then
     [ -n "$out" ] && printf '%s\n' "$out"

@@ -5,6 +5,10 @@
 # Every failure path is silent — discovery must never break a prompt.
 command -v alis >/dev/null 2>&1 || exit 0
 payload="$(cat 2>/dev/null)" || exit 0
+# Function-hooks handshake: the module lists the jobs it serves in
+# alis_module; when "suggest" is among them this script has nothing to do.
+alis_module_re='"alis_module"[[:space:]]*:[[:space:]]*"([^"]* )?suggest( [^"]*)?"'
+[[ $payload =~ $alis_module_re ]] && exit 0
 case "${CLAUDE_PROJECT_DIR:-$PWD}" in
   */alis.build/*) ;;
   *)
