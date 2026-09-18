@@ -14,8 +14,7 @@ import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane } from './mod/ops-pan
 import { renderOpsPane } from './mod/ops-pane-view'
 import { renderOpsResult, renderOpsRunning } from './mod/ops-render'
 import { passClassic } from './mod/classic'
-import { answerDeploy, confirmDeploy, DEPLOY_PANE_ID, deployDialog } from './mod/deploy-dialog'
-import { renderDeployDialog } from './mod/deploy-dialog-view'
+import { confirmDeploy } from './mod/deploy-dialog'
 import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
 import { suggestSkills } from './mod/suggest'
@@ -32,7 +31,7 @@ export function hostOf($: HostNouns): Host {
     cwd: () => $.session.cwd(),
     root: () => $.session.root(),
     surface: () => $.session.surface(),
-    sleep: (ms, signal) => $.clock.sleep(ms, { signal }),
+    ask: (question, options) => $.ui.ask(question, options),
     exists: path => $.fs.exists(path),
     list: path => $.fs.list(path),
     stat: path => $.fs.stat(path),
@@ -75,17 +74,8 @@ export const register: Register = on => {
   // a summary in place of the NDJSON progress once it is done.
   on('tool.call', { tool: 'Bash' }, ($, e, next) => {
     const host = hostOf($)
-    return confirmDeploy(host, e, e2 => watchAlisCall(host, e2, next, next.signal), next.signal)
+    return confirmDeploy(host, e, e2 => watchAlisCall(host, e2, next, next.signal))
   }).catch(($, e, next) => next(e))
-  on('ui.render', { component: 'Pane', requestId: DEPLOY_PANE_ID }, ($, e, next) =>
-    deployDialog.pending
-      ? renderDeployDialog($.ui.resolve(e), deployDialog.pending, { approve: () => answerDeploy('approve'), abort: () => answerDeploy('abort') })
-      : next(e),
-  )
-  on('ui.close', { id: DEPLOY_PANE_ID }, ($, e, next) => {
-    if (e.origin.kind !== 'plugin') answerDeploy('abort')
-    return next(e)
-  })
   on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
     const wait = liveOf(e.props.tool_use_id)
     return wait && e.props.isRunning ? renderOpsRunning($.ui.resolve(e), await next(e), wait) : next(e)

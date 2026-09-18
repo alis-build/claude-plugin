@@ -1,4 +1,4 @@
-import type { FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult, RenderSurface } from 'claude-code'
+import type { AskOptions, FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult, RenderSurface } from 'claude-code'
 
 import type { Host } from '../../hooks/mod/host'
 
@@ -12,7 +12,9 @@ export type FakeHost = Host & {
   dir: string
   /** What `surface` answers. */
   drawn: RenderSurface | null
-  sleeps: number
+  /** What `ask` answers, or throws when given an Error. */
+  askAnswer: string | Error
+  asks: { question: string; options: AskOptions }[]
   /** Paths `exists` answers true for. */
   present: Set<string>
   /** What `list` answers per directory. */
@@ -40,7 +42,8 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     session: overrides.session ?? 'session-a',
     dir: '/w',
     drawn: 'terminal',
-    sleeps: 0,
+    askAnswer: 'Abort',
+    asks: [],
     present: new Set(overrides.present ?? []),
     entries: {},
     stats: {},
@@ -61,10 +64,10 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     cwd: async () => host.dir,
     root: async () => host.dir,
     surface: async () => host.drawn,
-    sleep: async (_ms, signal) => {
-      host.sleeps += 1
-      if (signal.aborted) throw new Error('aborted')
-      await Promise.resolve()
+    ask: async (question, options) => {
+      host.asks.push({ question, options })
+      if (host.askAnswer instanceof Error) throw host.askAnswer
+      return host.askAnswer
     },
     suggestAlways: async () => host.env['ALIS_SUGGEST_ALWAYS'],
     exists: async path => host.present.has(path) || path in host.entries,

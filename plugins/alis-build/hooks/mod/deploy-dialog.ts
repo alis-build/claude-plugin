@@ -1,20 +1,25 @@
-// The deploy confirmation dialog: before a Bash call runs `alis deploy` with
+// The deploy confirmation: before a Bash call runs `alis deploy` with
 // --confirm-production (the flag the CLI says to pass only after explicit
-// user approval), a focused pane shows the target, version and each
-// environment with its production flag, and waits for Approve or Abort.
+// user approval), the engine's own question dialog asks the person, naming
+// the target, the version and each environment with its production flag.
 // Approve lets the call run and counts as the person's confirmation for the
 // permission gate, so the native prompt does not ask a second time; Abort
-// refuses it. Runs only where there is a surface to draw on. A production
-// deploy without the flag needs no dialog: the CLI refuses it (exit 3).
+// or a dismissed dialog refuses it. Nothing is asked where nothing draws
+// (a -p run), and a production deploy without the flag needs no question:
+// the CLI refuses it (exit 3).
+//
+// Why the engine's dialog and not a pane: in the fullscreen layout every
+// pane docks as a tab, focus is only a request the composer may refuse, and
+// Esc then interrupts the turn instead of the pane. A confirmation has to be
+// modal, and `$.ui.ask` is; its wait is a `$` call, free of the hook budget.
 import { workspaceOf } from './alis-command'
 import { commandPath } from './cli-gate'
 import type { Host } from './host'
 import { literalArgv } from './shell'
 
-export const DEPLOY_PANE_ID = 'alis-deploy'
 export const ABORT_REASON = 'Deploy aborted by the person in the alis confirmation dialog.'
+export const ASK_OPTIONS = ['Abort', 'Approve'] as const
 const LIST_TIMEOUT_MS = 10_000
-const WAIT_TICK_MS = 200
 
 export type DeployCall = {
   target: string | null
@@ -88,25 +93,20 @@ export type DeployPrompt = {
   version: string
   environments: EnvironmentInfo[]
   unresolved: string[]
-  confirmProduction: boolean
 }
 
-export type DeployAnswer = 'approve' | 'abort'
-
-/** The dialog's state: what it asks about while open, and the answer once given. */
-export const deployDialog: { pending: DeployPrompt | null; answer: DeployAnswer | null } = { pending: null, answer: null }
+/** The question the dialog asks, one sentence the person can answer with a number. */
+export function questionOf(prompt: DeployPrompt): string {
+  const envs = [
+    ...prompt.environments.map(env => `${env.displayName} (${env.id}${env.status ? `, ${env.status}` : ''}${env.production ? ', PRODUCTION' : ''})`),
+    ...prompt.unresolved.map(id => `${id} (not in the product's environment list)`),
+  ]
+  const where = envs.length > 0 ? envs.join(' and ') : 'the environment the CLI picks (none named, none resolved)'
+  return `Deploy ${prompt.target} version ${prompt.version} to ${where} with --confirm-production?`
+}
 
 /** Calls (by tool_use_id) the person approved in the dialog; the gate reads one once. */
 export const approvedCalls = new Set<string>()
-
-/** Read through a call so control flow does not narrow the shared field. */
-function currentAnswer(): DeployAnswer | null {
-  return deployDialog.answer
-}
-
-export function answerDeploy(answer: DeployAnswer): void {
-  if (deployDialog.pending && !deployDialog.answer) deployDialog.answer = answer
-}
 
 /**
  * Runs the call through `next`, first asking the person when it carries
@@ -117,7 +117,6 @@ export async function confirmDeploy<E extends object, R>(
   host: Host,
   e: E,
   next: (e: E) => Promise<R | { deny: string }>,
-  signal: AbortSignal,
 ): Promise<R | { deny: string }> {
   const { command, tool_use_id } = e as { command?: unknown; tool_use_id?: unknown }
   const call = deployCallOf(command)
@@ -129,28 +128,16 @@ export async function confirmDeploy<E extends object, R>(
   const known = product && product.includes('.') ? await environmentsOf(host, product) : []
   const chosen = call.environments.length > 0 ? known.filter(env => call.environments.includes(env.id)) : known.length === 1 ? known : []
   const unresolved = call.environments.filter(id => !known.some(env => env.id === id))
+  const prompt: DeployPrompt = { target: target ?? 'the package of the current directory', version: call.version ?? 'latest build', environments: chosen, unresolved }
 
-  if (deployDialog.pending) return { deny: 'Another alis deploy confirmation is still open; answer it first.' }
-  deployDialog.pending = { target: target ?? '(package of the current directory)', version: call.version ?? 'latest build', environments: chosen, unresolved, confirmProduction: call.confirmProduction }
-  deployDialog.answer = null
+  let answer: string
   try {
-    await host.openPane({ id: DEPLOY_PANE_ID, title: 'Confirm deploy', focus: true, closeOnEscape: true, holdToasts: true, rows: 10 + chosen.length + unresolved.length })
-    while (!deployDialog.answer) {
-      try {
-        await host.sleep(WAIT_TICK_MS, signal)
-      } catch {
-        deployDialog.answer = 'abort'
-      }
-    }
+    answer = await host.ask(questionOf(prompt), { options: ASK_OPTIONS, header: 'Deploy' })
   } catch (error) {
-    host.debug(`deploy: dialog could not open: ${String(error)}`)
-    deployDialog.answer = deployDialog.answer ?? 'abort'
+    host.debug(`deploy: the confirmation was dismissed: ${String(error)}`)
+    return { deny: ABORT_REASON }
   }
-  const answer = currentAnswer()
-  deployDialog.pending = null
-  deployDialog.answer = null
-  await host.closePane(DEPLOY_PANE_ID).catch(() => undefined)
-  if (answer !== 'approve') return { deny: ABORT_REASON }
+  if (answer !== 'Approve') return { deny: ABORT_REASON }
   if (typeof tool_use_id === 'string') approvedCalls.add(tool_use_id)
   return next(e)
 }
