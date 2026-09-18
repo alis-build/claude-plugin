@@ -116,6 +116,9 @@ off, the shell hooks run as before.
 
 With the module active:
 
+- the DBD primer, the service pointer and the skill catalog refresh at session
+  start come from the module too, with the same gating as the shell hooks, so a
+  session with the flag on runs no shell hook at all
 - `alis …` Bash commands get the same allow/ask/deny answers and the same
   `--approve` / `--session-id` rewrites as the shell gate, computed in-process
 - the handoff lifecycle is relayed to `alis workstation handoff _hook` in-process,

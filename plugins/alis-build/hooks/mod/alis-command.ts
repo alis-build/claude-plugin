@@ -82,7 +82,7 @@ function summarize(text: string): string | undefined {
   return trimmed.split('\n').at(-1)?.slice(0, 300)
 }
 
-export type Workspace = { org: string; side: 'build' | 'define'; relpath: string; pkg: string | null }
+export type Workspace = { root: string; org: string; side: 'build' | 'define'; relpath: string; pkg: string | null }
 
 /**
  * The workspace a directory is in, by the alis.build layout
@@ -93,6 +93,7 @@ export type Workspace = { org: string; side: 'build' | 'define'; relpath: string
 export function workspaceOf(dir: string): Workspace | null {
   const at = dir.indexOf('/alis.build/')
   if (at === -1) return null
+  const root = `${dir.slice(0, at)}/alis.build`
   const parts = dir.slice(at + '/alis.build/'.length).split('/').filter(Boolean)
   const [org, side] = parts
   if (!org || (side !== 'build' && side !== 'define')) return null
@@ -111,5 +112,5 @@ export function workspaceOf(dir: string): Workspace | null {
     }
   }
   if (svc.length === 0) return null
-  return { org, side, relpath: svc.join('/'), pkg: versioned ? [org, ...svc].join('.') : null }
+  return { root, org, side, relpath: svc.join('/'), pkg: versioned ? [org, ...svc].join('.') : null }
 }

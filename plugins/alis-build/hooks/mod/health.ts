@@ -4,18 +4,19 @@
 import type { Host } from './host'
 import { PLUGIN_VERSION } from './meta'
 
-let cliPath: Promise<string> | null = null
+/** Where `alis` is on PATH, or '' when it is not (a few milliseconds, as shutil.which was per hook process). */
+export function cliPathOf(host: Host): Promise<string> {
+  return host
+    .run(['/usr/bin/which', 'alis'], { timeoutMs: 3000 })
+    .then(r => (r.exitCode === 0 ? r.stdout.trim() : ''), () => '')
+}
 
 export async function observe(host: Host, filename: string, fields: Record<string, unknown>): Promise<void> {
   try {
     const home = await host.home()
     if (!home) return
     const root = (await host.pluginRoot()) ?? ''
-    // Resolved once per module load, as shutil.which is once per process.
-    cliPath ??= host
-      .run(['/usr/bin/which', 'alis'], { timeoutMs: 3000 })
-      .then(r => (r.exitCode === 0 ? r.stdout.trim() : ''), () => '')
-    const record = { root, version: PLUGIN_VERSION, observedAt: new Date().toISOString(), cliPath: await cliPath, ...fields }
+    const record = { root, version: PLUGIN_VERSION, observedAt: new Date().toISOString(), cliPath: await cliPathOf(host), ...fields }
     await host.writeFile(`${home}/.alis/${filename}`, JSON.stringify(record))
   } catch (error) {
     host.debug(`health: could not write ${filename}: ${String(error)}`)

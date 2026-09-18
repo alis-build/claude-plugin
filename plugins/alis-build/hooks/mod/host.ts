@@ -24,6 +24,10 @@ export type Host = {
   ask: (question: string, options: AskOptions) => Promise<string>
   /** ALIS_SUGGEST_ALWAYS, or undefined. */
   suggestAlways: () => Promise<string | undefined>
+  /** ALIS_PRIMER (full | digest | off), or undefined. */
+  primerMode: () => Promise<string | undefined>
+  /** Reads a text file; rejects when missing. */
+  readFile: (path: string) => Promise<string>
   /** Whether a path exists; never rejects. */
   exists: (path: string) => Promise<boolean>
   /** A directory's entries by name; rejects when missing. */

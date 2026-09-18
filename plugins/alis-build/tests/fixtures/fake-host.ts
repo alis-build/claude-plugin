@@ -21,6 +21,8 @@ export type FakeHost = Host & {
   entries: Record<string, FsEntry[]>
   /** What `stat` answers per path; a missing path rejects. */
   stats: Record<string, FsStat>
+  /** What `readFile` answers per path; a missing path rejects. */
+  files: Record<string, string>
   statuses: (string | undefined)[]
   invalidations: number
   panes: { opened: PaneOpenArgs[]; closed: string[] }
@@ -47,6 +49,7 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     present: new Set(overrides.present ?? []),
     entries: {},
     stats: {},
+    files: {},
     statuses: [],
     invalidations: 0,
     panes: { opened: [], closed: [] },
@@ -70,7 +73,13 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
       return host.askAnswer
     },
     suggestAlways: async () => host.env['ALIS_SUGGEST_ALWAYS'],
-    exists: async path => host.present.has(path) || path in host.entries,
+    primerMode: async () => host.env['ALIS_PRIMER'],
+    readFile: async path => {
+      const text = host.files[path]
+      if (text === undefined) throw new Error(`ENOENT ${path}`)
+      return text
+    },
+    exists: async path => host.present.has(path) || path in host.entries || path in host.files,
     list: async path => {
       if (!(path in host.entries)) throw new Error(`ENOENT ${path}`)
       return host.entries[path] ?? []

@@ -7,7 +7,7 @@
 // that throws adds no tag for that dispatch, and the shell hook answers.
 
 /** Tokens the module serves this round; a shell hook guards on its own. */
-export const COVERS: readonly string[] = ['cli', 'handoff', 'suggest']
+export const COVERS: readonly string[] = ['cli', 'handoff', 'suggest', 'primer', 'service', 'sync']
 
 export const TAG_FIELD = 'alis_module'
 

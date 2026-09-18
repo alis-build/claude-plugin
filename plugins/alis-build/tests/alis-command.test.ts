@@ -51,8 +51,8 @@ describe('alis-command', () => {
   })
 
   test('workspaceOf follows the alis.build layout', () => {
-    expect(workspaceOf('/r/alis.build/acme/build/sm/hello/v1/internal')).toEqual({ org: 'acme', side: 'build', relpath: 'sm/hello/v1', pkg: 'acme.sm.hello.v1' })
-    expect(workspaceOf('/r/alis.build/acme/define/acme/sm/hello')).toEqual({ org: 'acme', side: 'define', relpath: 'sm/hello', pkg: null })
+    expect(workspaceOf('/r/alis.build/acme/build/sm/hello/v1/internal')).toEqual({ root: '/r/alis.build', org: 'acme', side: 'build', relpath: 'sm/hello/v1', pkg: 'acme.sm.hello.v1' })
+    expect(workspaceOf('/r/alis.build/acme/define/acme/sm/hello')).toEqual({ root: '/r/alis.build', org: 'acme', side: 'define', relpath: 'sm/hello', pkg: null })
     expect(workspaceOf('/r/alis.build/acme/define/google/api')).toBe(null)
     expect(workspaceOf('/r/alis.build/acme/build')).toBe(null)
     expect(workspaceOf('/r/alis.build/acme/other/x')).toBe(null)

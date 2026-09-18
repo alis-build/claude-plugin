@@ -15,6 +15,7 @@ import { mergeClassic } from './classic-result'
 import { HANDOFF_EVENTS, handoffHook } from './handoff'
 import type { Host } from './host'
 import { isSessionId, pruneMarkers, writeMarker } from './markers'
+import { primerContext, serviceContext, syncSkills } from './session-context'
 import { COVERS, tagClassic } from './tag'
 
 export { MARKER_DIR, markerPath } from './markers'
@@ -43,7 +44,25 @@ export async function passClassic<E extends object, R extends object>(
     if (event === 'classic.SessionStart') void pruneMarkers(host)
   }
   const eventName = event.startsWith('classic.') ? event.slice('classic.'.length) : event
-  const mine = COVERS.includes('handoff') && HANDOFF_EVENTS.has(eventName) ? await handoffHook(host, eventName, e) : {}
+  let mine: Record<string, unknown> = COVERS.includes('handoff') && HANDOFF_EVENTS.has(eventName) ? await handoffHook(host, eventName, e) : {}
+  if (eventName === 'SessionStart') mine = { ...mine, ...(await sessionStartAnswer(host, p)) }
   const below = await next(event === 'classic.PreToolUse' ? e : tagClassic(e))
   return Object.keys(mine).length === 0 ? below : mergeClassic(below, mine)
+}
+
+/** The primer and service pointer as additionalContext; the catalog sync runs off the critical path. */
+async function sessionStartAnswer(host: Host, p: Record<string, unknown>): Promise<{ additionalContext?: string[] }> {
+  const cwd = typeof p['cwd'] === 'string' ? p['cwd'] : await host.cwd().catch(() => '')
+  const source = typeof p['source'] === 'string' ? p['source'] : 'startup'
+  if (COVERS.includes('sync')) void syncSkills(host, source).catch(error => host.debug(`sync: ${String(error)}`))
+  const blocks: string[] = []
+  if (COVERS.includes('primer')) {
+    const primer = await primerContext(host, cwd, source).catch(error => (host.debug(`primer: ${String(error)}`), null))
+    if (primer) blocks.push(primer)
+  }
+  if (COVERS.includes('service')) {
+    const service = await serviceContext(host, cwd).catch(error => (host.debug(`service: ${String(error)}`), null))
+    if (service) blocks.push(service)
+  }
+  return blocks.length > 0 ? { additionalContext: blocks } : {}
 }

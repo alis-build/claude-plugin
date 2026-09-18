@@ -28,12 +28,13 @@ describe('classic', () => {
 
   test('session end empties the marker; other events leave it alone', async () => {
     const host = fakeHost()
+    const markers = () => host.writes.filter(w => w.path.includes(MARKER_DIR))
     await passClassic(host, 'classic.SessionEnd', { session_id: 'abc' }, passthrough)
-    expect(host.writes).toEqual([{ path: markerPath('/h', 'abc'), text: '' }])
+    expect(markers()).toEqual([{ path: markerPath('/h', 'abc'), text: '' }])
     await passClassic(host, 'classic.Stop', { session_id: 'abc' }, passthrough)
     await passClassic(host, 'classic.SessionStart', { session_id: '../x' }, passthrough)
     await passClassic(host, 'classic.SessionStart', {}, passthrough)
-    expect(host.writes).toHaveLength(1)
+    expect(markers()).toHaveLength(1)
   })
 
   test('a marker that cannot be written is logged and the event still passes', async () => {

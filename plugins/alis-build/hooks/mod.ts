@@ -27,6 +27,8 @@ export function hostOf($: HostNouns): Host {
     pluginRoot: async () => $.plugin.root || (await $.env.get('CLAUDE_PLUGIN_ROOT')),
     allowedSubcmds: () => $.env.get('ALIS_ALLOWED_SUBCMDS'),
     suggestAlways: () => $.env.get('ALIS_SUGGEST_ALWAYS'),
+    primerMode: () => $.env.get('ALIS_PRIMER'),
+    readFile: path => $.fs.read(path),
     sessionId: () => $.session.id(),
     cwd: () => $.session.cwd(),
     root: () => $.session.root(),
