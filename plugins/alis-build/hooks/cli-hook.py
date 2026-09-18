@@ -5,6 +5,8 @@ import os
 import re
 import shlex
 import sys
+import time
+from pathlib import Path
 from health import observe
 
 GUIDANCE = ("Run one standalone alis command and read its complete JSON result. "
@@ -30,6 +32,21 @@ READ_PATHS = {
 WORKFLOW_TOP = {"define", "build", "deploy", "authorise"}
 WORKFLOW_PATHS = {("packages", x) for x in ("install", "upgrade", "add")}
 ALIASES = {"env": "environment", "envs": "environment", "environments": "environment", "block": "blocks", "op": "operations", "ops": "operations"}
+
+
+def served_by_module(payload, token):
+    """Whether the plugin's function-hooks module serves this job (see hooks/mod/classic.ts).
+
+    Most classic events carry the module's tag; PreToolUse cannot, so the
+    module keeps a per-session marker file the shell side trusts for an hour."""
+    if token in str(payload.get("alis_module", "")).split(): return True
+    sid = payload.get("session_id", "")
+    if not isinstance(sid, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", sid): return False
+    marker = Path.home() / ".alis/claude-module-sessions" / sid
+    try:
+        return time.time() - marker.stat().st_mtime < 3600 and token in marker.read_text().split()
+    except (OSError, ValueError):
+        return False
 
 
 def literal_argv(command):
@@ -136,6 +153,7 @@ def main():
     try:
         payload = json.load(sys.stdin)
         if not isinstance(payload, dict): return
+        if served_by_module(payload, "cli"): return
         response = decide(payload)
         if response:
             observe("claude-plugin-health.json", permissionMode=payload.get("permission_mode", "unknown"), approvalSource="native-confirmation-and-cli-tier")

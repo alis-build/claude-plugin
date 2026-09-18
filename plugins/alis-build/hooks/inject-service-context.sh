@@ -13,6 +13,12 @@
 # session proceeds unmodified (graceful degradation, like the sibling hooks).
 set -euo pipefail
 
+payload="$(cat 2>/dev/null || true)"
+# Function-hooks handshake: the module lists the jobs it serves in
+# alis_module; when "service" is among them this script has nothing to do.
+alis_module_re='"alis_module"[[:space:]]*:[[:space:]]*"([^"]* )?service( [^"]*)?"'
+[[ $payload =~ $alis_module_re ]] && exit 0
+
 dir="${CLAUDE_PROJECT_DIR:-$PWD}"
 case "$dir" in */alis.build/*) ;; *) exit 0 ;; esac
 

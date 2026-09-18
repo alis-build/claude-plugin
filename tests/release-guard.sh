@@ -58,6 +58,17 @@ for path in (root / "hooks").glob("*.py"):
     ast.parse(path.read_text(), filename=str(path))
 PY
 
+# 4. Function hooks (early access): every module hooks.json names must exist,
+#    and the version the module reports must match plugin.json.
+for m in $(jq -r '.modules[]? // empty' "$repo/plugins/alis-build/hooks/hooks.json"); do
+  [ -f "$repo/plugins/alis-build/hooks/$m" ] || { echo "FAIL: hooks module missing: $m" >&2; fail=1; }
+done
+mv2="$(sed -n "s/^export const PLUGIN_VERSION = '\([^']*\)'.*/\1/p" "$repo/plugins/alis-build/hooks/mod/meta.ts")"
+if [ "$pv" != "$mv2" ]; then
+  echo "FAIL: version skew plugin.json=$pv hooks/mod/meta.ts=$mv2" >&2
+  fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
   echo "release guard: OK (version $pv)"
 fi

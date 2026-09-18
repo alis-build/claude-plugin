@@ -41,6 +41,10 @@ if [ "$in_workspace" -eq 0 ] && [ "$has_cli" -eq 0 ]; then
 fi
 
 payload="$(cat 2>/dev/null || true)"
+# Function-hooks handshake: the module lists the jobs it serves in
+# alis_module; when "primer" is among them this script has nothing to do.
+alis_module_re='"alis_module"[[:space:]]*:[[:space:]]*"([^"]* )?primer( [^"]*)?"'
+[[ $payload =~ $alis_module_re ]] && exit 0
 want=full
 if printf '%s' "$payload" \
   | grep -qE '"source"[[:space:]]*:[[:space:]]*"(resume|compact)"'; then
