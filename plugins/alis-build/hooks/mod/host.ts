@@ -24,8 +24,8 @@ export type Host = {
   exists: (path: string) => Promise<boolean>
   /** Sets or clears (undefined) this plugin's line in the status area. */
   status: (text: string | undefined) => void
-  /** Sets or clears (undefined) this plugin's line under a tool row. */
-  notice: (toolUseId: string, text: string | undefined) => void
+  /** Asks the engine to draw this plugin's render hooks again. */
+  invalidate: () => void
   /** Runs `fn` every `ms` until the returned function is called. */
   every: (ms: number, fn: () => void) => () => void
   /** Writes a text file, creating directories as needed. */

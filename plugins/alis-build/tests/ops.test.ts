@@ -1,7 +1,7 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { alisCallOf, operationStateOf, progressEventsOf, summaryLinesOf } from '../hooks/mod/ops'
-import { elapsedOf, POLL_MS, watchAlisCall } from '../hooks/mod/ops-live'
+import { elapsedOf, liveOf, POLL_EVERY, TICK_MS, watchAlisCall } from '../hooks/mod/ops-live'
 import { fakeHost } from './fixtures/fake-host'
 
 tier('user')
@@ -85,7 +85,7 @@ describe('ops', () => {
 describe('ops-live', () => {
   const envelope = (command: string) => ({ tool: 'Bash', tool_use_id: 'toolu_9', command })
 
-  test('a wait keeps a notice under the row from describe polls and clears it when the call resolves', async () => {
+  test('a wait keeps live state from describe polls, redraws each tick, and forgets the call when it resolves', async () => {
     const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: '{"done":false,"status":"building"}', stderr: '' }) })
     let resolve!: (r: { result: string }) => void
     const pending = new Promise<{ result: string }>(r => (resolve = r))
@@ -94,42 +94,44 @@ describe('ops-live', () => {
     const outcome = watchAlisCall(host, envelope('alis operations wait operations/x --json'), () => pending, controller.signal)
     await settle()
 
-    expect(host.notices[0]?.[0]).toBe('toolu_9')
-    expect(host.notices[0]?.[1]).toMatch(/^alis: waiting on operations\/x · 0:00 · running$/)
-    expect(host.timers).toEqual([expect.objectContaining({ ms: POLL_MS, cancelled: false })])
+    expect(liveOf('toolu_9')).toMatchObject({ operation: 'operations/x', status: 'building' })
+    expect(host.timers).toEqual([expect.objectContaining({ ms: TICK_MS, cancelled: false })])
     expect(host.runs[0]?.argv).toEqual(['alis', 'operations', 'describe', 'operations/x', '--json'])
-    expect(host.notices.at(-1)?.[1]).toContain('· building')
+    expect(host.invalidations).toBe(1)
 
     host.answer = () => ({ exitCode: 0, stdout: '{"done":true,"version":"1.2.3"}', stderr: '' })
-    host.timers[0]?.fn()
+    for (let i = 0; i < POLL_EVERY; i++) host.timers[0]?.fn()
     await settle()
-    expect(host.notices.at(-1)?.[1]).toContain('· done → 1.2.3')
+    expect(host.runs).toHaveLength(2)
+    expect(liveOf('toolu_9')?.status).toBe('done → 1.2.3')
+    expect(host.invalidations).toBe(1 + POLL_EVERY + 1)
 
     resolve({ result: 'ok' })
     expect(await outcome).toEqual({ result: 'ok' })
     expect(host.timers[0]?.cancelled).toBe(true)
-    expect(host.notices.at(-1)).toEqual(['toolu_9', undefined])
+    expect(liveOf('toolu_9')).toBe(undefined)
   })
 
-  test('other Bash calls pass straight through with no timer or notice', async () => {
+  test('other Bash calls pass straight through with no timer or state', async () => {
     const host = fakeHost()
     const result = await watchAlisCall(host, envelope('alis build x --json --async'), async () => ({ result: 'r' }), new AbortController().signal)
     expect(result).toEqual({ result: 'r' })
     expect(host.timers).toEqual([])
-    expect(host.notices).toEqual([])
+    expect(liveOf('toolu_9')).toBe(undefined)
     await watchAlisCall(host, { tool: 'Bash', command: 'ls' }, async () => ({}), new AbortController().signal)
     expect(host.runs).toEqual([])
   })
 
-  test('an abort stops the polling and clears the notice; a failing describe is logged', async () => {
+  test('an abort stops the polling and forgets the call; a failing describe is logged', async () => {
     const host = fakeHost({ answer: () => new Error('ENOENT') })
     const controller = new AbortController()
     const never = new Promise<never>(() => {})
     void watchAlisCall(host, envelope('alis operations wait operations/y --json'), () => never, controller.signal)
     await settle()
     expect(host.logs.some(l => l.includes('ENOENT'))).toBe(true)
+    expect(liveOf('toolu_9')?.status).toBe('running')
     controller.abort()
     expect(host.timers[0]?.cancelled).toBe(true)
-    expect(host.notices.at(-1)).toEqual(['toolu_9', undefined])
+    expect(liveOf('toolu_9')).toBe(undefined)
   })
 })

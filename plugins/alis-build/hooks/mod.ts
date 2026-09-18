@@ -9,8 +9,8 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
 import { renderAlisOutput } from './mod/alis-render'
-import { watchAlisCall } from './mod/ops-live'
-import { renderOpsResult } from './mod/ops-render'
+import { liveOf, watchAlisCall } from './mod/ops-live'
+import { renderOpsResult, renderOpsRunning } from './mod/ops-render'
 import { passClassic } from './mod/classic'
 import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
@@ -29,7 +29,7 @@ export function hostOf($: HostNouns): Host {
     root: () => $.session.root(),
     exists: path => $.fs.exists(path),
     status: text => $.ui.status(text),
-    notice: (toolUseId, text) => $.ui.notice(toolUseId, text),
+    invalidate: () => $.ui.invalidate('ui.render'),
     every: (ms, fn) => $.clock.every(ms, fn).cancel,
     writeFile: (path, text) => $.fs.write(path, text),
     run: (argv, init) => $.process.run(argv, init),
@@ -59,9 +59,14 @@ export const register: Register = on => {
   }).catch(($, e, next) => next(e))
   on('command.run', { command: 'alis' }, ($, e) => runAlisCommand(hostOf($), e.args))
 
-  // Alis operations in Bash rows: a live line while `alis operations wait`
-  // runs, and a summary in place of the NDJSON progress once it is done.
+  // Alis operations in Bash rows: a live line under the row while `alis
+  // operations wait` runs, and a summary in place of the NDJSON progress
+  // once it is done.
   on('tool.call', { tool: 'Bash' }, ($, e, next) => watchAlisCall(hostOf($), e, next, next.signal)).catch(($, e, next) => next(e))
+  on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
+    const wait = liveOf(e.props.tool_use_id)
+    return wait && e.props.isRunning ? renderOpsRunning($.ui.resolve(e), await next(e), wait) : next(e)
+  })
   on('ui.render', { component: 'ToolResult', props: { tool: 'Bash' } }, ($, e, next) => renderOpsResult($.ui.resolve(e), e.props.output) ?? next(e))
   on('ui.render', { component: 'CommandOutput', props: { command: 'alis' } }, ($, e, next) => renderAlisOutput($.ui.resolve(e), e.props.text) ?? next(e))
 }

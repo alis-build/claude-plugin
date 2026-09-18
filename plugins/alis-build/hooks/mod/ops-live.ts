@@ -1,19 +1,32 @@
 // A live line under a running `alis operations wait <op>` Bash row. The
 // engine shows no output while a tool runs, so the module polls
-// `alis operations describe <op> --json` on its own clock and keeps the
-// row's notice current; the line goes away when the call resolves (the
-// result row then draws the summary, see ops-render.tsx).
+// `alis operations describe <op> --json` on its own clock, keeps what it
+// learned per call, and asks for a redraw; the ToolUse render hook
+// (ops-render.tsx) draws the line from that state while the row runs.
 import type { Host } from './host'
 import { alisCallOf, operationStateOf } from './ops'
 
-export const POLL_MS = 3_000
+/** How often the row is redrawn (the elapsed counter), in milliseconds. */
+export const TICK_MS = 1_000
+/** Every how many ticks the operation is described. */
+export const POLL_EVERY = 3
 const DESCRIBE_TIMEOUT_MS = 5_000
+
+export type LiveWait = { operation: string; startedAt: number; status: string }
+
+const live = new Map<string, LiveWait>()
+
+/** What a running call waits on, for its row; undefined once it resolved. */
+export function liveOf(toolUseId: unknown): LiveWait | undefined {
+  return typeof toolUseId === 'string' ? live.get(toolUseId) : undefined
+}
 
 type Envelope = { tool_use_id?: unknown; command?: unknown }
 
 /**
- * Runs the call through `next` and, while it runs, keeps a status line under
- * its row when it waits on an operation. Never changes the call or its result.
+ * Runs the call through `next` and, while it runs, keeps its row's live
+ * state current when it waits on an operation. Never changes the call or
+ * its result.
  */
 export function watchAlisCall<E extends object, R>(host: Host, e: E, next: (e: E) => Promise<R>, signal: AbortSignal): Promise<R> {
   const { tool_use_id, command } = e as Envelope
@@ -21,36 +34,39 @@ export function watchAlisCall<E extends object, R>(host: Host, e: E, next: (e: E
   const pending = next(e)
   if (call?.kind !== 'wait' || typeof tool_use_id !== 'string') return pending
 
-  const operation = call.operation
-  const startedAt = Date.now()
+  const state: LiveWait = { operation: call.operation, startedAt: Date.now(), status: 'running' }
+  live.set(tool_use_id, state)
   let inFlight = false
   let stopped = false
-  let lastStatus = 'running'
+  let ticks = 0
 
-  const show = () => host.notice(tool_use_id, `alis: waiting on ${operation} · ${elapsedOf(Date.now() - startedAt)} · ${lastStatus}`)
   const poll = async () => {
     if (inFlight || stopped) return
     inFlight = true
     try {
-      const run = await host.run(['alis', 'operations', 'describe', operation, '--json'], { timeoutMs: DESCRIBE_TIMEOUT_MS })
-      const state = run.exitCode === 0 ? operationStateOf(run.stdout) : null
-      if (state) lastStatus = state.error ? `failed: ${state.error}` : state.done ? `done${state.version ? ` → ${state.version}` : ''}` : (state.status ?? 'running')
+      const run = await host.run(['alis', 'operations', 'describe', state.operation, '--json'], { timeoutMs: DESCRIBE_TIMEOUT_MS })
+      const described = run.exitCode === 0 ? operationStateOf(run.stdout) : null
+      if (described) state.status = described.error ? `failed: ${described.error}` : described.done ? `done${described.version ? ` → ${described.version}` : ''}` : (described.status ?? 'running')
     } catch (error) {
-      host.debug(`ops: describe ${operation} failed: ${String(error)}`)
+      host.debug(`ops: describe ${state.operation} failed: ${String(error)}`)
     } finally {
       inFlight = false
     }
-    if (!stopped) show()
+    if (!stopped) host.invalidate()
   }
-  const cancel = host.every(POLL_MS, () => void poll())
+  const cancel = host.every(TICK_MS, () => {
+    if (stopped) return
+    host.invalidate()
+    if (++ticks % POLL_EVERY === 0) void poll()
+  })
   const stop = () => {
     if (stopped) return
     stopped = true
     cancel()
-    host.notice(tool_use_id, undefined)
+    live.delete(tool_use_id)
+    host.invalidate()
   }
   signal.addEventListener('abort', stop, { once: true })
-  show()
   void poll()
   return pending.finally(stop)
 }

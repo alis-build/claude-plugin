@@ -1,12 +1,29 @@
 /* @jsxRuntime classic */
 /* @jsx h */
-// Draws the result row of a Bash call that streamed an alis operation as a
-// short summary instead of its NDJSON progress lines. The stored result the
-// model reads is untouched. Returns null when the row is not ours.
+// Draws alis operations in Bash rows: a live line under a running
+// `operations wait` row (from ops-live.ts's state), and the result row of a
+// finished streamed operation as a short summary instead of its NDJSON
+// progress lines. The stored result the model reads is untouched. A row
+// that is not ours returns null and the caller lets the engine draw it.
 import type { RenderElement } from 'claude-code'
 
 import type { Kit } from './alis-render'
 import { summaryLinesOf } from './ops'
+import { elapsedOf, type LiveWait } from './ops-live'
+
+/** The engine's own row for the call, with the live line beneath it. */
+export function renderOpsRunning(kit: Kit, rendered: RenderElement, live: LiveWait, now = Date.now()): RenderElement {
+  const { Box, Text } = kit
+  return (
+    <Box flexDirection="column">
+      {rendered}
+      <Box paddingLeft={2}>
+        <Text dimColor>{`alis: waiting on ${live.operation} · ${elapsedOf(now - live.startedAt)} · `}</Text>
+        <Text>{live.status}</Text>
+      </Box>
+    </Box>
+  )
+}
 
 export function renderOpsResult(kit: Kit, output: unknown): RenderElement | null {
   const lines = summaryLinesOf(output)
