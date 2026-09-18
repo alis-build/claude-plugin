@@ -2,6 +2,7 @@ import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { classicState } from '../hooks/mod/classic'
 import { suggestSkills } from '../hooks/mod/suggest'
+import { suggestBand } from '../hooks/mod/suggest-band'
 import { fakeHost } from './fixtures/fake-host'
 
 tier('user')
@@ -30,6 +31,7 @@ describe('suggest', () => {
     host.dir = '/Users/me/alis.build/acme/build/sm/hello/v1'
     const result = await suggestSkills(host, { ...prompt('deploy it'), context: ['earlier'] }, passthrough)
     expect(result).toEqual({ text: 'deploy it', context: ['earlier', 'Possibly relevant skill: x'] })
+    expect(suggestBand.items).toEqual([])  // the note above is not in the CLI's exact shape
     expect(host.runs[0]?.argv).toEqual(['alis', 'skills', 'suggest', '--hook'])
     expect(host.runs[0]?.init?.timeoutMs).toBe(2000)
     expect(JSON.parse(host.runs[0]?.init?.stdin ?? '')).toEqual({

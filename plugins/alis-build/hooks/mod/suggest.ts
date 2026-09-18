@@ -8,6 +8,7 @@ import type { PromptSubmitInput, PromptSubmitResult } from 'claude-code'
 import { classicState } from './classic'
 import { parseHookEnvelope } from './classic-result'
 import type { Host } from './host'
+import { dismissSuggestions, showSuggestions, suggestionsOf } from './suggest-band'
 
 const CLI_TIMEOUT_MS = 2_000
 const WAKE_WORDS = /alis|skill/i
@@ -18,6 +19,8 @@ export async function suggestSkills(
   next: (e: PromptSubmitInput) => Promise<PromptSubmitResult>,
 ): Promise<PromptSubmitResult> {
   try {
+    // A new prompt clears the band; the answer below may fill it again.
+    if (dismissSuggestions()) host.invalidate()
     const root = await host.root().catch(() => '')
     if (!root.includes('/alis.build/')) {
       // Outside an alis.build workspace only explicit addresses matter
@@ -37,6 +40,7 @@ export async function suggestSkills(
     if (run.exitCode !== 0) return next(e)
     const text = parseHookEnvelope(run.stdout).additionalContext?.[0]
     if (!text) return next(e)
+    if (showSuggestions(suggestionsOf(text))) host.invalidate()
     return next({ ...e, context: [...(e.context ?? []), text] })
   } catch (error) {
     host.debug(`suggest: skipped: ${String(error)}`)

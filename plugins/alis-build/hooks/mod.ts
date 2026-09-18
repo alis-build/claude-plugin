@@ -18,6 +18,8 @@ import { confirmDeploy } from './mod/deploy-dialog'
 import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
 import { suggestSkills } from './mod/suggest'
+import { dismissSuggestions, loadPromptOf, suggestBand } from './mod/suggest-band'
+import { renderSuggestBand } from './mod/suggest-band-view'
 
 type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session' | 'clock' | 'prompt' | 'plugin'>
 
@@ -61,8 +63,22 @@ export const register: Register = on => {
   // engine.
   on('classic.PreToolUse', { tool: 'Bash' }, ($, e, next) => cliGateClassic(hostOf($), e, next)).catch(($, e, next) => next(e))
 
-  // Per-prompt skill discovery (suggest-skills.sh's job).
+  // Per-prompt skill discovery (suggest-skills.sh's job), and the band above
+  // the prompt where the person can load a suggested skill.
   on('prompt.submit', ($, e, next) => suggestSkills(hostOf($), e, next)).catch(($, e, next) => next(e))
+  on('ui.render', { component: 'AbovePrompt' }, ($, e, next) => {
+    if (e.props.hasSurvey || suggestBand.items.length === 0) return next(e)
+    const host = hostOf($)
+    return renderSuggestBand($.ui.resolve(e), suggestBand.items, {
+      load: id => {
+        void host.submitPrompt(loadPromptOf(id))
+        if (dismissSuggestions()) host.invalidate()
+      },
+      dismiss: () => {
+        if (dismissSuggestions()) host.invalidate()
+      },
+    }, e.props.bodyColumns)
+  })
 
   // /alis: registered once the session is ready, so it is listed by turn one.
   on('session.start', async ($, e, next) => {

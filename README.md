@@ -124,7 +124,10 @@ With the module active:
 - the handoff lifecycle is relayed to `alis workstation handoff _hook` in-process,
   with a status line while a handoff claims the session
 - per-prompt skill suggestions come from the same `alis skills suggest --hook` call,
-  attached as context beside the prompt
+  attached as context beside the prompt, and also shown in a band above the input
+  with a **Load** button per skill (it hands Claude the `alis skills load` command
+  as a prompt) and **Dismiss**; the band clears on the next prompt. Click it or
+  press ctrl+x tab to focus it, then `1`, `2`… load and `x` dismisses
 - `/alis status` shows the CLI version, workspace, what the module serves and the
   handoff claim without spending a model turn; `/alis handoff [alias]` runs
   `alis workstation handoff --session <this session> --json` for you (the
