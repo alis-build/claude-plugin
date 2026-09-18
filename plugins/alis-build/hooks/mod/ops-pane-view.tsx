@@ -1,7 +1,9 @@
 /* @jsxRuntime classic */
 /* @jsx h */
 // Draws the operations pane: one line per operation with its buttons, a
-// footer with the refresh time. Sized to the pane's body width.
+// footer with the refresh time. Sized to the pane's body width. No hotkeys:
+// a docked pane leaves the keyboard to the prompt, so its buttons are
+// clicked (or the pane is toggled with /alis ops).
 import type { Elements, RenderElement } from 'claude-code'
 
 import { agoOf, type OperationRow, type OpsPaneState, REFRESH_MS } from './ops-pane'
@@ -43,9 +45,9 @@ export function renderOpsPane(kit: PaneKit, state: OpsPaneState, actions: OpsPan
         </Box>
       ))}
       <Box marginTop={1}>
-        <Button key="refresh" label="Refresh" hotkey="r" onPress={actions.refresh} />
+        <Button key="refresh" label="Refresh" onPress={actions.refresh} />
         <Text> </Text>
-        <Button key="close" label="Close" hotkey="q" onPress={actions.close} />
+        <Button key="close" label="Close" onPress={actions.close} />
         <Text dimColor>
           {`  ${state.isRefreshing ? 'refreshing…' : state.refreshedAt ? `refreshed ${agoOf(new Date(state.refreshedAt).toISOString(), now)}` : ''} · every ${REFRESH_MS / 1000}s`}
         </Text>

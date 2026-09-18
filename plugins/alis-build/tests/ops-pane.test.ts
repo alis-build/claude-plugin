@@ -98,6 +98,6 @@ describe('ops-pane', () => {
     expect(drawn).toContain('deploy acme.sm.hello.v1')
     expect(drawn).toContain('"label":"Wait"')
     expect((drawn.match(/"label":"Cancel"/g) ?? []).length).toBe(1)
-    expect(drawn).toContain('"hotkey":"r"')
+    expect(drawn).not.toContain('hotkey')
   })
 })

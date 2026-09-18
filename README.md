@@ -131,7 +131,8 @@ With the module active:
   first with their state, refreshed every five seconds while open; each running
   operation has a **Wait** and a **Cancel** button that hand Claude the matching
   `alis operations …` command as a prompt, so the permission gate and your
-  confirmation stay in charge. `r` refreshes, `q` or Esc closes
+  confirmation stay in charge. Click **Refresh** or **Close**, or run `/alis ops`
+  again to close it; a docked pane leaves the keyboard to the prompt
 - while `alis operations wait <op> --json` runs in a Bash call, a live line under
   its row shows the elapsed time and the operation's state, polled from
   `alis operations describe` every three seconds; once any streamed operation
