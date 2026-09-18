@@ -18,6 +18,7 @@ allowed-tools:
   - "Bash(alis preview *)"
   - "Bash(terminal-browser action *)"
   - "Bash(terminal-browser ls*)"
+  - "mcp__terminal-browser__open"
 ---
 
 # Frontend preview: see and drive a service's page
@@ -35,6 +36,12 @@ the conversation, the user watches it, and you drive it.
    service's `.claude/launch.json` port, else the Makefile's `APP_URL`, else a
    Vite app's configured port, else `localhost:8080`. Pass `--port <n>` or `--url <address>` when you know better
    (a Vite server on 5173, a route such as `/checkout`).
+
+   If you have the `mcp__terminal-browser__open` tool (terminal-browser's
+   Claude Code plugin with its agent tool on), show the page inside Claude
+   Code instead: run `alis preview --dry-run --json` and call the tool with
+   its `url`. Drive it as in step 2; if `terminal-browser action` finds no
+   browser in this tab, pass `--browser <key>` from `terminal-browser ls --all`.
 3. Dev server on a workstation, agent on this laptop: run
    `alis preview --ssh alis-<org>-<id> --port <n> --json`. The browser stays
    here and its traffic goes through the workstation, so `localhost` is the
@@ -84,10 +91,13 @@ only when the user asks, and only this way:
 
 - `terminal-browser action -- tab close` closes the current tab
   (`tab close <id>` another; `terminal-browser ls` lists the ids). Closing the
-  last tab quits the browser. A `prefix+f` pane closes with it; a pane opened
-  by `alis preview` returns to its shell prompt, and `herdr pane close <id>`
-  removes it if the user wants that too (`terminal-browser ls --json` shows
-  the pane id while the browser runs).
+  last tab quits the browser. A `prefix+f` pane closes with it. A split
+  opened by `alis preview` asks the user whether to close it in Ghostty; in
+  herdr it returns to its shell prompt, and `herdr pane close <id>` removes it
+  if the user wants that too (`terminal-browser ls --json` shows the pane id
+  while the browser runs).
+- A page you opened with `mcp__terminal-browser__open` closes with
+  `mcp__terminal-browser__close`.
 - Never `terminal-browser action -- close`: it prints "Browser closed" but
   only disconnects you, and the browser stays open.
 - Never `terminal-browser shutdown`: it closes every browser on the machine,
