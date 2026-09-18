@@ -8,7 +8,7 @@
 import type { RenderElement } from 'claude-code'
 
 import type { Kit } from './alis-render'
-import { ACCENT, badge, DANGER, OK } from './brand'
+import { ACCENT, badge, DANGER, OK, RUNNING } from './brand'
 import { summaryLinesOf } from './ops'
 import { elapsedOf, type LiveWait } from './ops-live'
 
@@ -24,7 +24,7 @@ export function renderOpsRunning(kit: Kit, rendered: RenderElement, live: LiveWa
       <Box paddingLeft={2}>
         {badge(kit)}
         <Text dimColor>{` waiting on ${live.operation} · ${elapsedOf(now - live.startedAt)} · `}</Text>
-        <Text bold color={live.status.startsWith('failed') ? DANGER : live.status.startsWith('done') ? OK : ACCENT}>
+        <Text bold color={live.status.startsWith('failed') ? DANGER : live.status.startsWith('done') ? OK : RUNNING}>
           {live.status}
         </Text>
       </Box>

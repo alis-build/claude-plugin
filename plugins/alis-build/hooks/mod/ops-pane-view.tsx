@@ -6,7 +6,7 @@
 // clicked (or the pane is toggled with /alis ops).
 import type { Elements, RenderElement } from 'claude-code'
 
-import { ACCENT, OK } from './brand'
+import { OK, RUNNING } from './brand'
 import { agoOf, type OperationRow, type OpsPaneState, REFRESH_MS } from './ops-pane'
 
 export type PaneKit = Pick<Elements['terminal'], 'Box' | 'Text' | 'Button' | 'Link'>
@@ -33,7 +33,7 @@ export function renderOpsPane(kit: PaneKit, state: OpsPaneState, actions: OpsPan
             <Text bold={row.running} color={row.running ? OK : undefined}>
               {row.running ? '● ' : '○ '}
             </Text>
-            <Text bold={row.running} color={row.running ? ACCENT : undefined}>{`${row.type} ${row.target}`}</Text>
+            <Text bold={row.running} color={row.running ? RUNNING : undefined}>{`${row.type} ${row.target}`}</Text>
             <Text dimColor>{`  ${row.running ? (row.status ?? 'running') : 'done'} · ${agoOf(row.startedAt, now)}`}</Text>
           </Box>
           <Box paddingLeft={2}>
