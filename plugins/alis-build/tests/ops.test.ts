@@ -1,7 +1,7 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { alisCallOf, operationStateOf, progressEventsOf, summaryLinesOf } from '../hooks/mod/ops'
-import { elapsedOf, liveOf, POLL_EVERY, TICK_MS, watchAlisCall } from '../hooks/mod/ops-live'
+import { elapsedOf, liveAmong, liveOf, POLL_EVERY, TICK_MS, watchAlisCall } from '../hooks/mod/ops-live'
 import { fakeHost } from './fixtures/fake-host'
 
 tier('user')
@@ -95,6 +95,8 @@ describe('ops-live', () => {
     await settle()
 
     expect(liveOf('toolu_9')).toMatchObject({ operation: 'operations/x', status: 'building' })
+    expect(liveAmong([{ tool_use_id: 'other', isRunning: true }, { tool_use_id: 'toolu_9', isRunning: true }])).toBe(liveOf('toolu_9'))
+    expect(liveAmong([{ tool_use_id: 'toolu_9', isRunning: false }])).toBe(undefined)
     expect(host.timers).toEqual([expect.objectContaining({ ms: TICK_MS, cancelled: false })])
     expect(host.runs[0]?.argv).toEqual(['alis', 'operations', 'describe', 'operations/x', '--json'])
     expect(host.invalidations).toBe(1)

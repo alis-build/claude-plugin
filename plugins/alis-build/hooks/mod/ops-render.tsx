@@ -11,7 +11,10 @@ import type { Kit } from './alis-render'
 import { summaryLinesOf } from './ops'
 import { elapsedOf, type LiveWait } from './ops-live'
 
-/** The engine's own row for the call, with the live line beneath it. */
+/**
+ * The engine's own row (a tool call, or the folded group holding it) with
+ * the live line beneath it.
+ */
 export function renderOpsRunning(kit: Kit, rendered: RenderElement, live: LiveWait, now = Date.now()): RenderElement {
   const { Box, Text } = kit
   return (

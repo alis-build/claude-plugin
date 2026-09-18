@@ -9,7 +9,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
 import { renderAlisOutput } from './mod/alis-render'
-import { liveOf, watchAlisCall } from './mod/ops-live'
+import { liveAmong, liveOf, watchAlisCall } from './mod/ops-live'
 import { renderOpsResult, renderOpsRunning } from './mod/ops-render'
 import { passClassic } from './mod/classic'
 import { cliGateClassic } from './mod/cli-gate-classic'
@@ -66,6 +66,10 @@ export const register: Register = on => {
   on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
     const wait = liveOf(e.props.tool_use_id)
     return wait && e.props.isRunning ? renderOpsRunning($.ui.resolve(e), await next(e), wait) : next(e)
+  })
+  on('ui.render', { component: 'ToolGroup' }, async ($, e, next) => {
+    const wait = e.props.isExpanded ? undefined : liveAmong(e.props.calls)
+    return wait ? renderOpsRunning($.ui.resolve(e), await next(e), wait) : next(e)
   })
   on('ui.render', { component: 'ToolResult', props: { tool: 'Bash' } }, ($, e, next) => renderOpsResult($.ui.resolve(e), e.props.output) ?? next(e))
   on('ui.render', { component: 'CommandOutput', props: { command: 'alis' } }, ($, e, next) => renderAlisOutput($.ui.resolve(e), e.props.text) ?? next(e))

@@ -21,6 +21,15 @@ export function liveOf(toolUseId: unknown): LiveWait | undefined {
   return typeof toolUseId === 'string' ? live.get(toolUseId) : undefined
 }
 
+/** The first live wait among a folded group's calls, for the group's row. */
+export function liveAmong(calls: ReadonlyArray<{ tool_use_id?: string; isRunning: boolean }>): LiveWait | undefined {
+  for (const call of calls) {
+    const wait = call.isRunning ? liveOf(call.tool_use_id) : undefined
+    if (wait) return wait
+  }
+  return undefined
+}
+
 type Envelope = { tool_use_id?: unknown; command?: unknown }
 
 /**
