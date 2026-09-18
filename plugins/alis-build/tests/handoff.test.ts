@@ -30,7 +30,7 @@ describe('handoff', () => {
     const answer = await handoffHook(host, 'PreToolUse', { tool: 'Bash', tool_use_id: 't', command: 'ls' })
     expect(answer).toEqual({ deny: REASON })
     expect(JSON.parse(host.runs[0]?.init?.stdin ?? '')).toEqual({ session_id: 'abc', hook_event_name: 'PreToolUse', cwd: '/w' })
-    expect(host.statuses).toEqual(['alis handoff: session claimed, coordinator unavailable'])
+    expect(host.statuses).toEqual(['handoff: session claimed, coordinator unavailable'])
   })
 
   test('an existing claim fails closed without a CLI, per event', async () => {
@@ -60,12 +60,12 @@ describe('handoff', () => {
   test('the status line follows the claim and clears once it is gone', async () => {
     const host = fakeHost({ present: [CLAIM] })
     await handoffHook(host, 'UserPromptSubmit', { session_id: 'abc', hook_event_name: 'UserPromptSubmit' })
-    expect(host.statuses).toEqual(['alis handoff: session claimed'])
-    expect(host.toasts).toEqual(['alis: a handoff has claimed this session'])
+    expect(host.statuses).toEqual(['handoff: session claimed'])
+    expect(host.toasts).toEqual(['a handoff has claimed this session'])
     host.present.clear()
     await handoffHook(host, 'PostToolUse', { session_id: 'abc', hook_event_name: 'PostToolUse' })
     await handoffHook(host, 'PostToolUse', { session_id: 'abc', hook_event_name: 'PostToolUse' })
-    expect(host.statuses).toEqual(['alis handoff: session claimed', undefined])
+    expect(host.statuses).toEqual(['handoff: session claimed', undefined])
   })
 
   test('passClassic relays the nine lifecycle events and merges the answer over the chain beneath', async () => {

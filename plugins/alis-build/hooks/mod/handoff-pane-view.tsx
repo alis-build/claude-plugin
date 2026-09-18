@@ -18,7 +18,10 @@ export function renderHandoffPane(kit: PaneKit, pane: HandoffPaneState, actions:
   const s = pane.state
   const failed = s ? FAILED.has(s.phase) || Boolean(s.error) : false
   const settled = s ? TERMINAL_PHASES.has(s.phase) : false
-  const canCancel = s !== null && !settled && !pane.busy
+  // A handoff that failed before the session stopped still holds the claim
+  // here; Cancel is how the CLI releases it, so it stays on until released.
+  const released = s !== null && (s.phase === 'cancelled' || s.phase === 'reclaimed' || s.phase === 'completed')
+  const canCancel = s !== null && !released && !pane.busy
   const canReclaim = s !== null && (s.safeToClose || s.phase === 'completed' || s.phase === 'waiting_for_input') && s.phase !== 'reclaimed' && !pane.busy
   return (
     <Box flexDirection="column" key="alis-handoff">
@@ -46,6 +49,7 @@ export function renderHandoffPane(kit: PaneKit, pane: HandoffPaneState, actions:
             )}
           </Box>
           {s.error ? <Text color={DANGER}>{`error: ${s.error}`}</Text> : null}
+          {failed && !released ? <Text dimColor>The session is still claimed on this laptop; Cancel handoff releases it.</Text> : null}
           {s.reclaim?.error ? <Text color={DANGER}>{`reclaim stopped at ${s.reclaim.phase ?? '?'}: ${s.reclaim.error}`}</Text> : null}
           {s.url ? (
             <Box>

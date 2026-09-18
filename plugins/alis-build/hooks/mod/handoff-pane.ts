@@ -105,8 +105,8 @@ export async function refreshHandoff(host: Host): Promise<void> {
     if (run.exitCode !== 0 || !state) throw new Error(run.stderr.trim().split('\n').at(-1) || run.stdout.trim().split('\n').at(-1) || `status exited ${run.exitCode}`)
     handoffPane.state = state
     handoffPane.error = null
-    if (state.safeToClose && !lastSafe) host.toast(`alis: safe to close the laptop, the session is on ${state.target}`)
-    if (state.error && !lastSafe) host.toast(`alis: handoff problem, ${state.error}`)
+    if (state.safeToClose && !lastSafe) host.toast(`safe to close the laptop, the session is on ${state.target}`)
+    if (state.error && !lastSafe) host.toast(`handoff problem: ${state.error}`)
     lastSafe = state.safeToClose
     if (state.safeToClose || TERMINAL_PHASES.has(state.phase)) schedule(host, POLL_SETTLED_MS)
   } catch (error) {
@@ -137,7 +137,7 @@ export function handoffActions(host: Host) {
       const next = handoffStateOf(run.stdout)
       if (next) handoffPane.state = next
       handoffPane.error = run.exitCode === 0 ? null : run.stderr.trim().split('\n').at(-1) || `${verb} exited ${run.exitCode}`
-      host.toast(run.exitCode === 0 ? `alis: handoff ${verb === 'cancel' ? 'cancelled' : 'reclaimed'}` : `alis: ${verb} failed`)
+      host.toast(run.exitCode === 0 ? `handoff ${verb === 'cancel' ? 'cancelled' : 'reclaimed'}` : `${verb} failed`)
     } catch (error) {
       handoffPane.error = String(error)
     } finally {

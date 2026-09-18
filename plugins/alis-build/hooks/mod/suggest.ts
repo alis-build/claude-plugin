@@ -43,7 +43,7 @@ export async function suggestSkills(
     const items = suggestionsOf(text)
     if (showSuggestions(items)) {
       host.invalidate()
-      if (items.length > 0) host.toast(`alis: skill suggested, ${items.map(i => i.id).join(', ')} (band above the prompt)`)
+      if (items.length > 0) host.toast(`skill suggested: ${items.map(i => i.id).join(', ')} (band above the prompt)`)
     }
     return next({ ...e, context: [...(e.context ?? []), text] })
   } catch (error) {

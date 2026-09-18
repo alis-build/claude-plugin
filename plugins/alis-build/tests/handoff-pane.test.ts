@@ -39,7 +39,7 @@ describe('handoff-pane', () => {
     host.answer = statusAnswers(running)
     await refreshHandoff(host)
     expect(handoffPane.state?.safeToClose).toBe(true)
-    expect(host.toasts).toEqual(['alis: safe to close the laptop, the session is on alis-acme-1'])
+    expect(host.toasts).toEqual(['safe to close the laptop, the session is on alis-acme-1'])
     expect(host.timers.at(-1)).toEqual(expect.objectContaining({ ms: POLL_SETTLED_MS, cancelled: false }))
     expect(host.timers.filter(t => !t.cancelled)).toHaveLength(1)
     onHandoffPaneClosed()
@@ -73,7 +73,7 @@ describe('handoff-pane', () => {
     expect(host.runs.at(-1)?.argv).toEqual(['alis', 'workstation', 'handoff', 'reclaim', ID, '--json', '--approve'])
     expect(host.asks.at(-1)).toEqual({ question: 'Bring the session back from alis-acme-1 to this laptop?', options: { options: ['Keep it', 'Reclaim'], header: 'Handoff' } })
     expect(handoffPane.state?.phase).toBe('reclaimed')
-    expect(host.toasts.at(-1)).toBe('alis: handoff reclaimed')
+    expect(host.toasts.at(-1)).toBe('handoff reclaimed')
     host.askAnswer = 'Cancel handoff'
     host.answer = (run: Run) => (run.argv[3] === 'cancel' ? { exitCode: 0, stdout: JSON.stringify({ ...started, phase: 'cancelled' }), stderr: '' } : statusAnswers(running)(run))
     actions.cancel()
@@ -118,7 +118,11 @@ describe('handoff-pane', () => {
 
   test('the pane draws the safe-to-close line, the link and the buttons the phase allows', async ($, on) => {
     const pane = { isOpen: true, state: handoffStateOf(JSON.stringify(running))!, refreshedAt: Date.now(), error: null, busy: null }
-    on('ui.render', { component: 'Pane' }, ($, e) => renderHandoffPane($.ui.resolve(e), pane, { cancel: () => undefined, reclaim: () => undefined, refresh: () => undefined, close: () => undefined }))
+    const failedPane = { ...pane, state: { ...pane.state, phase: 'failed_before_stop', safeToClose: false, error: 'source and destination need matching claude versions' } }
+    const actions = { cancel: () => undefined, reclaim: () => undefined, refresh: () => undefined, close: () => undefined }
+    // Every hook beneath the plugins is registered before the first call on $.
+    on('ui.render', { component: 'Pane', requestId: 'test-handoff' }, ($, e) => renderHandoffPane($.ui.resolve(e), pane, actions))
+    on('ui.render', { component: 'Pane', requestId: 'test-failed' }, ($, e) => renderHandoffPane($.ui.resolve(e), failedPane, actions))
     const drawn = JSON.stringify(await $.ui.render({
       surface: 'terminal', component: 'Pane', requestId: 'test-handoff',
       props: { title: 'x', isFocused: true, bodyColumns: 80, placement: 'inline', scroll: { first: 0, rows: 12 } as never, view: {} as never },
@@ -128,5 +132,13 @@ describe('handoff-pane', () => {
     expect(drawn).toContain('"label":"Reclaim"')
     expect(drawn).toContain('"label":"Cancel handoff"')
     expect(drawn).toContain(' alis ')
+
+    const failedDrawn = JSON.stringify(await $.ui.render({
+      surface: 'terminal', component: 'Pane', requestId: 'test-failed',
+      props: { title: 'x', isFocused: true, bodyColumns: 80, placement: 'inline', scroll: { first: 0, rows: 12 } as never, view: {} as never },
+    }))
+    expect(failedDrawn).toContain('"label":"Cancel handoff"')
+    expect(failedDrawn).not.toContain('"label":"Reclaim"')
+    expect(failedDrawn).toContain('still claimed on this laptop')
   })
 })

@@ -77,8 +77,8 @@ async function isClaimed(host: Host, sid: string): Promise<boolean> {
 
 function showStatus(host: Host, claimed: boolean, cliOk: boolean): void {
   if (claimed) {
-    if (!statusShown) host.toast('alis: a handoff has claimed this session')
-    host.status(cliOk ? 'alis handoff: session claimed' : 'alis handoff: session claimed, coordinator unavailable')
+    if (!statusShown) host.toast('a handoff has claimed this session')
+    host.status(cliOk ? 'handoff: session claimed' : 'handoff: session claimed, coordinator unavailable')
     statusShown = true
   } else if (statusShown) {
     host.status(undefined)
