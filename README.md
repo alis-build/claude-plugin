@@ -126,6 +126,12 @@ With the module active:
   handoff claim without spending a model turn; `/alis handoff [alias]` runs
   `alis workstation handoff --session <this session> --json` for you (the
   command runs without a permission dialog because you typed it)
+- `/alis ops` opens a pane (docked beside the transcript in the fullscreen layout,
+  inline otherwise) listing the operations this machine started, running ones
+  first with their state, refreshed every five seconds while open; each running
+  operation has a **Wait** and a **Cancel** button that hand Claude the matching
+  `alis operations …` command as a prompt, so the permission gate and your
+  confirmation stay in charge. `r` refreshes, `q` or Esc closes
 - while `alis operations wait <op> --json` runs in a Bash call, a live line under
   its row shows the elapsed time and the operation's state, polled from
   `alis operations describe` every three seconds; once any streamed operation

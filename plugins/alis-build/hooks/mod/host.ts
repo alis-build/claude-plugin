@@ -3,7 +3,7 @@
 // within the file a hook receives it in, and `$.env.get` takes literal
 // names, so hooks/mod.ts spells every `$.noun.call` once in hostOf() and
 // the files under hooks/mod/ take this interface. Tests pass a fake.
-import type { ProcessRunInit, ProcessRunResult } from 'claude-code'
+import type { PaneOpenArgs, ProcessRunInit, ProcessRunResult } from 'claude-code'
 
 export type Host = {
   /** $HOME, or undefined when unset. */
@@ -26,6 +26,12 @@ export type Host = {
   status: (text: string | undefined) => void
   /** Asks the engine to draw this plugin's render hooks again. */
   invalidate: () => void
+  /** Opens (or retitles) one of this plugin's panes. */
+  openPane: (pane: PaneOpenArgs) => Promise<void>
+  /** Closes one of this plugin's panes; an id that is not open is left alone. */
+  closePane: (id: string) => Promise<void>
+  /** Hands the session a prompt, run once it is idle. */
+  submitPrompt: (text: string) => Promise<unknown>
   /** Runs `fn` every `ms` until the returned function is called. */
   every: (ms: number, fn: () => void) => () => void
   /** Writes a text file, creating directories as needed. */

@@ -12,7 +12,7 @@ const version = (run: Run) =>
 
 describe('alis-command', () => {
   test('the command is named alis with a hint', () => {
-    expect(COMMAND_SPEC).toEqual({ name: 'alis', description: expect.any(String), argumentHint: 'status | handoff [alias]' })
+    expect(COMMAND_SPEC).toEqual({ name: 'alis', description: expect.any(String), argumentHint: 'status | ops | handoff [alias]' })
   })
 
   test('status reports the CLI, workspace, module coverage and handoff claim', async () => {

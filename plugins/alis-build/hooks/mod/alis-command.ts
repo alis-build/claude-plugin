@@ -4,22 +4,25 @@
 import type { CommandSpec } from 'claude-code'
 
 import type { Host } from './host'
+import { toggleOpsPane } from './ops-pane'
 import { PLUGIN_VERSION } from './meta'
 import { COVERS } from './tag'
 
 export const COMMAND_SPEC: CommandSpec = {
   name: 'alis',
   description: 'Alis Build: status, or hand this session to a workstation',
-  argumentHint: 'status | handoff [alias]',
+  argumentHint: 'status | ops | handoff [alias]',
 }
 
-const USAGE = ['usage: status | handoff [alias]', 'status: CLI, workspace, module and handoff state', 'handoff [alias]: continue this session on an enrolled workstation'].join('\n')
+const USAGE = ['usage: status | ops | handoff [alias]', 'status: CLI, workspace, module and handoff state', 'ops: open or close the operations pane', 'handoff [alias]: continue this session on an enrolled workstation'].join('\n')
 
 export async function runAlisCommand(host: Host, args: string): Promise<{ text: string }> {
   const [verb, ...rest] = args.trim().split(/\s+/).filter(Boolean)
   switch (verb ?? 'status') {
     case 'status':
       return { text: await status(host) }
+    case 'ops':
+      return { text: await toggleOpsPane(host) }
     case 'handoff':
       return { text: await handoff(host, rest[0]) }
     default:

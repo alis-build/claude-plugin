@@ -1,4 +1,4 @@
-import type { ProcessRunInit, ProcessRunResult } from 'claude-code'
+import type { PaneOpenArgs, ProcessRunInit, ProcessRunResult } from 'claude-code'
 
 import type { Host } from '../../hooks/mod/host'
 
@@ -14,6 +14,8 @@ export type FakeHost = Host & {
   present: Set<string>
   statuses: (string | undefined)[]
   invalidations: number
+  panes: { opened: PaneOpenArgs[]; closed: string[] }
+  prompts: string[]
   /** Timers `every` registered, with their cancel state; call `fn` to tick. */
   timers: { ms: number; fn: () => void; cancelled: boolean }[]
   runs: Run[]
@@ -33,6 +35,8 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     present: new Set(overrides.present ?? []),
     statuses: [],
     invalidations: 0,
+    panes: { opened: [], closed: [] },
+    prompts: [],
     timers: [],
     runs: [],
     writes: [],
@@ -52,6 +56,15 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     },
     invalidate: () => {
       host.invalidations += 1
+    },
+    openPane: async pane => {
+      host.panes.opened.push(pane)
+    },
+    closePane: async id => {
+      host.panes.closed.push(id)
+    },
+    submitPrompt: async text => {
+      host.prompts.push(text)
     },
     every: (ms, fn) => {
       const timer = { ms, fn, cancelled: false }
