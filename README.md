@@ -137,12 +137,12 @@ With the module active:
   environment with its production flag; **Approve** lets it run and stands in for
   the native permission prompt on that call, **Abort** or dismissing refuses it.
   Without the flag the CLI refuses a production deploy on its own, so nothing asks
-- a handoff opens a pane beside the transcript instead of the CLI's separate
-  progress window: the target, the phase, a prominent "safe to close the laptop"
-  line once the workstation has the session, the workstation link, and **Cancel**
-  and **Reclaim** buttons that confirm in a dialog before running the CLI. It opens
-  from `/alis handoff` and from any `alis workstation handoff` Claude runs (the
-  module adds `--no-progress` to that call)
+- `/alis handoff [alias]` opens a pane beside the transcript instead of the CLI's
+  separate progress window: the target, the phase, a prominent "safe to close the
+  laptop" line once the workstation has the session, the workstation link, and
+  **Cancel** and **Reclaim** buttons that confirm in a dialog before running the
+  CLI. A handoff Claude starts through the `alis:handoff` skill keeps the CLI's
+  own popup
 - `/alis ops` opens a pane (docked beside the transcript in the fullscreen layout,
   inline otherwise) listing the operations this machine started, running ones
   first with their state, refreshed every five seconds while open; each running

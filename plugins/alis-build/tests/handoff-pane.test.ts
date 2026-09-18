@@ -1,7 +1,6 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { runAlisCommand } from '../hooks/mod/alis-command'
-import { handoffStartArgv, watchHandoffCall } from '../hooks/mod/handoff-call'
 import { HANDOFF_PANE_ID, handoffActions, handoffPane, handoffStateOf, onHandoffPaneClosed, openHandoffPane, POLL_MS, POLL_SETTLED_MS, refreshHandoff } from '../hooks/mod/handoff-pane'
 import { renderHandoffPane } from '../hooks/mod/handoff-pane-view'
 import { fakeHost, type Run } from './fixtures/fake-host'
@@ -90,29 +89,6 @@ describe('handoff-pane', () => {
     expect(text).toContain('handoff: started')
     expect(text).toContain('target: alis-acme-1')
     expect(host.panes.opened.map(p => p.id)).toEqual([HANDOFF_PANE_ID])
-    onHandoffPaneClosed()
-  })
-
-  test('a handoff Claude starts is rewritten with --no-progress and opens the pane from its answer', async () => {
-    onHandoffPaneClosed()
-    expect(handoffStartArgv('alis workstation handoff --session abc --json')).toEqual(['alis', 'workstation', 'handoff', '--session', 'abc', '--json'])
-    expect(handoffStartArgv('alis --cwd /x workstation handoff --to a-b --json')?.at(-1)).toBe('--json')
-    expect(handoffStartArgv('alis workstation handoff status abc --json')).toBe(null)
-    expect(handoffStartArgv('alis workstation handoff targets --json')).toBe(null)
-    expect(handoffStartArgv('alis build x')).toBe(null)
-    const host = fakeHost({ answer: statusAnswers(started) })
-    const seen: string[] = []
-    const result = await watchHandoffCall(host, { tool: 'Bash', tool_use_id: 't', command: 'alis workstation handoff --session abc --json' }, async e2 => {
-      seen.push((e2 as { command: string }).command)
-      return { result: { stdout: JSON.stringify(started), stderr: '', interrupted: false } }
-    })
-    expect(seen).toEqual(['alis workstation handoff --session abc --json --no-progress'])
-    expect(result).toMatchObject({ result: { stdout: expect.any(String) } })
-    await settle()
-    expect(host.panes.opened.map(p => p.id)).toEqual([HANDOFF_PANE_ID])
-    expect(handoffPane.state?.id).toBe(ID)
-    const untouched = await watchHandoffCall(host, { tool: 'Bash', command: 'ls' }, async () => ({ result: 'r' }))
-    expect(untouched).toEqual({ result: 'r' })
     onHandoffPaneClosed()
   })
 

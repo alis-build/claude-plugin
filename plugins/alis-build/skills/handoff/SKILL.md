@@ -12,8 +12,7 @@ the work; you run one command and reply with one line.
    answers "choose --to from enrolled workstation aliases: …", ask the user which
    one and rerun with `--to <alias>`.
 2. Reply with one short line, such as "Handing off to <alias>; progress is in the
-   popup." (or "in the Alis handoff pane" when the plugin's function hooks are on,
-   which show it beside the transcript instead of a popup), and end your turn. Do not call more tools, poll status, or write a
+   popup.", and end your turn. Do not call more tools, poll status, or write a
    recap: the handoff waits for this turn to end, and further tool calls are denied.
 
 Native continuation resumes this exact conversation on the workstation with

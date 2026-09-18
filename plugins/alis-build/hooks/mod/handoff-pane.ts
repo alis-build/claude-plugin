@@ -1,7 +1,7 @@
 // The handoff pane: one handoff's progress inside Claude Code instead of the
-// CLI's separate progress window. Opened when a handoff starts (from
-// /alis handoff, or from a Bash call the module rewrote with --no-progress),
-// polled from `alis workstation handoff status <id> --json`, with Cancel
+// CLI's separate progress window. Opened by /alis handoff (which passes
+// --no-progress); a handoff the alis:handoff skill starts keeps the CLI's
+// own window. Polled from `alis workstation handoff status <id> --json`, with Cancel
 // and Reclaim buttons that confirm first and then run the CLI directly
 // (prompts are blocked in a claimed session).
 import type { Host } from './host'

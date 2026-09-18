@@ -9,7 +9,6 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
 import { renderAlisOutput } from './mod/alis-render'
-import { watchHandoffCall } from './mod/handoff-call'
 import { HANDOFF_PANE_ID, handoffActions, handoffPane, onHandoffPaneClosed } from './mod/handoff-pane'
 import { renderHandoffPane } from './mod/handoff-pane-view'
 import { liveAmong, liveOf, watchAlisCall } from './mod/ops-live'
@@ -96,7 +95,7 @@ export const register: Register = on => {
   // a summary in place of the NDJSON progress once it is done.
   on('tool.call', { tool: 'Bash' }, ($, e, next) => {
     const host = hostOf($)
-    return confirmDeploy(host, e, e2 => watchHandoffCall(host, e2, e3 => watchAlisCall(host, e3, next, next.signal)))
+    return confirmDeploy(host, e, e2 => watchAlisCall(host, e2, next, next.signal))
   }).catch(($, e, next) => next(e))
   on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
     const wait = liveOf(e.props.tool_use_id)
@@ -114,7 +113,7 @@ export const register: Register = on => {
     return next(e)
   })
 
-  // The handoff pane: opened by /alis handoff or a rewritten handoff call.
+  // The handoff pane: opened by /alis handoff.
   on('ui.render', { component: 'Pane', requestId: HANDOFF_PANE_ID }, ($, e) => renderHandoffPane($.ui.resolve(e), handoffPane, handoffActions(hostOf($))))
   on('ui.close', { id: HANDOFF_PANE_ID }, ($, e, next) => {
     onHandoffPaneClosed()
