@@ -9,6 +9,10 @@ export type Written = { path: string; text: string }
 export type FakeHost = Host & {
   env: Record<string, string>
   session: string
+  dir: string
+  /** Paths `exists` answers true for. */
+  present: Set<string>
+  statuses: (string | undefined)[]
   runs: Run[]
   writes: Written[]
   logs: string[]
@@ -18,10 +22,13 @@ export type FakeHost = Host & {
   writeError?: Error
 }
 
-export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | 'answer' | 'writeError'>> = {}): FakeHost {
+export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | 'answer' | 'writeError'>> & { present?: string[] } = {}): FakeHost {
   const host: FakeHost = {
     env: overrides.env ?? { HOME: '/h', CLAUDE_PLUGIN_ROOT: '/p' },
     session: overrides.session ?? 'session-a',
+    dir: '/w',
+    present: new Set(overrides.present ?? []),
+    statuses: [],
     runs: [],
     writes: [],
     logs: [],
@@ -31,6 +38,11 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     pluginRoot: async () => host.env['CLAUDE_PLUGIN_ROOT'],
     allowedSubcmds: async () => host.env['ALIS_ALLOWED_SUBCMDS'],
     sessionId: async () => host.session,
+    cwd: async () => host.dir,
+    exists: async path => host.present.has(path),
+    status: text => {
+      host.statuses.push(text)
+    },
     writeFile: async (path, text) => {
       if (host.writeError) throw host.writeError
       host.writes.push({ path, text })

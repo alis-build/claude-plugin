@@ -14,6 +14,12 @@ export type Host = {
   allowedSubcmds: () => Promise<string | undefined>
   /** The session's id, the transcript file's name. */
   sessionId: () => Promise<string>
+  /** The directory the session runs in, absolute. */
+  cwd: () => Promise<string>
+  /** Whether a path exists; never rejects. */
+  exists: (path: string) => Promise<boolean>
+  /** Sets or clears (undefined) this plugin's line in the status area. */
+  status: (text: string | undefined) => void
   /** Writes a text file, creating directories as needed. */
   writeFile: (path: string, text: string) => Promise<void>
   /** Runs a host command by argv; rejects on timeout or a missing binary. */
