@@ -3,7 +3,7 @@
 // within the file a hook receives it in, and `$.env.get` takes literal
 // names, so hooks/mod.ts spells every `$.noun.call` once in hostOf() and
 // the files under hooks/mod/ take this interface. Tests pass a fake.
-import type { FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult } from 'claude-code'
+import type { FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult, RenderSurface } from 'claude-code'
 
 export type Host = {
   /** $HOME, or undefined when unset. */
@@ -18,6 +18,10 @@ export type Host = {
   cwd: () => Promise<string>
   /** The session's project root, absolute. */
   root: () => Promise<string>
+  /** Where the session draws, or null where nothing draws (a -p run). */
+  surface: () => Promise<RenderSurface | null>
+  /** Resolves after `ms`; rejects at once when `signal` aborts. A `$` wait, free of the hook's budget. */
+  sleep: (ms: number, signal: AbortSignal) => Promise<void>
   /** ALIS_SUGGEST_ALWAYS, or undefined. */
   suggestAlways: () => Promise<string | undefined>
   /** Whether a path exists; never rejects. */

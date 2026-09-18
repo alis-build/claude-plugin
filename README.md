@@ -126,6 +126,11 @@ With the module active:
   handoff claim without spending a model turn; `/alis handoff [alias]` runs
   `alis workstation handoff --session <this session> --json` for you (the
   command runs without a permission dialog because you typed it)
+- a Bash call that runs `alis deploy … --confirm-production` first opens a focused
+  dialog showing the target, version and each environment with its production
+  flag; **Approve** lets it run and stands in for the native permission prompt on
+  that call, **Abort** or Esc refuses it. Without the flag the CLI refuses a
+  production deploy on its own, so no dialog appears
 - `/alis ops` opens a pane (docked beside the transcript in the fullscreen layout,
   inline otherwise) listing the operations this machine started, running ones
   first with their state, refreshed every five seconds while open; each running

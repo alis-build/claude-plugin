@@ -9,6 +9,7 @@ import type { PreToolUseResult } from 'claude-code'
 import { decide } from './cli-gate'
 import { classicState } from './classic'
 import { mergeClassic, toPreToolUseResult } from './classic-result'
+import { approvedCalls } from './deploy-dialog'
 import { observe } from './health'
 import type { Host } from './host'
 
@@ -19,7 +20,7 @@ export async function cliGateClassic<E extends object>(
   e: E,
   next: (e: E) => Promise<PreToolUseResult>,
 ): Promise<PreToolUseResult> {
-  const { tool, tool_use_id: _id, ...toolInput } = e as Record<string, unknown>
+  const { tool, tool_use_id, ...toolInput } = e as Record<string, unknown>
   const permissionMode = classicState.permissionMode
   const decision = decide({
     toolName: tool,
@@ -28,6 +29,12 @@ export async function cliGateClassic<E extends object>(
     sessionId: await host.sessionId().catch(() => undefined),
     allowedSubcmds: await host.allowedSubcmds(),
   })
+  // The person already confirmed this exact call in the deploy dialog: that
+  // stands in for the native prompt, once. The --approve rewrite still lands.
+  if (decision.matched && decision.decision === 'ask' && typeof tool_use_id === 'string' && approvedCalls.delete(tool_use_id)) {
+    decision.decision = 'allow'
+    decision.reason = 'Confirmed by the person in the alis deploy dialog.'
+  }
   if (decision.matched) {
     await observe(host, HEALTH_FILE, {
       permissionMode: permissionMode ?? 'unknown',

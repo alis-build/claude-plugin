@@ -1,4 +1,4 @@
-import type { FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult } from 'claude-code'
+import type { FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult, RenderSurface } from 'claude-code'
 
 import type { Host } from '../../hooks/mod/host'
 
@@ -10,6 +10,9 @@ export type FakeHost = Host & {
   env: Record<string, string>
   session: string
   dir: string
+  /** What `surface` answers. */
+  drawn: RenderSurface | null
+  sleeps: number
   /** Paths `exists` answers true for. */
   present: Set<string>
   /** What `list` answers per directory. */
@@ -36,6 +39,8 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     env: overrides.env ?? { HOME: '/h', CLAUDE_PLUGIN_ROOT: '/p' },
     session: overrides.session ?? 'session-a',
     dir: '/w',
+    drawn: 'terminal',
+    sleeps: 0,
     present: new Set(overrides.present ?? []),
     entries: {},
     stats: {},
@@ -55,6 +60,12 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     sessionId: async () => host.session,
     cwd: async () => host.dir,
     root: async () => host.dir,
+    surface: async () => host.drawn,
+    sleep: async (_ms, signal) => {
+      host.sleeps += 1
+      if (signal.aborted) throw new Error('aborted')
+      await Promise.resolve()
+    },
     suggestAlways: async () => host.env['ALIS_SUGGEST_ALWAYS'],
     exists: async path => host.present.has(path) || path in host.entries,
     list: async path => {
