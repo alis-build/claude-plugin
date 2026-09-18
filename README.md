@@ -111,8 +111,8 @@ Claude Code is adding function hooks ("mods"): a plugin module whose hooks run i
 the engine instead of shell scripts. This plugin ships one (`hooks/mod.ts`) beside
 its shell hooks, and only loads it where `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1` is
 set in the environment (or under `env` in `~/.claude/settings.json`). Builds that
-predate the feature ignore the module entry (verified on 2.1.250); with the flag
-off, the shell hooks run as before.
+predate the feature ignore the module entry (verified on 2.1.211, the version this
+plugin requires, and 2.1.250); with the flag off, the shell hooks run as before.
 
 With the module active:
 
@@ -169,8 +169,8 @@ a per-session marker under `~/.alis/claude-module-sessions/` that the shell gate
 and handoff hook trust for an hour; markers older than a day are removed at the
 next session start. A module hook that fails is skipped by the
 engine and the shell hook answers that event. `alis doctor` reads the same
-`~/.alis/claude-plugin-health.json` either way. Tested on Claude Code 2.1.250 (flag
-absent) and 2.1.276 (flag on); the API is early access and may change between
+`~/.alis/claude-plugin-health.json` either way. Tested on Claude Code 2.1.211 and
+2.1.250 (flag absent) and 2.1.276 (flag off and on); the API is early access and may change between
 releases.
 
 ## Skills
