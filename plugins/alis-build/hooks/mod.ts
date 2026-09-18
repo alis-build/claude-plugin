@@ -16,6 +16,7 @@ import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane } from './mod/ops-pan
 import { renderOpsPane } from './mod/ops-pane-view'
 import { renderOpsResult, renderOpsRunning } from './mod/ops-render'
 import { passClassic } from './mod/classic'
+import { describeBash } from './mod/describe'
 import { confirmDeploy } from './mod/deploy-dialog'
 import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
@@ -65,6 +66,12 @@ export const register: Register = on => {
   // answers with the chain beneath; the gate's own throw is logged by the
   // engine.
   on('classic.PreToolUse', { tool: 'Bash' }, ($, e, next) => cliGateClassic(hostOf($), e, next)).catch(($, e, next) => next(e))
+
+  // The alis command rules in the Bash tool's description, once per session.
+  on('tool.describe', { tool: 'Bash' }, async ($, e, next) => {
+    const { description } = await next(e)
+    return { description: await describeBash(hostOf($), description) }
+  }).catch(($, e, next) => next(e))
 
   // Per-prompt skill discovery (suggest-skills.sh's job), and the band above
   // the prompt where the person can load a suggested skill.

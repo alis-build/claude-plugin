@@ -116,6 +116,10 @@ off, the shell hooks run as before.
 
 With the module active:
 
+- the Bash tool's description carries the alis command rules (one standalone
+  command, `--cwd` not `cd &&`, no pipes or `head`, stderr is progress) when the
+  CLI is on PATH, so the model reads them before composing a command rather than
+  after a bad one
 - the DBD primer, the service pointer and the skill catalog refresh at session
   start come from the module too, with the same gating as the shell hooks, so a
   session with the flag on runs no shell hook at all
