@@ -1,4 +1,4 @@
-import type { PaneOpenArgs, ProcessRunInit, ProcessRunResult } from 'claude-code'
+import type { FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult } from 'claude-code'
 
 import type { Host } from '../../hooks/mod/host'
 
@@ -12,6 +12,10 @@ export type FakeHost = Host & {
   dir: string
   /** Paths `exists` answers true for. */
   present: Set<string>
+  /** What `list` answers per directory. */
+  entries: Record<string, FsEntry[]>
+  /** What `stat` answers per path; a missing path rejects. */
+  stats: Record<string, FsStat>
   statuses: (string | undefined)[]
   invalidations: number
   panes: { opened: PaneOpenArgs[]; closed: string[] }
@@ -33,6 +37,8 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     session: overrides.session ?? 'session-a',
     dir: '/w',
     present: new Set(overrides.present ?? []),
+    entries: {},
+    stats: {},
     statuses: [],
     invalidations: 0,
     panes: { opened: [], closed: [] },
@@ -50,7 +56,16 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     cwd: async () => host.dir,
     root: async () => host.dir,
     suggestAlways: async () => host.env['ALIS_SUGGEST_ALWAYS'],
-    exists: async path => host.present.has(path),
+    exists: async path => host.present.has(path) || path in host.entries,
+    list: async path => {
+      if (!(path in host.entries)) throw new Error(`ENOENT ${path}`)
+      return host.entries[path] ?? []
+    },
+    stat: async path => {
+      const stat = host.stats[path]
+      if (!stat) throw new Error(`ENOENT ${path}`)
+      return stat
+    },
     status: text => {
       host.statuses.push(text)
     },

@@ -145,7 +145,8 @@ The two sides never run one job twice: the module tags each classic hook event
 with `alis_module` (the jobs it serves) and a shell hook whose token is listed
 exits at once; on `PreToolUse`, whose event cannot carry the tag, the module keeps
 a per-session marker under `~/.alis/claude-module-sessions/` that the shell gate
-and handoff hook trust for an hour. A module hook that fails is skipped by the
+and handoff hook trust for an hour; markers older than a day are removed at the
+next session start. A module hook that fails is skipped by the
 engine and the shell hook answers that event. `alis doctor` reads the same
 `~/.alis/claude-plugin-health.json` either way. Tested on Claude Code 2.1.250 (flag
 absent) and 2.1.276 (flag on); the API is early access and may change between

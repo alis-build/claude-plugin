@@ -14,18 +14,15 @@
 import { mergeClassic } from './classic-result'
 import { HANDOFF_EVENTS, handoffHook } from './handoff'
 import type { Host } from './host'
+import { isSessionId, pruneMarkers, writeMarker } from './markers'
 import { COVERS, tagClassic } from './tag'
 
-export const MARKER_DIR = '.alis/claude-module-sessions'
-const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/
+export { MARKER_DIR, markerPath } from './markers'
+
 const MARKER_EVENTS = new Set(['classic.SessionStart', 'classic.UserPromptSubmit', 'classic.PostToolUse', 'classic.SessionEnd'])
 
 /** What the classic events told us since the module loaded. */
 export const classicState: { permissionMode?: string } = {}
-
-export function markerPath(home: string, sessionId: string): string {
-  return `${home}/${MARKER_DIR}/${sessionId}`
-}
 
 export async function passClassic<E extends object, R extends object>(
   host: Host,
@@ -36,13 +33,14 @@ export async function passClassic<E extends object, R extends object>(
   const p = e as Record<string, unknown>
   if (typeof p['permission_mode'] === 'string') classicState.permissionMode = p['permission_mode']
   const sid = p['session_id']
-  if (MARKER_EVENTS.has(event) && typeof sid === 'string' && SESSION_ID.test(sid)) {
+  if (MARKER_EVENTS.has(event) && isSessionId(sid)) {
     try {
-      const home = await host.home()
-      if (home) await host.writeFile(markerPath(home, sid), event === 'classic.SessionEnd' ? '' : COVERS.join(' '))
+      await writeMarker(host, sid, event === 'classic.SessionEnd' ? '' : COVERS.join(' '))
     } catch (error) {
       host.debug(`classic: could not write the session marker: ${String(error)}`)
     }
+    // Once per session, drop markers no session could still be using.
+    if (event === 'classic.SessionStart') void pruneMarkers(host)
   }
   const eventName = event.startsWith('classic.') ? event.slice('classic.'.length) : event
   const mine = COVERS.includes('handoff') && HANDOFF_EVENTS.has(eventName) ? await handoffHook(host, eventName, e) : {}

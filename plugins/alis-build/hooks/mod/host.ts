@@ -3,12 +3,12 @@
 // within the file a hook receives it in, and `$.env.get` takes literal
 // names, so hooks/mod.ts spells every `$.noun.call` once in hostOf() and
 // the files under hooks/mod/ take this interface. Tests pass a fake.
-import type { PaneOpenArgs, ProcessRunInit, ProcessRunResult } from 'claude-code'
+import type { FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult } from 'claude-code'
 
 export type Host = {
   /** $HOME, or undefined when unset. */
   home: () => Promise<string | undefined>
-  /** CLAUDE_PLUGIN_ROOT as the engine process has it, or undefined. */
+  /** The plugin's directory (the one holding plugin.json), absolute. */
   pluginRoot: () => Promise<string | undefined>
   /** ALIS_ALLOWED_SUBCMDS, or undefined. */
   allowedSubcmds: () => Promise<string | undefined>
@@ -22,6 +22,10 @@ export type Host = {
   suggestAlways: () => Promise<string | undefined>
   /** Whether a path exists; never rejects. */
   exists: (path: string) => Promise<boolean>
+  /** A directory's entries by name; rejects when missing. */
+  list: (path: string) => Promise<readonly FsEntry[]>
+  /** A path's kind, size and mtime; rejects when missing. */
+  stat: (path: string) => Promise<FsStat>
   /** Sets or clears (undefined) this plugin's line in the status area. */
   status: (text: string | undefined) => void
   /** Asks the engine to draw this plugin's render hooks again. */

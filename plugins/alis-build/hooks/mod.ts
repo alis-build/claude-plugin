@@ -18,18 +18,20 @@ import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
 import { suggestSkills } from './mod/suggest'
 
-type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session' | 'clock' | 'prompt'>
+type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session' | 'clock' | 'prompt' | 'plugin'>
 
 export function hostOf($: HostNouns): Host {
   return {
     home: () => $.env.get('HOME'),
-    pluginRoot: () => $.env.get('CLAUDE_PLUGIN_ROOT'),
+    pluginRoot: async () => $.plugin.root || (await $.env.get('CLAUDE_PLUGIN_ROOT')),
     allowedSubcmds: () => $.env.get('ALIS_ALLOWED_SUBCMDS'),
     suggestAlways: () => $.env.get('ALIS_SUGGEST_ALWAYS'),
     sessionId: () => $.session.id(),
     cwd: () => $.session.cwd(),
     root: () => $.session.root(),
     exists: path => $.fs.exists(path),
+    list: path => $.fs.list(path),
+    stat: path => $.fs.stat(path),
     status: text => $.ui.status(text),
     invalidate: () => $.ui.invalidate('ui.render'),
     openPane: pane => $.ui.open(pane),
