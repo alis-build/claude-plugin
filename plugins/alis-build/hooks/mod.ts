@@ -7,9 +7,12 @@
 // the hooks themselves live under hooks/mod/ and take a Host.
 import type { EngineInterface, Register } from 'claude-code'
 
+import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
+import { renderAlisOutput } from './mod/alis-render'
 import { passClassic } from './mod/classic'
 import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
+import { suggestSkills } from './mod/suggest'
 
 type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session'>
 
@@ -18,8 +21,10 @@ export function hostOf($: HostNouns): Host {
     home: () => $.env.get('HOME'),
     pluginRoot: () => $.env.get('CLAUDE_PLUGIN_ROOT'),
     allowedSubcmds: () => $.env.get('ALIS_ALLOWED_SUBCMDS'),
+    suggestAlways: () => $.env.get('ALIS_SUGGEST_ALWAYS'),
     sessionId: () => $.session.id(),
     cwd: () => $.session.cwd(),
+    root: () => $.session.root(),
     exists: path => $.fs.exists(path),
     status: text => $.ui.status(text),
     writeFile: (path, text) => $.fs.write(path, text),
@@ -29,13 +34,25 @@ export function hostOf($: HostNouns): Host {
 }
 
 export const register: Register = on => {
-  // Outermost: every classic event passes down tagged or marked. Never answer
-  // without next here, since one classic dispatch carries every other
-  // plugin's hooks; a failure passes the event down untouched.
+  // Outermost: every classic event passes down tagged or marked, and the
+  // handoff lifecycle is relayed. Never answer without next here, since one
+  // classic dispatch carries every other plugin's hooks; a failure passes
+  // the event down untouched.
   on('classic.*', ($, e, next) => passClassic(hostOf($), next.event, e, next)).catch(($, e, next) => next(e))
 
   // The permission gate for `alis …` commands (cli-hook.py's job). A failure
   // answers with the chain beneath; the gate's own throw is logged by the
   // engine.
   on('classic.PreToolUse', { tool: 'Bash' }, ($, e, next) => cliGateClassic(hostOf($), e, next)).catch(($, e, next) => next(e))
+
+  // Per-prompt skill discovery (suggest-skills.sh's job).
+  on('prompt.submit', ($, e, next) => suggestSkills(hostOf($), e, next)).catch(($, e, next) => next(e))
+
+  // /alis: registered once the session is ready, so it is listed by turn one.
+  on('session.start', async ($, e, next) => {
+    await $.command.register(COMMAND_SPEC).catch(error => $.ui.log(`alis: could not register /alis: ${String(error)}`, { to: 'debug' }))
+    return next(e)
+  }).catch(($, e, next) => next(e))
+  on('command.run', { command: 'alis' }, ($, e) => runAlisCommand(hostOf($), e.args))
+  on('ui.render', { component: 'CommandOutput', props: { command: 'alis' } }, ($, e, next) => renderAlisOutput($.ui.resolve(e), e.props.text) ?? next(e))
 }

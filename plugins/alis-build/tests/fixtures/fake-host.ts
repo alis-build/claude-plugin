@@ -39,6 +39,8 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     allowedSubcmds: async () => host.env['ALIS_ALLOWED_SUBCMDS'],
     sessionId: async () => host.session,
     cwd: async () => host.dir,
+    root: async () => host.dir,
+    suggestAlways: async () => host.env['ALIS_SUGGEST_ALWAYS'],
     exists: async path => host.present.has(path),
     status: text => {
       host.statuses.push(text)

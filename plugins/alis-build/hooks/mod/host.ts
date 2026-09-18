@@ -16,6 +16,10 @@ export type Host = {
   sessionId: () => Promise<string>
   /** The directory the session runs in, absolute. */
   cwd: () => Promise<string>
+  /** The session's project root, absolute. */
+  root: () => Promise<string>
+  /** ALIS_SUGGEST_ALWAYS, or undefined. */
+  suggestAlways: () => Promise<string | undefined>
   /** Whether a path exists; never rejects. */
   exists: (path: string) => Promise<boolean>
   /** Sets or clears (undefined) this plugin's line in the status area. */
