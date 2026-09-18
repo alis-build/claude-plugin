@@ -175,5 +175,28 @@ class TagGuardTests(unittest.TestCase):
                     self.assertEqual(self.run_hook(script, dict(base, alis_module=token), env), "")
             self.assertFalse(Path(home, "synced").exists())
 
+    def test_pretooluse_hooks_step_aside_on_a_fresh_session_marker_only(self):
+        with tempfile.TemporaryDirectory() as home:
+            env = {"HOME": home, "PATH": "/usr/bin:/bin"}
+            Path(home, ".alis/handoff-sessions").mkdir(parents=True)
+            Path(home, ".alis/handoff-sessions/abc.claim").write_text("{}")
+            markers = Path(home, ".alis/claude-module-sessions"); markers.mkdir()
+            payload = {"session_id": "abc", "hook_event_name": "PreToolUse", "permission_mode": "auto", "tool_name": "Bash",
+                       "tool_input": {"command": "alis whoami --json"}}
+            gate = lambda: self.run_hook("allow-alis-cli.sh", payload, env)
+            handoff = lambda: self.run_hook("handoff.sh", payload, env)
+            self.assertIn('"allow"', gate()); self.assertIn("deny", handoff())        # no marker: both answer
+            marker = markers / "abc"
+            marker.write_text("cli handoff")
+            self.assertEqual(gate(), ""); self.assertEqual(handoff(), "")             # fresh marker with both tokens
+            marker.write_text("cli")
+            self.assertEqual(gate(), ""); self.assertIn("deny", handoff())            # only the gate is served
+            marker.write_text("")
+            self.assertIn('"allow"', gate())                                          # session ended: empty marker
+            marker.write_text("cli handoff")
+            os.utime(marker, (0, 0))
+            self.assertIn('"allow"', gate()); self.assertIn("deny", handoff())        # stale marker is ignored
+            self.assertIn('"allow"', self.run_hook("allow-alis-cli.sh", dict(payload, session_id="../abc"), env))
+
 
 if __name__ == "__main__": unittest.main()

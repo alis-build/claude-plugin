@@ -1,0 +1,23 @@
+// What the module's hooks need from the world, as plain functions. `$` is
+// never handed across an import: `claude plugin validate` follows `$` only
+// within the file a hook receives it in, and `$.env.get` takes literal
+// names, so hooks/mod.ts spells every `$.noun.call` once in hostOf() and
+// the files under hooks/mod/ take this interface. Tests pass a fake.
+import type { ProcessRunInit, ProcessRunResult } from 'claude-code'
+
+export type Host = {
+  /** $HOME, or undefined when unset. */
+  home: () => Promise<string | undefined>
+  /** CLAUDE_PLUGIN_ROOT as the engine process has it, or undefined. */
+  pluginRoot: () => Promise<string | undefined>
+  /** ALIS_ALLOWED_SUBCMDS, or undefined. */
+  allowedSubcmds: () => Promise<string | undefined>
+  /** The session's id, the transcript file's name. */
+  sessionId: () => Promise<string>
+  /** Writes a text file, creating directories as needed. */
+  writeFile: (path: string, text: string) => Promise<void>
+  /** Runs a host command by argv; rejects on timeout or a missing binary. */
+  run: (argv: readonly string[], init?: ProcessRunInit) => Promise<ProcessRunResult>
+  /** A line for the debug log, led by the plugin's name. */
+  debug: (text: string) => void
+}
