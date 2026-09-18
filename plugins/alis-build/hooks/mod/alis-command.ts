@@ -13,7 +13,7 @@ export const COMMAND_SPEC: CommandSpec = {
   argumentHint: 'status | handoff [alias]',
 }
 
-const USAGE = ['alis: usage', 'status: CLI, workspace, module and handoff state', 'handoff [alias]: continue this session on an enrolled workstation'].join('\n')
+const USAGE = ['usage: status | handoff [alias]', 'status: CLI, workspace, module and handoff state', 'handoff [alias]: continue this session on an enrolled workstation'].join('\n')
 
 export async function runAlisCommand(host: Host, args: string): Promise<{ text: string }> {
   const [verb, ...rest] = args.trim().split(/\s+/).filter(Boolean)
@@ -40,7 +40,7 @@ async function status(host: Host): Promise<string> {
   const workspace = workspaceOf(cwd)
   const claimed = home && sid ? await host.exists(`${home}/.alis/handoff-sessions/${sid}.claim`).catch(() => false) : false
   return [
-    'alis: status',
+    'status: ' + new Date().toISOString().slice(0, 16).replace('T', ' '),
     `cli: ${version ? `v${version}` : 'not found on PATH'}`,
     `workspace: ${workspace ? `${workspace.org} ${workspace.side} ${workspace.relpath}${workspace.pkg ? ` (${workspace.pkg})` : ''}` : 'none (not inside alis.build)'}`,
     `plugin: v${PLUGIN_VERSION}, function hooks serving ${COVERS.join(', ')}`,
@@ -50,14 +50,14 @@ async function status(host: Host): Promise<string> {
 
 async function handoff(host: Host, alias: string | undefined): Promise<string> {
   const sid = await host.sessionId().catch(() => '')
-  if (!sid) return 'alis: handoff\nerror: this session has no id to hand off'
+  if (!sid) return 'handoff: error\nerror: this session has no id to hand off'
   const argv = ['alis', 'workstation', 'handoff', '--session', sid, '--json', ...(alias ? ['--to', alias] : [])]
   try {
     const run = await host.run(argv, { timeoutMs: 60_000 })
     const said = summarize(run.stdout) ?? summarize(run.stderr) ?? (run.exitCode === 0 ? 'started' : `exit ${run.exitCode}`)
-    return `alis: handoff\n${run.exitCode === 0 ? 'result' : 'error'}: ${said}`
+    return `handoff: ${run.exitCode === 0 ? 'started' : 'failed'}\n${run.exitCode === 0 ? 'result' : 'error'}: ${said}`
   } catch (error) {
-    return `alis: handoff\nerror: ${String(error)}`
+    return `handoff: failed\nerror: ${String(error)}`
   }
 }
 

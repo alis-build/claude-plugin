@@ -18,15 +18,14 @@ describe('alis-command', () => {
   test('status reports the CLI, workspace, module coverage and handoff claim', async () => {
     const host = fakeHost({ answer: version, present: ['/h/.alis/handoff-sessions/session-a.claim'] })
     host.dir = '/Users/me/alis.build/acme/define/acme/sm/hello/v1'
-    expect((await runAlisCommand(host, 'status')).text).toBe(
-      [
-        'alis: status',
-        'cli: v1.144.8',
-        'workspace: acme define sm/hello/v1 (acme.sm.hello.v1)',
-        `plugin: v${PLUGIN_VERSION}, function hooks serving ${COVERS.join(', ')}`,
-        'handoff: this session is claimed',
-      ].join('\n'),
-    )
+    const lines = (await runAlisCommand(host, 'status')).text.split('\n')
+    expect(lines[0]).toMatch(/^status: \d{4}-\d\d-\d\d \d\d:\d\d$/)
+    expect(lines.slice(1)).toEqual([
+      'cli: v1.144.8',
+      'workspace: acme define sm/hello/v1 (acme.sm.hello.v1)',
+      `plugin: v${PLUGIN_VERSION}, function hooks serving ${COVERS.join(', ')}`,
+      'handoff: this session is claimed',
+    ])
     const bare = fakeHost({ answer: () => new Error('ENOENT') })
     bare.dir = '/plain'
     expect((await runAlisCommand(bare, '')).text).toContain('cli: not found on PATH')
@@ -36,19 +35,19 @@ describe('alis-command', () => {
 
   test('handoff runs the CLI for this session, with an alias when given', async () => {
     const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: '{"message":"Handing off to alis-acme-1"}', stderr: '' }) })
-    expect((await runAlisCommand(host, 'handoff')).text).toBe('alis: handoff\nresult: Handing off to alis-acme-1')
+    expect((await runAlisCommand(host, 'handoff')).text).toBe('handoff: started\nresult: Handing off to alis-acme-1')
     expect(host.runs[0]?.argv).toEqual(['alis', 'workstation', 'handoff', '--session', 'session-a', '--json'])
     await runAlisCommand(host, 'handoff  alis-acme-2')
     expect(host.runs[1]?.argv).toEqual(['alis', 'workstation', 'handoff', '--session', 'session-a', '--json', '--to', 'alis-acme-2'])
     expect(host.runs[1]?.init?.timeoutMs).toBe(60000)
     const failing = fakeHost({ answer: () => ({ exitCode: 2, stdout: '', stderr: 'choose --to from enrolled workstation aliases: a, b' }) })
-    expect((await runAlisCommand(failing, 'handoff')).text).toBe('alis: handoff\nerror: choose --to from enrolled workstation aliases: a, b')
+    expect((await runAlisCommand(failing, 'handoff')).text).toBe('handoff: failed\nerror: choose --to from enrolled workstation aliases: a, b')
     const missing = fakeHost({ answer: () => new Error('spawn alis ENOENT') })
     expect((await runAlisCommand(missing, 'handoff')).text).toContain('error: Error: spawn alis ENOENT')
   })
 
   test('anything else prints usage', async () => {
-    expect((await runAlisCommand(fakeHost(), 'frobnicate')).text).toContain('alis: usage')
+    expect((await runAlisCommand(fakeHost(), 'frobnicate')).text).toContain('usage: status')
   })
 
   test('workspaceOf follows the alis.build layout', () => {

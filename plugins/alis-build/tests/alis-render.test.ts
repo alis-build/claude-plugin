@@ -10,7 +10,7 @@ describe('alis-render', () => {
       surface: 'terminal',
       component: 'CommandOutput',
       requestId: 'm1',
-      props: { command: 'alis', args: 'status', text: 'alis: status\ncli: v1\nhandoff: no claim', isErrored: false },
+      props: { command: 'alis', args: 'status', text: 'status: 2026-09-18 11:39\ncli: v1\nhandoff: no claim', isErrored: false },
     })
     expect(JSON.stringify(tree)).toContain('handoff: ')
     expect(JSON.stringify(tree)).toContain('no claim')
