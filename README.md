@@ -126,6 +126,13 @@ With the module active:
   handoff claim without spending a model turn; `/alis handoff [alias]` runs
   `alis workstation handoff --session <this session> --json` for you (the
   command runs without a permission dialog because you typed it)
+- while `alis operations wait <op> --json` runs in a Bash call, a live line under
+  its row shows the elapsed time and the operation's state, polled from
+  `alis operations describe` every three seconds; once any streamed operation
+  (`define`, `build`, `deploy`, `operations wait`) finishes, its result row is
+  drawn as a short summary (outcome, version, last progress, warning and the
+  `next` command) instead of the NDJSON progress lines. The result the model
+  reads is untouched
 
 The two sides never run one job twice: the module tags each classic hook event
 with `alis_module` (the jobs it serves) and a shell hook whose token is listed
@@ -236,9 +243,16 @@ declarations, gitignored, regenerate after a Claude Code update), then
 and `claude plugin test plugins/alis-build` (the `tests/*.test.ts` suite, which
 includes 312 recorded answers of the Python gate the port must match). An
 optional typecheck is `npx -p typescript tsc -p plugins/alis-build/tsconfig.json`.
-To try it live, `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir plugins/alis-build --debug`
-and look for `hooks module alis` lines; editing the module reloads it, but `/alis`
-is registered at session start, so restart the session after editing `hooks/mod.ts`.
+To try it live, `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir /absolute/path/to/plugins/alis-build --debug`
+(a relative `--plugin-dir` resolves against the session's folder) and look for
+`hooks module alis` lines; editing the module reloads it, but `/alis` is
+registered at session start, so restart the session after editing `hooks/mod.ts`.
+A value under `env` in `~/.claude/settings.json` wins over the shell variable, and
+with the flag off `claude plugin test` is not even listed: run the suite with a
+scratch config such as `CLAUDE_CONFIG_DIR=/tmp/cc-on` holding a `settings.json` of
+`{"env":{"CLAUDE_CODE_ENABLE_FUNCTION_HOOKS":"1"}}`, or pass
+`--settings '{"env":{"CLAUDE_CODE_ENABLE_FUNCTION_HOOKS":"0"}}'` to a session to
+see the shell-only path.
 
 Live routing evaluation is opt-in: `tests/routing-eval.sh --live /path/to/disposable-fixture
 --results /tmp/routing-scores.json`. Use a disposable workspace and a stub `alis`

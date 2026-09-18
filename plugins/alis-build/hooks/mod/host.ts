@@ -24,6 +24,10 @@ export type Host = {
   exists: (path: string) => Promise<boolean>
   /** Sets or clears (undefined) this plugin's line in the status area. */
   status: (text: string | undefined) => void
+  /** Sets or clears (undefined) this plugin's line under a tool row. */
+  notice: (toolUseId: string, text: string | undefined) => void
+  /** Runs `fn` every `ms` until the returned function is called. */
+  every: (ms: number, fn: () => void) => () => void
   /** Writes a text file, creating directories as needed. */
   writeFile: (path: string, text: string) => Promise<void>
   /** Runs a host command by argv; rejects on timeout or a missing binary. */

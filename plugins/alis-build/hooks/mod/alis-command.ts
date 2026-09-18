@@ -40,7 +40,7 @@ async function status(host: Host): Promise<string> {
   const workspace = workspaceOf(cwd)
   const claimed = home && sid ? await host.exists(`${home}/.alis/handoff-sessions/${sid}.claim`).catch(() => false) : false
   return [
-    'status: ' + new Date().toISOString().slice(0, 16).replace('T', ' '),
+    'status: ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC',
     `cli: ${version ? `v${version}` : 'not found on PATH'}`,
     `workspace: ${workspace ? `${workspace.org} ${workspace.side} ${workspace.relpath}${workspace.pkg ? ` (${workspace.pkg})` : ''}` : 'none (not inside alis.build)'}`,
     `plugin: v${PLUGIN_VERSION}, function hooks serving ${COVERS.join(', ')}`,

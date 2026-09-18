@@ -19,7 +19,7 @@ describe('alis-command', () => {
     const host = fakeHost({ answer: version, present: ['/h/.alis/handoff-sessions/session-a.claim'] })
     host.dir = '/Users/me/alis.build/acme/define/acme/sm/hello/v1'
     const lines = (await runAlisCommand(host, 'status')).text.split('\n')
-    expect(lines[0]).toMatch(/^status: \d{4}-\d\d-\d\d \d\d:\d\d$/)
+    expect(lines[0]).toMatch(/^status: \d{4}-\d\d-\d\d \d\d:\d\d UTC$/)
     expect(lines.slice(1)).toEqual([
       'cli: v1.144.8',
       'workspace: acme define sm/hello/v1 (acme.sm.hello.v1)',

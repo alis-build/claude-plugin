@@ -13,6 +13,9 @@ export type FakeHost = Host & {
   /** Paths `exists` answers true for. */
   present: Set<string>
   statuses: (string | undefined)[]
+  notices: [string, string | undefined][]
+  /** Timers `every` registered, with their cancel state; call `fn` to tick. */
+  timers: { ms: number; fn: () => void; cancelled: boolean }[]
   runs: Run[]
   writes: Written[]
   logs: string[]
@@ -29,6 +32,8 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     dir: '/w',
     present: new Set(overrides.present ?? []),
     statuses: [],
+    notices: [],
+    timers: [],
     runs: [],
     writes: [],
     logs: [],
@@ -44,6 +49,16 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     exists: async path => host.present.has(path),
     status: text => {
       host.statuses.push(text)
+    },
+    notice: (id, text) => {
+      host.notices.push([id, text])
+    },
+    every: (ms, fn) => {
+      const timer = { ms, fn, cancelled: false }
+      host.timers.push(timer)
+      return () => {
+        timer.cancelled = true
+      }
     },
     writeFile: async (path, text) => {
       if (host.writeError) throw host.writeError
