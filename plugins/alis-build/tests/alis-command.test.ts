@@ -36,9 +36,9 @@ describe('alis-command', () => {
   test('handoff runs the CLI for this session, with an alias when given', async () => {
     const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: '{"message":"Handing off to alis-acme-1"}', stderr: '' }) })
     expect((await runAlisCommand(host, 'handoff')).text).toBe('handoff: started\nresult: Handing off to alis-acme-1')
-    expect(host.runs[0]?.argv).toEqual(['alis', 'workstation', 'handoff', '--session', 'session-a', '--json'])
+    expect(host.runs[0]?.argv).toEqual(['alis', 'workstation', 'handoff', '--session', 'session-a', '--json', '--no-progress'])
     await runAlisCommand(host, 'handoff  alis-acme-2')
-    expect(host.runs[1]?.argv).toEqual(['alis', 'workstation', 'handoff', '--session', 'session-a', '--json', '--to', 'alis-acme-2'])
+    expect(host.runs[1]?.argv).toEqual(['alis', 'workstation', 'handoff', '--session', 'session-a', '--json', '--no-progress', '--to', 'alis-acme-2'])
     expect(host.runs[1]?.init?.timeoutMs).toBe(60000)
     const failing = fakeHost({ answer: () => ({ exitCode: 2, stdout: '', stderr: 'choose --to from enrolled workstation aliases: a, b' }) })
     expect((await runAlisCommand(failing, 'handoff')).text).toBe('handoff: failed\nerror: choose --to from enrolled workstation aliases: a, b')

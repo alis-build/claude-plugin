@@ -4,6 +4,7 @@
 import type { CommandSpec } from 'claude-code'
 
 import type { Host } from './host'
+import { handoffStateOf, openHandoffPane } from './handoff-pane'
 import { toggleOpsPane } from './ops-pane'
 import { PLUGIN_VERSION } from './meta'
 import { COVERS } from './tag'
@@ -54,9 +55,14 @@ async function status(host: Host): Promise<string> {
 async function handoff(host: Host, alias: string | undefined): Promise<string> {
   const sid = await host.sessionId().catch(() => '')
   if (!sid) return 'handoff: error\nerror: this session has no id to hand off'
-  const argv = ['alis', 'workstation', 'handoff', '--session', sid, '--json', ...(alias ? ['--to', alias] : [])]
+  const argv = ['alis', 'workstation', 'handoff', '--session', sid, '--json', '--no-progress', ...(alias ? ['--to', alias] : [])]
   try {
     const run = await host.run(argv, { timeoutMs: 60_000 })
+    const state = run.exitCode === 0 ? handoffStateOf(run.stdout) : null
+    if (state) {
+      await openHandoffPane(host, state).catch(error => host.debug(`handoff pane: could not open: ${String(error)}`))
+      return `handoff: started\ntarget: ${state.target}\nphase: ${state.phase}\npane: progress is in the Alis handoff pane; keep the laptop open until it says it is safe to close`
+    }
     const said = summarize(run.stdout) ?? summarize(run.stderr) ?? (run.exitCode === 0 ? 'started' : `exit ${run.exitCode}`)
     return `handoff: ${run.exitCode === 0 ? 'started' : 'failed'}\n${run.exitCode === 0 ? 'result' : 'error'}: ${said}`
   } catch (error) {
