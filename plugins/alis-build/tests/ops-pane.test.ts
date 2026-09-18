@@ -94,6 +94,9 @@ describe('ops-pane', () => {
       props: { title: 'x', isFocused: true, bodyColumns: 90, placement: 'inline', scroll: { first: 0, rows: 14 } as never, view: {} as never },
     })
     const drawn = JSON.stringify(tree)
+    expect(drawn).toContain(' alis ')
+    expect(drawn).toContain(' operations')
+    expect(drawn).toContain('1 running')
     expect(drawn).toContain('build acme.sm.hello.v1')
     expect(drawn).toContain('deploy acme.sm.hello.v1')
     expect(drawn).toContain('"label":"Wait"')

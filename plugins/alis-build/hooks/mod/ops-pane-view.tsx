@@ -6,7 +6,7 @@
 // clicked (or the pane is toggled with /alis ops).
 import type { Elements, RenderElement } from 'claude-code'
 
-import { OK, RUNNING } from './brand'
+import { badge, OK, RUNNING } from './brand'
 import { agoOf, type OperationRow, type OpsPaneState, REFRESH_MS } from './ops-pane'
 
 export type PaneKit = Pick<Elements['terminal'], 'Box' | 'Text' | 'Button' | 'Link'>
@@ -23,6 +23,11 @@ export function renderOpsPane(kit: PaneKit, state: OpsPaneState, actions: OpsPan
   const wide = bodyColumns >= 70
   return (
     <Box flexDirection="column" key="alis-ops">
+      <Box marginBottom={1}>
+        {badge(kit)}
+        <Text bold>{' operations'}</Text>
+        <Text dimColor>{`  ${state.rows.filter(r => r.running).length} running`}</Text>
+      </Box>
       {state.rows.length === 0 && !state.error ? (
         <Text dimColor>{state.refreshedAt ? 'No operations recorded on this machine.' : 'Loading…'}</Text>
       ) : null}
