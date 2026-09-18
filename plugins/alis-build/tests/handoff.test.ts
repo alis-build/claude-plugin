@@ -61,6 +61,7 @@ describe('handoff', () => {
     const host = fakeHost({ present: [CLAIM] })
     await handoffHook(host, 'UserPromptSubmit', { session_id: 'abc', hook_event_name: 'UserPromptSubmit' })
     expect(host.statuses).toEqual(['alis handoff: session claimed'])
+    expect(host.toasts).toEqual(['alis: a handoff has claimed this session'])
     host.present.clear()
     await handoffHook(host, 'PostToolUse', { session_id: 'abc', hook_event_name: 'PostToolUse' })
     await handoffHook(host, 'PostToolUse', { session_id: 'abc', hook_event_name: 'PostToolUse' })

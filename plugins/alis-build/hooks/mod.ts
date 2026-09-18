@@ -40,6 +40,7 @@ export function hostOf($: HostNouns): Host {
     list: path => $.fs.list(path),
     stat: path => $.fs.stat(path),
     status: text => $.ui.status(text),
+    toast: text => $.ui.toast(text),
     invalidate: () => $.ui.invalidate('ui.render'),
     openPane: pane => $.ui.open(pane),
     closePane: id => $.ui.close({ id }),

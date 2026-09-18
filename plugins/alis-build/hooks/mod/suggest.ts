@@ -40,7 +40,11 @@ export async function suggestSkills(
     if (run.exitCode !== 0) return next(e)
     const text = parseHookEnvelope(run.stdout).additionalContext?.[0]
     if (!text) return next(e)
-    if (showSuggestions(suggestionsOf(text))) host.invalidate()
+    const items = suggestionsOf(text)
+    if (showSuggestions(items)) {
+      host.invalidate()
+      if (items.length > 0) host.toast(`alis: skill suggested, ${items.map(i => i.id).join(', ')} (band above the prompt)`)
+    }
     return next({ ...e, context: [...(e.context ?? []), text] })
   } catch (error) {
     host.debug(`suggest: skipped: ${String(error)}`)

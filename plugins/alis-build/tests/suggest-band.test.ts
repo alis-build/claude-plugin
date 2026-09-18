@@ -32,6 +32,7 @@ describe('suggest-band', () => {
     await suggestSkills(host, prompt('make an iphone app'), passthrough)
     expect(suggestBand.items.map(i => i.id)).toEqual(['build-your-first-ios-app'])
     expect(host.invalidations).toBe(1)
+    expect(host.toasts).toEqual(['alis: skill suggested, build-your-first-ios-app (band above the prompt)'])
     host.answer = () => ({ exitCode: 0, stdout: '', stderr: '' })
     await suggestSkills(host, prompt('thanks'), passthrough)
     expect(suggestBand.items).toEqual([])

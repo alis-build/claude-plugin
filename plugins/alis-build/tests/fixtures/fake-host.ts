@@ -24,6 +24,7 @@ export type FakeHost = Host & {
   /** What `readFile` answers per path; a missing path rejects. */
   files: Record<string, string>
   statuses: (string | undefined)[]
+  toasts: string[]
   invalidations: number
   panes: { opened: PaneOpenArgs[]; closed: string[] }
   prompts: string[]
@@ -51,6 +52,7 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     stats: {},
     files: {},
     statuses: [],
+    toasts: [],
     invalidations: 0,
     panes: { opened: [], closed: [] },
     prompts: [],
@@ -91,6 +93,9 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     },
     status: text => {
       host.statuses.push(text)
+    },
+    toast: text => {
+      host.toasts.push(text)
     },
     invalidate: () => {
       host.invalidations += 1

@@ -25,7 +25,8 @@ describe('ops-render', () => {
     const drawn = JSON.stringify(await $.ui.render(e))
     expect(reached).toBe(1)
     expect(drawn).toContain('engine row')
-    expect(drawn).toContain('alis: waiting on operations/z · 1:05 · ')
+    expect(drawn).toContain(' waiting on operations/z · 1:05 · ')
+    expect(drawn).toContain('"inverse":true')
     expect(drawn).toContain('building')
   })
 
@@ -37,7 +38,8 @@ describe('ops-render', () => {
       props: { tool_use_id: 't1', tool: 'Bash', output: { stdout: '{"name":"operations/x","done":true,"version":"1.2.3"}', stderr: STDERR, interrupted: false }, isErrored: false },
     })
     const drawn = JSON.stringify(tree)
-    expect(drawn).toContain('alis operation: done → 1.2.3')
+    expect(drawn).toContain('done → 1.2.3')
+    expect(drawn).toContain(' alis ')
     expect(drawn).toContain('Deploying revision')
     expect(drawn).not.toContain('Fetching sources')
   })

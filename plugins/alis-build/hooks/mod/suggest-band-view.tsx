@@ -5,6 +5,7 @@
 // has the focus (a click, or ctrl+x tab).
 import type { RenderElement } from 'claude-code'
 
+import { badge } from './brand'
 import type { PaneKit } from './ops-pane-view'
 import type { Suggestion } from './suggest-band'
 
@@ -16,7 +17,8 @@ export function renderSuggestBand(kit: PaneKit, items: Suggestion[], actions: Su
   return (
     <Box flexDirection="column" key="alis-suggest">
       <Box>
-        <Text dimColor>{`alis: possibly relevant skill${items.length > 1 ? 's' : ''}  `}</Text>
+        {badge(kit)}
+        <Text bold>{` possibly relevant skill${items.length > 1 ? 's' : ''}  `}</Text>
         <Button key="dismiss" label="Dismiss" hotkey="x" dimColor onPress={actions.dismiss} />
       </Box>
       {items.map((item, i) => (

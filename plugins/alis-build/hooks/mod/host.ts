@@ -36,6 +36,8 @@ export type Host = {
   stat: (path: string) => Promise<FsStat>
   /** Sets or clears (undefined) this plugin's line in the status area. */
   status: (text: string | undefined) => void
+  /** Shows a line on the notification bar for a few seconds. */
+  toast: (text: string) => void
   /** Asks the engine to draw this plugin's render hooks again. */
   invalidate: () => void
   /** Opens (or retitles) one of this plugin's panes. */
