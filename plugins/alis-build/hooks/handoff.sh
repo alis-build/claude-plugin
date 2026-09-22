@@ -5,6 +5,24 @@
 
 payload=$(cat 2>/dev/null)
 
+# Function-hooks handshake: the module lists the jobs it serves in
+# alis_module; when "handoff" is among them this script has nothing to do.
+alis_module_re='"alis_module"[[:space:]]*:[[:space:]]*"([^"]* )?handoff( [^"]*)?"'
+[[ $payload =~ $alis_module_re ]] && exit 0
+# PreToolUse cannot carry the tag (see hooks/mod/classic.ts): the module keeps
+# a per-session marker instead, trusted for an hour.
+flat=$(printf '%s' "$payload" | tr '\n\r' '  ')
+field() {
+  printf '%s' "$flat" | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p"
+}
+sid=$(field session_id)
+sid_re='^[A-Za-z0-9_-]{1,128}$'
+marker="$HOME/.alis/claude-module-sessions/$sid"
+if [[ $sid =~ $sid_re ]] && [ -f "$marker" ] && [ -n "$(find "$marker" -mmin -60 2>/dev/null)" ] \
+   && grep -qE '(^| )handoff( |$)' "$marker"; then
+  exit 0
+fi
+
 if command -v alis >/dev/null 2>&1; then
   if out=$(printf '%s' "$payload" | alis workstation handoff _hook 2>/dev/null); then
     [ -n "$out" ] && printf '%s\n' "$out"
@@ -13,12 +31,6 @@ if command -v alis >/dev/null 2>&1; then
 fi
 
 # Coordinator unavailable: fail closed only for sessions with a handoff claim.
-flat=$(printf '%s' "$payload" | tr '\n\r' '  ')
-field() {
-  printf '%s' "$flat" | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p"
-}
-sid=$(field session_id)
-sid_re='^[A-Za-z0-9_-]{1,128}$'
 [[ $sid =~ $sid_re ]] || exit 0
 [ -e "$HOME/.alis/handoff-sessions/$sid.claim" ] || exit 0
 

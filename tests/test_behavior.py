@@ -135,4 +135,68 @@ class LifecycleTests(unittest.TestCase):
                 self.assertEqual(p.stdout, expected)
 
 
+class TagGuardTests(unittest.TestCase):
+    """Function-hooks handshake: a shell hook steps aside only on its own token."""
+
+    def run_hook(self, script, payload, env=None):
+        base = dict(os.environ, CLAUDE_PLUGIN_ROOT=str(HOOKS.parent), PYTHONDONTWRITEBYTECODE="1")
+        base.update(env or {})
+        p = subprocess.run(["bash", str(HOOKS / script)], input=json.dumps(payload), text=True, capture_output=True, env=base)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        return p.stdout
+
+    def test_each_hook_exits_silently_on_its_own_token_and_works_on_others(self):
+        with tempfile.TemporaryDirectory() as home:
+            bindir = Path(home, "bin"); bindir.mkdir()
+            fake = bindir / "alis"
+            fake.write_text('#!/bin/sh\ncase "$*" in *suggest*) cat >/dev/null; echo \'{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"suggested"}}\' ;; *sync*) touch "$HOME/synced" ;; *) cat >/dev/null; exit 1 ;; esac\n')
+            fake.chmod(0o700)
+            env = {"HOME": home, "PATH": str(bindir) + os.pathsep + os.environ["PATH"], "ALIS_PRIMER": "digest",
+                   "CLAUDE_PROJECT_DIR": home + "/alis.build/acme/build/sm/hello/v1", "ALIS_SUGGEST_ALWAYS": "1"}
+            Path(home, ".alis/handoff-sessions").mkdir(parents=True)
+            Path(home, ".alis/handoff-sessions/abc.claim").write_text("{}")
+            base = {"session_id": "abc", "hook_event_name": "PreToolUse", "permission_mode": "auto", "source": "startup",
+                    "prompt": "alis, help", "tool_name": "Bash", "tool_input": {"command": "alis whoami --json"}}
+            cases = {  # script -> (token, a check that the untagged run produced its normal output)
+                "load-primer.sh": ("primer", lambda out: "Alis" in out),
+                "inject-service-context.sh": ("service", lambda out: "acme.sm.hello.v1" in out),
+                "suggest-skills.sh": ("suggest", lambda out: "suggested" in out),
+                "handoff.sh": ("handoff", lambda out: "deny" in out),
+                "allow-alis-cli.sh": ("cli", lambda out: '"allow"' in out),
+                "sync-skills.sh": ("sync", lambda out: Path(home, "synced").exists()),
+            }
+            for script, (token, check) in cases.items():
+                with self.subTest(script=script):
+                    for tag in ("", "other primer-x", "handoffs"):
+                        self.assertEqual(self.run_hook(script, dict(base, alis_module=tag), env), self.run_hook(script, base, env))
+                    self.assertTrue(check(self.run_hook(script, base, env)))
+                    Path(home, "synced").unlink(missing_ok=True)
+                    self.assertEqual(self.run_hook(script, dict(base, alis_module="cli " + token + " suggest"), env), "")
+                    self.assertEqual(self.run_hook(script, dict(base, alis_module=token), env), "")
+            self.assertFalse(Path(home, "synced").exists())
+
+    def test_pretooluse_hooks_step_aside_on_a_fresh_session_marker_only(self):
+        with tempfile.TemporaryDirectory() as home:
+            env = {"HOME": home, "PATH": "/usr/bin:/bin"}
+            Path(home, ".alis/handoff-sessions").mkdir(parents=True)
+            Path(home, ".alis/handoff-sessions/abc.claim").write_text("{}")
+            markers = Path(home, ".alis/claude-module-sessions"); markers.mkdir()
+            payload = {"session_id": "abc", "hook_event_name": "PreToolUse", "permission_mode": "auto", "tool_name": "Bash",
+                       "tool_input": {"command": "alis whoami --json"}}
+            gate = lambda: self.run_hook("allow-alis-cli.sh", payload, env)
+            handoff = lambda: self.run_hook("handoff.sh", payload, env)
+            self.assertIn('"allow"', gate()); self.assertIn("deny", handoff())        # no marker: both answer
+            marker = markers / "abc"
+            marker.write_text("cli handoff")
+            self.assertEqual(gate(), ""); self.assertEqual(handoff(), "")             # fresh marker with both tokens
+            marker.write_text("cli")
+            self.assertEqual(gate(), ""); self.assertIn("deny", handoff())            # only the gate is served
+            marker.write_text("")
+            self.assertIn('"allow"', gate())                                          # session ended: empty marker
+            marker.write_text("cli handoff")
+            os.utime(marker, (0, 0))
+            self.assertIn('"allow"', gate()); self.assertIn("deny", handoff())        # stale marker is ignored
+            self.assertIn('"allow"', self.run_hook("allow-alis-cli.sh", dict(payload, session_id="../abc"), env))
+
+
 if __name__ == "__main__": unittest.main()

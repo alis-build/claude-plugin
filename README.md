@@ -17,6 +17,7 @@ Use this plugin to let Claude Code work with Alis Build organisations, products,
 - Quiet, local-first discovery and capture skills: `alis:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalog in ~40ms, and loads a registry skill only on a distinctive match; catalog metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
 - Confidence-gated per-prompt skill suggestions (a `UserPromptSubmit` hook backed by `alis skills suggest`) — a suggestion appears only when the match is distinctive; wake phrases (`alis, …`, `capture this as a skill`) route from any directory
 - Structured CLI workflows run with the CLI's automation tier; guarded actions use Claude's native confirmation
+- Function hooks (Claude Code early access): with `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1` the permission gate, handoff lifecycle and skill suggestions run inside Claude Code's plugin engine instead of shell scripts, and `/alis status` and `/alis handoff [alias]` are available; without it, the shell hooks behave exactly as before
 
 ## Before You Start
 
@@ -104,6 +105,74 @@ Guarded actions (`--confirm-production`, `--approve`, `--yes`, block uninstall a
 
 `ALIS_ALLOWED_SUBCMDS` restricts automatic allows (for example `context doctor operations`); it does not disable required confirmation. Missing Python causes the permission hook to fall back to Claude's normal handling.
 
+## Function hooks (early access)
+
+Claude Code is adding function hooks ("mods"): a plugin module whose hooks run in
+the engine instead of shell scripts. This plugin ships one (`hooks/mod.ts`) beside
+its shell hooks, and only loads it where `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1` is
+set in the environment (or under `env` in `~/.claude/settings.json`). Builds that
+predate the feature ignore the module entry (verified on 2.1.211, the version this
+plugin requires, and 2.1.250); with the flag off, the shell hooks run as before.
+
+With the module active:
+
+- the Bash tool's description carries the alis command rules (one standalone
+  command, `--cwd` not `cd &&`, no pipes or `head`, stderr is progress) when the
+  CLI is on PATH, so the model reads them before composing a command rather than
+  after a bad one
+- the DBD primer, the service pointer and the skill catalog refresh at session
+  start come from the module too, with the same gating as the shell hooks, so a
+  session with the flag on runs no shell hook at all
+- `alis …` Bash commands get the same allow/ask/deny answers and the same
+  `--approve` / `--session-id` rewrites as the shell gate, computed in-process
+- the handoff lifecycle is relayed to `alis workstation handoff _hook` in-process,
+  with a status line while a handoff claims the session
+- per-prompt skill suggestions come from the same `alis skills suggest --hook` call,
+  attached as context beside the prompt, and also shown in a band above the input
+  with a **Load** button per skill (it hands Claude the `alis skills load` command
+  as a prompt) and **Dismiss**; the band clears on the next prompt. Click it or
+  press ctrl+x tab to focus it, then `1`, `2`… load and `x` dismisses
+- `/alis status` shows the CLI version, workspace, what the module serves and the
+  handoff claim without spending a model turn; `/alis handoff [alias]` runs
+  `alis workstation handoff --session <this session> --json` for you (the
+  command runs without a permission dialog because you typed it)
+- a Bash call that runs `alis deploy … --confirm-production` first asks you in
+  Claude Code's own question dialog, naming the target, version and each
+  environment with its production flag; **Approve** lets it run and stands in for
+  the native permission prompt on that call, **Abort** or dismissing refuses it.
+  Without the flag the CLI refuses a production deploy on its own, so nothing asks
+- `/alis handoff [alias]` opens a pane beside the transcript instead of the CLI's
+  separate progress window: the target, the phase, a prominent "safe to close the
+  laptop" line once the workstation has the session, the workstation link, and
+  **Cancel** and **Reclaim** buttons that confirm in a dialog before running the
+  CLI. A handoff Claude starts through the `alis:handoff` skill keeps the CLI's
+  own popup
+- `/alis ops` opens a pane (docked beside the transcript in the fullscreen layout,
+  inline otherwise) listing the operations this machine started, running ones
+  first with their state, refreshed every five seconds while open; each running
+  operation has a **Wait** and a **Cancel** button that hand Claude the matching
+  `alis operations …` command as a prompt, so the permission gate and your
+  confirmation stay in charge. Click **Refresh** or **Close**, or run `/alis ops`
+  again to close it; a docked pane leaves the keyboard to the prompt
+- while `alis operations wait <op> --json` runs in a Bash call, a live line under
+  its row shows the elapsed time and the operation's state, polled from
+  `alis operations describe` every three seconds; once any streamed operation
+  (`define`, `build`, `deploy`, `operations wait`) finishes, its result row is
+  drawn as a short summary (outcome, version, last progress, warning and the
+  `next` command) instead of the NDJSON progress lines. The result the model
+  reads is untouched
+
+The two sides never run one job twice: the module tags each classic hook event
+with `alis_module` (the jobs it serves) and a shell hook whose token is listed
+exits at once; on `PreToolUse`, whose event cannot carry the tag, the module keeps
+a per-session marker under `~/.alis/claude-module-sessions/` that the shell gate
+and handoff hook trust for an hour; markers older than a day are removed at the
+next session start. A module hook that fails is skipped by the
+engine and the shell hook answers that event. `alis doctor` reads the same
+`~/.alis/claude-plugin-health.json` either way. Tested on Claude Code 2.1.211 and
+2.1.250 (flag absent) and 2.1.276 (flag off and on); the API is early access and may change between
+releases.
+
 ## Skills
 
 ### See the frontend
@@ -180,6 +249,12 @@ If `alis` commands fail with an auth error, run `alis login` (or `alis authorise
 
 `alis doctor --json` reports cached Claude plugin versions, missing hooks, the last observed hook path and the last catalog refresh outcome. These are observations, not verification of the active session. Local observations contain no commands, transcripts or credentials. Skill refresh uses Claude's native async hook lifecycle with its own 20-second deadline.
 
+If the function-hooks module seems to do nothing, run with `--debug`: the log names
+the module (`hooks module alis loaded`), every event it settled, and any hook the
+engine skipped and why; a dim transcript line names a failed hook once. A stale
+`~/.alis/claude-module-sessions/<session id>` marker only ever makes a shell hook
+step aside for a job the module lists in it, and expires after an hour.
+
 ## Development checks
 
 Run `RELEASE_GUARD_STRICT=1 tests/release-guard.sh`, the two shell hook tests,
@@ -189,6 +264,24 @@ executables; no deployment, uninstall or message is sent.
 Also run `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_handoff.py` for the bash
 lifecycle hook (`hooks/handoff.sh`, stub `alis` on PATH),
 source-claim and permission-routing checks.
+
+For the function-hooks module: from a Claude Code session in this repo run
+`/plugin-types plugins/alis-build/.claude/types` (writes the engine's type
+declarations, gitignored, regenerate after a Claude Code update), then
+`claude plugin validate plugins/alis-build` (lists what the module hooks and calls)
+and `claude plugin test plugins/alis-build` (the `tests/*.test.ts` suite, which
+includes 312 recorded answers of the Python gate the port must match). An
+optional typecheck is `npx -p typescript tsc -p plugins/alis-build/tsconfig.json`.
+To try it live, `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir /absolute/path/to/plugins/alis-build --debug`
+(a relative `--plugin-dir` resolves against the session's folder) and look for
+`hooks module alis` lines; editing the module reloads it, but `/alis` is
+registered at session start, so restart the session after editing `hooks/mod.ts`.
+A value under `env` in `~/.claude/settings.json` wins over the shell variable, and
+with the flag off `claude plugin test` is not even listed: run the suite with a
+scratch config such as `CLAUDE_CONFIG_DIR=/tmp/cc-on` holding a `settings.json` of
+`{"env":{"CLAUDE_CODE_ENABLE_FUNCTION_HOOKS":"1"}}`, or pass
+`--settings '{"env":{"CLAUDE_CODE_ENABLE_FUNCTION_HOOKS":"0"}}'` to a session to
+see the shell-only path.
 
 Live routing evaluation is opt-in: `tests/routing-eval.sh --live /path/to/disposable-fixture
 --results /tmp/routing-scores.json`. Use a disposable workspace and a stub `alis`
