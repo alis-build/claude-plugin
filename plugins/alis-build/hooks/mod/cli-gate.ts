@@ -11,7 +11,7 @@ export const GUIDANCE =
   'A Claude background-task ID is not an Alis operation ID.'
 
 const GLOBALS = new Set(['--cwd', '--session-id'])
-const BOOLS = new Set(['--json', '--verbose', '--approve', '--confirm-production', '--yes', '--help', '-h'])
+const BOOLS = new Set(['--json', '--verbose', '--approve', '--confirm-production', '--yes', '--reveal', '--help', '-h'])
 const READ_TOP = new Set(['docs', 'doctor', 'whoami', 'version', 'ask'])
 const READ_PATHS = new Set(
   [
@@ -43,6 +43,8 @@ const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/
 
 export const PLAN_DENY = 'This Alis action changes state. Finish the plan and obtain execution approval first.'
 export const ASK_REASON = 'Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.'
+export const SECRET_REASON =
+  'This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.'
 export const ALLOW_REASON = 'Alis structured CLI workflow; CLI automation and production gates remain in force.'
 
 /** What the classic PreToolUse payload gives decide(), as plain fields. */
@@ -115,6 +117,11 @@ export function decide(input: GateInput): GateDecision {
   let guarded = hasAny(GUARD_FLAGS)
   guarded ||= top === 'blocks' && options.includes('uninstall')
   guarded ||= top === 'environment' && (options.includes('destroy') || options.includes('unset'))
+  // `variables|vars` and `refresh` print secret values on CLIs before 1.146.1
+  // and behind --reveal from then on; the gate cannot see the version, so the
+  // bare command asks too.
+  const secrets = top === 'environment' && (flags.has('--reveal') || ['variables', 'vars', 'refresh'].some(v => options.includes(v)))
+  guarded ||= secrets
   const handoffRead = HANDOFF_READ.has(commandPath(argv, 3).join(' '))
   const readOnly = READ_TOP.has(top) || READ_PATHS.has(path.join(' ')) || handoffRead || hasAny(HELP_FLAGS)
 
@@ -124,7 +131,7 @@ export function decide(input: GateInput): GateDecision {
   }
   if (guarded) {
     result.decision = 'ask'
-    result.reason = ASK_REASON
+    result.reason = secrets ? SECRET_REASON : ASK_REASON
     // Native confirmation displays this modified command. Execution then
     // satisfies the CLI's non-production confirmation once. Never add the
     // production flag: the CLI must first resolve its exact target/version.

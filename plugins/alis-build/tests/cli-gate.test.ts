@@ -1,6 +1,6 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
-import { commandPath, decide, GUIDANCE } from '../hooks/mod/cli-gate'
+import { commandPath, decide, GUIDANCE, SECRET_REASON } from '../hooks/mod/cli-gate'
 import { shlexSplit } from '../hooks/mod/shell'
 
 tier('user')
@@ -36,6 +36,28 @@ describe('cli-gate', () => {
         expect(argv.includes('--approve') || argv.includes('--approve=true') || argv.includes('--yes')).toBe(true)
       }
     }
+  })
+
+  test('secret-printing environment commands ask', () => {
+    // CLI >= 1.146.1 reveals values only behind --reveal; older CLIs print
+    // them from the bare command, so both shapes ask, and the reason says why.
+    for (const cmd of [
+      'alis environment variables alis.os --json',
+      'alis env vars alis.os',
+      'alis environment variables alis.os --reveal -e production --json',
+      'alis environment refresh alis.os',
+      'alis environment refresh alis.os --output .env',
+      'alis environment refresh alis.os --reveal',
+    ]) {
+      const result = decision(cmd)
+      expect(result).toMatchObject({ matched: true, decision: 'ask', reason: SECRET_REASON })
+      if (!result.matched) throw new Error('unreachable')
+      const argv = shlexSplit(result.updatedInput?.['command'] as string)
+      expect(argv.includes('--approve')).toBe(true)
+      expect(argv.includes('--confirm-production')).toBe(false)
+    }
+    expect(decision('alis environment variables alis.os --reveal', 'plan')).toMatchObject({ decision: 'deny' })
+    expect(decision('alis environment list alis.os --json')).toMatchObject({ decision: 'allow' })
   })
 
   test('plan never auto-allows mutations', () => {

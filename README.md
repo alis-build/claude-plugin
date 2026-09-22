@@ -101,7 +101,7 @@ Use one standalone `alis` command per Bash call. The plugin allows known read co
 
 Use `alis --cwd /absolute/workspace/path ...` for another workspace, and `alis environment list <org>.<product> --json` to choose a target without fetching variable values. These require the CLI release containing the Claude reliability changes; check `alis --help` and `alis environment --help`. New logs/cancellation commands also need the matching backend.
 
-Guarded actions (`--confirm-production`, `--approve`, `--yes`, block uninstall and environment unset) request native confirmation of the exact command. When needed, the hook includes `--approve` in the command shown for confirmation so the CLI does not ask a second time; it never inserts `--confirm-production`. Plan mode cannot run these actions. Higher-priority Claude rules/classifier denials remain in force. Session attribution uses a per-command `--session-id`; no shared approval file is written or trusted for Claude. `auto` and `acceptEdits` are not consent to external actions.
+Guarded actions (`--confirm-production`, `--approve`, `--yes`, block uninstall, environment unset, and the secret-printing `environment variables|vars|refresh` and `--reveal`) request native confirmation of the exact command. When needed, the hook includes `--approve` in the command shown for confirmation so the CLI does not ask a second time; it never inserts `--confirm-production`. Plan mode cannot run these actions. Higher-priority Claude rules/classifier denials remain in force. Session attribution uses a per-command `--session-id`; no shared approval file is written or trusted for Claude. `auto` and `acceptEdits` are not consent to external actions.
 
 `ALIS_ALLOWED_SUBCMDS` restricts automatic allows (for example `context doctor operations`); it does not disable required confirmation. Missing Python causes the permission hook to fall back to Claude's normal handling.
 
@@ -270,7 +270,7 @@ For the function-hooks module: from a Claude Code session in this repo run
 declarations, gitignored, regenerate after a Claude Code update), then
 `claude plugin validate plugins/alis-build` (lists what the module hooks and calls)
 and `claude plugin test plugins/alis-build` (the `tests/*.test.ts` suite, which
-includes 312 recorded answers of the Python gate the port must match). An
+includes 348 recorded answers of the Python gate the port must match). An
 optional typecheck is `npx -p typescript tsc -p plugins/alis-build/tsconfig.json`.
 To try it live, `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir /absolute/path/to/plugins/alis-build --debug`
 (a relative `--plugin-dir` resolves against the session's folder) and look for

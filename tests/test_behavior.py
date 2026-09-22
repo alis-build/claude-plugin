@@ -44,6 +44,25 @@ class PermissionTests(unittest.TestCase):
                     argv = shlex.split(result["updatedInput"]["command"])
                     self.assertEqual("--confirm-production" in argv, "--confirm-production" in shlex.split(cmd))
 
+    def test_secret_printing_environment_commands_ask(self):
+        # CLI >= 1.146.1 reveals values only behind --reveal; older CLIs print
+        # them from the bare command, so both shapes ask, and the reason says why.
+        for cmd in ("alis environment variables alis.os --json",
+                    "alis env vars alis.os",
+                    "alis environment variables alis.os --reveal -e production --json",
+                    "alis environment refresh alis.os",
+                    "alis environment refresh alis.os --output .env",
+                    "alis environment refresh alis.os --reveal"):
+            with self.subTest(command=cmd):
+                result = self.decision(cmd)
+                self.assertEqual(result.get("permissionDecision"), "ask")
+                self.assertIn("secret", result["permissionDecisionReason"])
+                argv = shlex.split(result["updatedInput"]["command"])
+                self.assertIn("--approve", argv)
+                self.assertNotIn("--confirm-production", argv)
+        self.assertEqual(self.decision("alis environment variables alis.os --reveal", "plan")["permissionDecision"], "deny")
+        self.assertEqual(self.decision("alis environment list alis.os --json")["permissionDecision"], "allow")
+
     def test_plan_never_auto_allows_mutations(self):
         self.assertEqual(self.decision("alis build example.app.api.v1 --json", "plan")["permissionDecision"], "deny")
         self.assertEqual(self.decision("alis operations describe operations/a --json", "plan")["permissionDecision"], "allow")

@@ -3083,5 +3083,461 @@ export const PARITY: readonly ParityCase[] = [
   "mode": "default",
   "allowed": "context doctor",
   "python": null
+ },
+ {
+  "command": "alis environment variables alis.os --json",
+  "mode": "auto",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment variables alis.os --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment variables alis.os --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --json",
+  "mode": "plan",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --json",
+  "mode": "default",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment variables alis.os --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment variables alis.os --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis env vars alis.os",
+  "mode": "auto",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis env vars alis.os --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis env vars alis.os",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis env vars alis.os --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis env vars alis.os",
+  "mode": "plan",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis env vars alis.os",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis env vars alis.os",
+  "mode": "default",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis env vars alis.os --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis env vars alis.os",
+  "mode": "default",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis env vars alis.os --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --reveal -e production --json",
+  "mode": "auto",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --reveal -e production --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --reveal -e production --json",
+  "mode": "plan",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --reveal -e production --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --reveal -e production --json",
+  "mode": "default",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment variables alis.os --reveal -e production --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os",
+  "mode": "auto",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os",
+  "mode": "plan",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os",
+  "mode": "default",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os",
+  "mode": "default",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --output .env",
+  "mode": "auto",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --output .env",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --output .env",
+  "mode": "plan",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --output .env",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --output .env",
+  "mode": "default",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --output .env",
+  "mode": "default",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --reveal",
+  "mode": "auto",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --reveal",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --reveal",
+  "mode": "plan",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --reveal",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --reveal",
+  "mode": "default",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis environment refresh alis.os --reveal",
+  "mode": "default",
+  "allowed": "context doctor",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "updatedInput": {
+    "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
  }
 ]
