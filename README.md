@@ -103,6 +103,8 @@ Use `alis --cwd /absolute/workspace/path ...` for another workspace, and `alis e
 
 Guarded actions (`--confirm-production`, `--approve`, `--yes`, block uninstall, environment unset, and the secret-printing `environment variables|vars|refresh` and `--reveal`) request native confirmation of the exact command. When needed, the hook includes `--approve` in the command shown for confirmation so the CLI does not ask a second time; it never inserts `--confirm-production`. Plan mode cannot run these actions. Higher-priority Claude rules/classifier denials remain in force. Session attribution uses a per-command `--session-id`; no shared approval file is written or trusted for Claude. `auto` and `acceptEdits` are not consent to external actions.
 
+After every tool result the plugin looks for secret-looking values (Stripe, GitHub, npm, PyPI, Linear, SendGrid keys, connection strings with passwords, private keys, `NAME=value` lines whose name says secret). A hit cannot be unprinted, so the plugin shows which kinds landed and that they need rotating, and tells the model not to repeat them. Values never appear in the warning. The CLI masks its own uploads and `environment variables` output since 1.146.1; this covers `cat .env`, `printenv` and the like.
+
 `ALIS_ALLOWED_SUBCMDS` restricts automatic allows (for example `context doctor operations`); it does not disable required confirmation. Missing Python causes the permission hook to fall back to Claude's normal handling.
 
 ## Function hooks (early access)
