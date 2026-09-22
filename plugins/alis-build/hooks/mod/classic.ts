@@ -15,6 +15,7 @@ import { mergeClassic } from './classic-result'
 import { HANDOFF_EVENTS, handoffHook } from './handoff'
 import type { Host } from './host'
 import { isSessionId, pruneMarkers, writeMarker } from './markers'
+import { secretsAnswer } from './secrets'
 import { primerContext, serviceContext, syncSkills } from './session-context'
 import { COVERS, tagClassic } from './tag'
 
@@ -46,6 +47,7 @@ export async function passClassic<E extends object, R extends object>(
   const eventName = event.startsWith('classic.') ? event.slice('classic.'.length) : event
   let mine: Record<string, unknown> = COVERS.includes('handoff') && HANDOFF_EVENTS.has(eventName) ? await handoffHook(host, eventName, e) : {}
   if (eventName === 'SessionStart') mine = { ...mine, ...(await sessionStartAnswer(host, p)) }
+  if (eventName === 'PostToolUse' && COVERS.includes('secrets')) mine = mergeClassic(mine, await secretsAnswer(host, e))
   const below = await next(event === 'classic.PreToolUse' ? e : tagClassic(e))
   return Object.keys(mine).length === 0 ? below : mergeClassic(below, mine)
 }

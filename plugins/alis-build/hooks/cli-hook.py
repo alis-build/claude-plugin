@@ -14,7 +14,7 @@ GUIDANCE = ("Run one standalone alis command and read its complete JSON result. 
             "Keep stderr progress separate; no head/tail, pipes, redirects or sleep loops. "
             "A Claude background-task ID is not an Alis operation ID.")
 GLOBALS = {"--cwd", "--session-id"}
-BOOLS = {"--json", "--verbose", "--approve", "--confirm-production", "--yes", "--help", "-h"}
+BOOLS = {"--json", "--verbose", "--approve", "--confirm-production", "--yes", "--reveal", "--help", "-h"}
 READ_TOP = {"docs", "doctor", "whoami", "version", "ask"}
 READ_PATHS = {
     ("context", "view"), ("accounts", "list"), ("org", "list"), ("org", "view"),
@@ -122,13 +122,20 @@ def decide(payload):
     guarded = bool(flags & {"--confirm-production", "--approve", "--yes"})
     guarded = guarded or (top == "blocks" and "uninstall" in options)
     guarded = guarded or (top == "environment" and any(v in options for v in ("destroy", "unset")))
+    # `variables|vars` and `refresh` print secret values on CLIs before 1.146.1
+    # and behind --reveal from then on; the gate cannot see the version, so the
+    # bare command asks too.
+    secrets = top == "environment" and ("--reveal" in flags or any(v in options for v in ("variables", "vars", "refresh")))
+    guarded = guarded or secrets
     handoff_read = command_path(argv, 3) in {("workstation", "handoff", "status"), ("workstation", "handoff", "targets")}
     read_only = top in READ_TOP or path in READ_PATHS or handoff_read or bool(flags & {"--help", "-h"})
     if payload.get("permission_mode") == "plan" and (guarded or not read_only):
         result.update(permissionDecision="deny", permissionDecisionReason="This Alis action changes state. Finish the plan and obtain execution approval first.")
         return {"hookSpecificOutput": result}
     if guarded:
-        result.update(permissionDecision="ask", permissionDecisionReason="Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.")
+        reason = ("This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment."
+                  if secrets else "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.")
+        result.update(permissionDecision="ask", permissionDecisionReason=reason)
         # Native confirmation displays this modified command. Execution then
         # satisfies the CLI's non-production confirmation once. Never add the
         # production flag: the CLI must first resolve its exact target/version.
