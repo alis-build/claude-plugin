@@ -34,48 +34,107 @@ FAKE = {
     "linear": "lin_api_FAKEFAKEFAKEFAKEFAKE0000",
     "sendgrid": "SG." + "FAKE" * 6 + "." + "FAKE" * 11,
     "postgres": "postgres://app:FAKEpassword@db.example.test/app",
+    "aws": "AKIAFAKEFAKEFAKEFAKE",
+    "google": "AIza" + "FAKE" * 8 + "FAK",
+    "slack": "xoxb-FAKE-FAKE-FAKE-FAKE",
     "privateKey": "-----BEGIN RSA PRIVATE KEY-----",
     "assignment": "STRIPE_SECRET_KEY=FAKEFAKEFAKEFAKEFAKEFAKE",
 }
+REVEAL_COMMAND = "alis environment variables alis.os --reveal --json"
+
+
+def bash(command, stdout, **extra):
+    return {"session_id": "abc", "hook_event_name": "PostToolUse", "tool_name": "Bash", "tool_input": {"command": command},
+            "tool_response": {"stdout": stdout, "stderr": ""}, **extra}
 
 
 class SecretsTests(unittest.TestCase):
     """The samples of tests/secrets.test.ts, one for one; every value is a made-up shape."""
 
+    def setUp(self):
+        self.home = tempfile.TemporaryDirectory(); self.addCleanup(self.home.cleanup)
+
     def run_hook(self, payload, env=None):
         p = subprocess.run(["bash", str(HOOKS / "warn-secrets.sh")], input=json.dumps(payload), capture_output=True, text=True,
-                           env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1", **(env or {})), check=True)
+                           env=dict(os.environ, HOME=self.home.name, PYTHONDONTWRITEBYTECODE="1", **(env or {})), check=True)
         return json.loads(p.stdout) if p.stdout.strip() else {}
 
-    def test_secret_kinds_are_named_once_with_counts(self):
+    def context(self, payload):
+        return self.run_hook(payload)["hookSpecificOutput"]["additionalContext"]
+
+    def test_secret_kinds_are_named_once_with_counts_in_table_order(self):
         self.assertEqual(secrets.secret_kinds_of(f"{FAKE['stripe']}\n{FAKE['stripe']}\n{FAKE['postgres']}"),
                          [("stripe", 2), ("postgres", 1)])
         for kind, sample in FAKE.items():
             with self.subTest(kind=kind):
                 self.assertEqual([k for k, _ in secrets.secret_kinds_of(f"value: {sample}")], [kind])
 
-    def test_masked_redacted_and_names_only_output_is_clean(self):
+    def test_one_value_matching_two_patterns_counts_once(self):
+        self.assertEqual(secrets.secret_kinds_of(f"STRIPE_SECRET_KEY={FAKE['stripe']}"), [("stripe", 1)])
+
+    def test_masked_redacted_names_only_and_secret_reference_output_is_clean(self):
         for text in ("", "STRIPE_SECRET_KEY=••••••••", "token [REDACTED:stripe] was here",
                      '{"envs":[{"name":"STRIPE_SECRET_KEY","set":true}],"revealed":false}',
-                     "alis environment variables alis.os --reveal", "export PATH=/usr/local/bin:/usr/bin"):
+                     "alis environment variables alis.os --reveal", "export PATH=/usr/local/bin:/usr/bin",
+                     '{"secretName": "projects/123456/secrets/db-password/versions/1"}',
+                     'password_secret_name = "projects/acme/secrets/db-password"',
+                     "The access_token: abcdefghijklmnopqrst is described in the docs",
+                     "DB_PASSWORD_SECRET_NAME=projects/acme/secrets/db-password"):
             with self.subTest(text=text):
                 self.assertEqual(secrets.secret_kinds_of(text), [])
 
-    def test_a_bash_result_with_secrets_warns_the_person_and_the_model(self):
-        out = self.run_hook({"session_id": "abc", "hook_event_name": "PostToolUse", "tool_name": "Bash", "tool_input": {"command": "cat .env"},
-                             "tool_response": {"stdout": f"{FAKE['stripe']}\n{FAKE['postgres']}\n", "stderr": ""}})
+    def test_text_past_the_scan_cap_is_not_read(self):
+        self.assertEqual(secrets.secret_kinds_of("x" * secrets.MAX_SCAN + FAKE["stripe"]), [])
+        self.assertEqual(secrets.secret_kinds_of(FAKE["stripe"] + "x" * secrets.MAX_SCAN), [("stripe", 1)])
+
+    def test_an_alis_environment_reveal_counts_every_revealed_row_masked_rows_never(self):
+        json_out = '{"environments":[{"environmentId":"production","envs":[{"name":"DB_PASSWORD","value":"FAKE-long-value-abcdefghij"}]}],"revealed":true}'
+        self.assertEqual(self.context(bash(REVEAL_COMMAND, json_out)), secrets.warning_of([("revealed", 1)]))
+        table = "NAME          VALUE\nDB_PASSWORD   FAKE-long-value-klmnopqrst\nAPI_URL       https://api.example.test\n"
+        self.assertEqual(self.context(bash("alis env vars alis.os --reveal -e production", table)), secrets.warning_of([("revealed", 2)]))
+        self.assertEqual(self.context(bash("alis environment refresh alis.os --reveal", "DB_PASSWORD=FAKE-long-value-uvwxyz\n")), secrets.warning_of([("revealed", 1)]))
+        for masked in ("DB_PASSWORD   ••••••••\nEMPTY_ONE     (empty)\n", '{"environments":[{"envs":[{"name":"DB_PASSWORD","set":true}]}],"revealed":false}'):
+            with self.subTest(masked=masked):
+                self.assertEqual(self.run_hook(bash("alis environment variables alis.os --json", masked)), {})
+        # The same rows from any other command are ordinary text.
+        self.assertEqual(self.run_hook(bash("cat table.txt", table)), {})
+
+    def test_a_bash_result_with_secrets_warns_the_person_and_the_model_without_the_values(self):
+        out = self.run_hook(bash("cat .env", f"{FAKE['stripe']}\n{FAKE['postgres']}\n"))
         context = out["hookSpecificOutput"]["additionalContext"]
         self.assertEqual(out["hookSpecificOutput"]["hookEventName"], "PostToolUse")
+        self.assertEqual(context, secrets.warning_of([("stripe", 1), ("postgres", 1)]))
         self.assertIn("stripe", context); self.assertIn("rotate", context); self.assertNotIn(FAKE["stripe"], context)
-        self.assertIn("secret", out["systemMessage"]); self.assertNotIn(FAKE["stripe"], out["systemMessage"])
+        # A classic systemMessage carries no plugin prefix of its own.
+        self.assertTrue(out["systemMessage"].startswith("alis: ")); self.assertIn("secret", out["systemMessage"]); self.assertNotIn(FAKE["stripe"], out["systemMessage"])
 
-    def test_a_read_result_is_scanned_and_a_clean_or_module_served_result_is_silent(self):
+    def test_tool_inputs_read_results_and_list_results_are_scanned_and_a_clean_result_is_silent(self):
+        write = {"hook_event_name": "PostToolUse", "tool_name": "Write", "tool_input": {"file_path": "/x/.env", "content": FAKE["github"]},
+                 "tool_response": {"type": "create", "filePath": "/x/.env"}}
+        self.assertIn("github", self.context(write))
         read = {"hook_event_name": "PostToolUse", "tool_name": "Read", "tool_input": {"file_path": "/x/.env"},
                 "tool_response": {"type": "text", "file": {"filePath": "/x/.env", "content": FAKE["assignment"]}}}
-        self.assertIn("assignment", self.run_hook(read)["hookSpecificOutput"]["additionalContext"])
-        self.assertEqual(self.run_hook({"hook_event_name": "PostToolUse", "tool_name": "Bash", "tool_response": {"stdout": "ok\n", "stderr": ""}}), {})
+        self.assertIn("assignment", self.context(read))
+        mcp = {"hook_event_name": "PostToolUse", "tool_name": "mcp__x__y", "tool_input": {}, "tool_response": [{"type": "text", "text": FAKE["npm"]}]}
+        self.assertIn("npm", self.context(mcp))
+        self.assertEqual(self.run_hook(bash("echo ok", "ok\n")), {})
         self.assertEqual(self.run_hook({"hook_event_name": "PostToolUse", "tool_name": "Bash"}), {})
-        self.assertEqual(self.run_hook(dict(read, alis_module="cli secrets")), {})
+
+    def test_a_value_already_warned_about_in_the_session_is_not_warned_about_again(self):
+        self.assertNotEqual(self.run_hook(bash("cat .env", FAKE["stripe"])), {})
+        self.assertEqual(self.run_hook(bash("cat .env", FAKE["stripe"])), {})
+        self.assertEqual(self.context(bash("cat .env", f"{FAKE['stripe']}\n{FAKE['linear']}")), secrets.warning_of([("linear", 1)]))
+        # Another session starts fresh; a session-less payload never remembers.
+        self.assertNotEqual(self.run_hook(bash("cat .env", FAKE["stripe"], session_id="other")), {})
+        no_sid = bash("cat .env", FAKE["github"]); del no_sid["session_id"]
+        self.assertNotEqual(self.run_hook(no_sid), {}); self.assertNotEqual(self.run_hook(no_sid), {})
+
+    def test_the_hook_steps_aside_on_its_own_token_only(self):
+        payload = bash("cat .env", FAKE["sendgrid"])
+        self.assertEqual(self.run_hook(dict(payload, alis_module="cli secrets")), {})
+        for tag in ("", "other secretsX", "secret", "cli handoff"):
+            with self.subTest(tag=tag):
+                self.assertIn("sendgrid", self.context(dict(payload, alis_module=tag, session_id="s-" + str(len(tag)))))
 
 
 class PermissionTests(unittest.TestCase):

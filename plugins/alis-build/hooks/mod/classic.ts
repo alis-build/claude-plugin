@@ -47,7 +47,7 @@ export async function passClassic<E extends object, R extends object>(
   const eventName = event.startsWith('classic.') ? event.slice('classic.'.length) : event
   let mine: Record<string, unknown> = COVERS.includes('handoff') && HANDOFF_EVENTS.has(eventName) ? await handoffHook(host, eventName, e) : {}
   if (eventName === 'SessionStart') mine = { ...mine, ...(await sessionStartAnswer(host, p)) }
-  if (eventName === 'PostToolUse' && COVERS.includes('secrets')) mine = { ...mine, ...(await secretsAnswer(host, e)) }
+  if (eventName === 'PostToolUse' && COVERS.includes('secrets')) mine = mergeClassic(mine, await secretsAnswer(host, e))
   const below = await next(event === 'classic.PreToolUse' ? e : tagClassic(e))
   return Object.keys(mine).length === 0 ? below : mergeClassic(below, mine)
 }
