@@ -142,6 +142,7 @@ describe('cli-gate', () => {
 
   test('commandPath skips global flags and resolves aliases', () => {
     expect(commandPath(['alis', '--cwd', '/x', '--json', 'env', 'list'])).toEqual(['environment', 'list'])
+    expect(commandPath(['alis', '--reveal', 'env', 'vars'])).toEqual(['environment', 'vars'])
     expect(commandPath(['alis', '--cwd=/x', 'ops', 'wait', 'op/1'])).toEqual(['operations', 'wait'])
     expect(commandPath(['alis', '--', 'docs'])).toEqual([])
     expect(commandPath(['alis', 'workstation', 'handoff', 'status'], 3)).toEqual(['workstation', 'handoff', 'status'])

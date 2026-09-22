@@ -3539,5 +3539,65 @@ export const PARITY: readonly ParityCase[] = [
     "timeout": 120000
    }
   }
+ },
+ {
+  "command": "alis operations --reveal describe operations/a --json",
+  "mode": "auto",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis operations --reveal describe operations/a --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis operations --reveal describe operations/a --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "python": null
+ },
+ {
+  "command": "alis operations --reveal describe operations/a --json",
+  "mode": "plan",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis operations --reveal describe operations/a --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis operations --reveal describe operations/a --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "python": null
+ },
+ {
+  "command": "alis operations --reveal describe operations/a --json",
+  "mode": "default",
+  "allowed": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis operations --reveal describe operations/a --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis operations --reveal describe operations/a --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "python": null
  }
 ]

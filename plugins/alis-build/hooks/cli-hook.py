@@ -14,7 +14,7 @@ GUIDANCE = ("Run one standalone alis command and read its complete JSON result. 
             "Keep stderr progress separate; no head/tail, pipes, redirects or sleep loops. "
             "A Claude background-task ID is not an Alis operation ID.")
 GLOBALS = {"--cwd", "--session-id"}
-BOOLS = {"--json", "--verbose", "--approve", "--confirm-production", "--yes", "--help", "-h"}
+BOOLS = {"--json", "--verbose", "--approve", "--confirm-production", "--yes", "--reveal", "--help", "-h"}
 READ_TOP = {"docs", "doctor", "whoami", "version", "ask"}
 READ_PATHS = {
     ("context", "view"), ("accounts", "list"), ("org", "list"), ("org", "view"),
