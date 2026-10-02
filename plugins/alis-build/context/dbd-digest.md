@@ -47,8 +47,11 @@ as a skill" and `alis:capture` saves it for their team.
 
 Production changes need explicit confirmation: a production deploy exits with code 3 until
 re-run with `--confirm-production`, and that flag requires the user's explicit approval —
-never invent it. Present the CLI's exact pinned retry through native permission
-confirmation; no extra chat question is needed first. Session modes grant nothing.
+never invent it; the plugin asks the user before it runs (and before an uninstall,
+environment destroy/unset or `--reveal`), in its own dialog in every mode. No extra chat question
+is needed first. On `APPROVAL_REQUIRED` (manual tier), re-run with `--approve` only when the
+user explicitly asked for that action on that target; when it was only implied, ask in chat
+first. Session modes grant nothing, and a refusal means stop.
 
 Run one standalone Alis command per Bash call: no pipes, output trimming or redirects.
 Read help in full too; check the relevant subcommand's `--help` before concluding

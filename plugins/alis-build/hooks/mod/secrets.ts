@@ -1,12 +1,19 @@
-// A warning when a tool call carries secret-looking values (secrets-hook.py's
-// job). The call is already in the transcript by the time PostToolUse fires,
-// so nothing here redacts: the person hears which kinds landed and that they
-// need rotating, and the model is told not to repeat them. The CLI masks its
-// own uploads since 1.146.1; this covers `cat .env`, printenv and the like,
-// and the values an `alis environment … --reveal` printed on request.
+// Secret-looking values in tool calls (secrets-hook.py's job, and more).
+//
+// A tool result is masked on its way into the conversation (session.append):
+// each value becomes [REDACTED:kind], its name kept, so the model never reads
+// it, and the person gets a toast. The transcript file still holds the raw
+// output in the row's structured tool record (toolUseResult), which the
+// engine stores as made and no hook can rewrite. What cannot be masked
+// gets the old warning at PostToolUse: a tool call's own arguments (the
+// engine puts tool_use blocks back) and what an `alis environment … --reveal`
+// printed, which the person asked to see and the Bash gate confirmed. The
+// CLI masks its own uploads since 1.146.1; this covers `cat .env`, printenv
+// and the like.
 //
 // The pattern table is the one in hooks/secrets-hook.py, in the same order;
 // tests/secrets.test.ts and tests/test_behavior.py share their samples.
+import type { SecretsMemo } from '../../types'
 import type { Host } from './host'
 
 export type SecretKind = { kind: string; count: number }
@@ -53,8 +60,9 @@ function spansOf(text: string, revealed: boolean): Span[] {
     for (const m of text.matchAll(pattern)) {
       const start = m.index ?? 0
       const end = start + m[0].length
-      // An earlier pattern owns any overlapping span (one value, one count).
-      if (keep(m) && !spans.some(s => start < s.end && end > s.start)) spans.push({ kind, start, end, value: m[0] })
+      // An earlier pattern owns any overlapping span (one value, one count);
+      // a match holding a mask marker is masked text, not a value.
+      if (keep(m) && !m[0].includes('[REDACTED:') && !spans.some(s => start < s.end && end > s.start)) spans.push({ kind, start, end, value: m[0] })
     }
   }
   if (revealed) for (const pattern of REVEALED) add('revealed', pattern)
@@ -115,11 +123,40 @@ export function toastOf(tool: string, kinds: SecretKind[]): string {
 }
 
 // Values already warned about this session, as hashes: a file read twice or
-// a .env written then read warns once. Never the values themselves.
+// a .env written then read warns once. Never the values themselves. Masked
+// values are kept apart: the model never saw them, so a later exposure of
+// the same value still warns.
 const seen = new Set<string>()
+const maskedSeen = new Set<string>()
+
+// Bash calls whose result is left unmasked (see isEnvCommand), by tool_use_id,
+// noted at tool.call and taken when the result row arrives.
+const unmasked = new Set<string>()
+
+export type { SecretsMemo }
+
+/** What survives a reload of the module (see saved.ts). */
+export function secretsMemo(): SecretsMemo {
+  return { seen: [...seen], masked: [...maskedSeen], unmasked: [...unmasked] }
+}
+
+export function restoreSecrets(memo: SecretsMemo): void {
+  forgetSecrets()
+  for (const h of memo.seen) seen.add(h)
+  for (const h of memo.masked) maskedSeen.add(h)
+  for (const id of memo.unmasked) unmasked.add(id)
+}
 
 export function forgetSecrets(): void {
   seen.clear()
+  maskedSeen.clear()
+  unmasked.clear()
+}
+
+/** Notes a Bash call whose result must reach the model as printed. */
+export function noteBashCall(e: object): void {
+  const p = e as Record<string, unknown>
+  if (typeof p['tool_use_id'] === 'string' && isEnvCommand(p['command'])) unmasked.add(p['tool_use_id'])
 }
 
 function hashOf(value: string): string {
@@ -131,13 +168,21 @@ function hashOf(value: string): string {
   return `${h.toString(16)}:${value.length}`
 }
 
-/** The classic PostToolUse answer for one tool call; empty when it is clean or already warned about. */
+/** Whether a Bash command prints environment values (and so is never masked). */
+export function isEnvCommand(command: unknown): boolean {
+  return typeof command === 'string' && ENV_COMMAND.test(command)
+}
+
+/**
+ * The classic PostToolUse answer for one tool call: the values the model saw
+ * despite the masking, its arguments and a reveal's output. Empty when those
+ * are clean or already warned about.
+ */
 export async function secretsAnswer(host: Host, e: object): Promise<{ additionalContext?: string[] }> {
   const p = e as Record<string, unknown>
   const input = p['tool_input']
-  const command = typeof input === 'object' && input !== null ? (input as Record<string, unknown>)['command'] : undefined
-  const revealed = typeof command === 'string' && ENV_COMMAND.test(command)
-  const text = `${textOf(p['tool_response'])}\n${inputTextOf(input)}`.slice(0, MAX_SCAN)
+  const revealed = isEnvCommand(typeof input === 'object' && input !== null ? (input as Record<string, unknown>)['command'] : undefined)
+  const text = `${revealed ? textOf(p['tool_response']) : ''}\n${inputTextOf(input)}`.slice(0, MAX_SCAN)
   const fresh = spansOf(text, revealed).filter(s => !seen.has(hashOf(s.value)))
   if (fresh.length === 0) return {}
   for (const s of fresh) seen.add(hashOf(s.value))
@@ -145,4 +190,68 @@ export async function secretsAnswer(host: Host, e: object): Promise<{ additional
   const tool = typeof p['tool_name'] === 'string' ? p['tool_name'] : 'tool'
   host.toast(toastOf(tool, kinds))
   return { additionalContext: [warningOf(kinds)] }
+}
+
+const KEY_END = /-----END [A-Z ]*PRIVATE KEY-----/g
+
+/** A span's replacement: the marker, keeping an assignment's name and a connection string's user. */
+function maskOf(s: Span): string {
+  const marker = `[REDACTED:${s.kind}]`
+  if (s.kind === 'assignment') return `${/^.*?[=:]\s*["']?/.exec(s.value)?.[0] ?? ''}${marker}`
+  if (s.kind === 'postgres') return `${/^postgres(?:ql)?:\/\/[^:/\s@]+:/.exec(s.value)?.[0] ?? ''}${marker}@`
+  return marker
+}
+
+/** `text` with every secret-looking value masked, and the spans masked. */
+export function maskText(text: string): { text: string; spans: Span[] } {
+  const spans = spansOf(text.slice(0, MAX_SCAN), false).sort((a, b) => a.start - b.start)
+  // The pattern finds a private key by its header; the mask takes the key
+  // through its footer, or to the end when the text was cut.
+  for (const s of spans) {
+    if (s.kind !== 'privateKey') continue
+    KEY_END.lastIndex = s.end
+    const end = KEY_END.exec(text)
+    s.end = end ? end.index + end[0].length : text.length
+  }
+  const kept = spans.filter(s => !spans.some(o => o !== s && o.kind === 'privateKey' && s.start >= o.start && s.end <= o.end))
+  let out = ''
+  let at = 0
+  for (const s of kept) {
+    out += text.slice(at, s.start) + maskOf(s)
+    at = s.end
+  }
+  return { text: out + text.slice(at), spans: kept }
+}
+
+type Block = { type?: unknown; text?: unknown; content?: unknown; tool_use_id?: unknown }
+
+function maskBlock(block: Block, spans: Span[]): Block {
+  const mask = (text: string) => {
+    const masked = maskText(text)
+    spans.push(...masked.spans)
+    return masked.text
+  }
+  if (block.type === 'text' && typeof block.text === 'string') return { ...block, text: mask(block.text) }
+  if (block.type !== 'tool_result') return block
+  if (typeof block.tool_use_id === 'string' && unmasked.delete(block.tool_use_id)) return block
+  if (typeof block.content === 'string') return { ...block, content: mask(block.content) }
+  if (Array.isArray(block.content)) return { ...block, content: block.content.map(b => (typeof b === 'object' && b !== null ? maskBlock(b as Block, spans) : b)) }
+  return block
+}
+
+/**
+ * A tool-result row with its secret-looking values masked, and the kinds of
+ * those not masked before (the toast's). `changed` is false when nothing was.
+ */
+export function maskRow<M extends { content: readonly unknown[] }>(message: M): { message: M; changed: boolean; fresh: SecretKind[] } {
+  const spans: Span[] = []
+  const content = message.content.map(b => (typeof b === 'object' && b !== null ? maskBlock(b as Block, spans) : b))
+  const fresh = spans.filter(s => !maskedSeen.has(hashOf(s.value)))
+  for (const s of fresh) maskedSeen.add(hashOf(s.value))
+  return { message: spans.length > 0 ? { ...message, content } : message, changed: spans.length > 0, fresh: kindsOf(fresh) }
+}
+
+/** What the person sees when a result was masked; never carries a value. */
+export function maskedToastOf(tool: string, kinds: SecretKind[]): string {
+  return `masked secret-looking values in the last ${tool} result before Claude read them (${list(kinds)}).`
 }

@@ -20,7 +20,7 @@ describe('ops-render', () => {
     let reached = 0
     on('ui.render', { component: 'ToolUse' }, ($, e) => {
       reached += 1
-      return renderOpsRunning($.ui.resolve(e), engineRow, { operation: 'operations/z', startedAt: 1000, status: 'building' }, 66_000)
+      return renderOpsRunning($.ui.resolve(e), engineRow, { operation: 'operations/z', startedAt: 1000, status: 'building', progress: 'Pushing image' }, 66_000)
     })
     const drawn = JSON.stringify(await $.ui.render(e))
     expect(reached).toBe(1)
@@ -28,6 +28,7 @@ describe('ops-render', () => {
     expect(drawn).toContain(' waiting on operations/z · 1:05 · ')
     expect(drawn).toContain('"inverse":true')
     expect(drawn).toContain('building')
+    expect(drawn).toContain(' · Pushing image')
   })
 
   test('a Bash result that streamed an alis operation is drawn as a summary', async $ => {

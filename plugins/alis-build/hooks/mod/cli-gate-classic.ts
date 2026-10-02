@@ -29,11 +29,12 @@ export async function cliGateClassic<E extends object>(
     sessionId: await host.sessionId().catch(() => undefined),
     allowedSubcmds: await host.allowedSubcmds(),
   })
-  // The person already confirmed this exact call in the deploy dialog: that
-  // stands in for the native prompt, once. The --approve rewrite still lands.
+  // The person already confirmed this exact call in the alis dialog (a
+  // guarded command, or a production deploy): that stands in for the native
+  // prompt, once. The --approve rewrite still lands.
   if (decision.matched && decision.decision === 'ask' && typeof tool_use_id === 'string' && approvedCalls.delete(tool_use_id)) {
     decision.decision = 'allow'
-    decision.reason = 'Confirmed by the person in the alis deploy dialog.'
+    decision.reason = 'Confirmed by the person in the alis confirmation dialog.'
   }
   if (decision.matched) {
     await observe(host, HEALTH_FILE, {

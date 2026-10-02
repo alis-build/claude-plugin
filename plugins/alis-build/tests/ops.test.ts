@@ -114,6 +114,66 @@ describe('ops-live', () => {
     expect(liveOf('toolu_9')).toBe(undefined)
   })
 
+  test("the CLI's own progress lines show while its stream lasts, polling waits, and the call's end ends the child", async () => {
+    const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: '{"done":false,"status":"building"}', stderr: '' }) })
+    let resolve!: (r: { result: string }) => void
+    const pending = new Promise<{ result: string }>(r => (resolve = r))
+    const outcome = watchAlisCall(host, envelope('alis operations wait operations/x --json'), () => pending, new AbortController().signal)
+    await settle()
+    const child = host.spawns[0]
+    expect(child?.argv).toEqual(['alis', 'operations', 'wait', 'operations/x', '--json'])
+
+    // A line split across two writes is read once it is whole.
+    child?.write('stderr', '{"elapsed":"0:05","progress":"Building image')
+    await settle()
+    expect(liveOf('toolu_9')?.progress).toBe(undefined)
+    child?.write('stderr', ' (2/5)"}\n{"elapsed":"0:06"}\n')
+    await settle()
+    expect(liveOf('toolu_9')?.progress).toBe('Building image (2/5)')
+
+    // While the stream lasts, the clock redraws but does not describe.
+    const described = host.runs.length
+    for (let i = 0; i < POLL_EVERY; i++) host.timers[0]?.fn()
+    await settle()
+    expect(host.runs).toHaveLength(described)
+
+    resolve({ result: 'ok' })
+    expect(await outcome).toEqual({ result: 'ok' })
+    await settle()
+    expect(child?.returned).toBe(true)
+    expect(liveOf('toolu_9')).toBe(undefined)
+  })
+
+  test("the stream's outcome sets the status; a stream that ends early hands back to polling", async () => {
+    const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: '{"done":false,"status":"queued"}', stderr: '' }) })
+    void watchAlisCall(host, envelope('alis operations wait operations/x --json'), () => new Promise(() => {}), new AbortController().signal)
+    await settle()
+    host.spawns[0]?.write('stdout', '{"done":true,')
+    host.spawns[0]?.write('stdout', '"version":"4.5.6"}')
+    host.spawns[0]?.exit(0)
+    await settle()
+    expect(liveOf('toolu_9')?.status).toBe('done → 4.5.6')
+
+    host.answer = () => ({ exitCode: 0, stdout: '{"done":false,"status":"deploying"}', stderr: '' })
+    for (let i = 0; i < POLL_EVERY; i++) host.timers[0]?.fn()
+    await settle()
+    expect(liveOf('toolu_9')?.status).toBe('deploying')
+  })
+
+  test('a child that cannot start is logged and the polling carries on', async () => {
+    const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: '{"done":false,"status":"building"}', stderr: '' }) })
+    host.spawnError = new Error('ENOENT alis')
+    const controller = new AbortController()
+    void watchAlisCall(host, envelope('alis operations wait operations/z --json'), () => new Promise(() => {}), controller.signal)
+    await settle()
+    expect(host.logs.some(l => l.includes('ENOENT alis'))).toBe(true)
+    const described = host.runs.length
+    for (let i = 0; i < POLL_EVERY; i++) host.timers[0]?.fn()
+    await settle()
+    expect(host.runs.length).toBe(described + 1)
+    controller.abort()
+  })
+
   test('other Bash calls pass straight through with no timer or state', async () => {
     const host = fakeHost()
     const result = await watchAlisCall(host, envelope('alis build x --json --async'), async () => ({ result: 'r' }), new AbortController().signal)

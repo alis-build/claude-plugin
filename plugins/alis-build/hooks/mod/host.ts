@@ -3,7 +3,7 @@
 // within the file a hook receives it in, and `$.env.get` takes literal
 // names, so hooks/mod.ts spells every `$.noun.call` once in hostOf() and
 // the files under hooks/mod/ take this interface. Tests pass a fake.
-import type { AskOptions, FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult, RenderSurface } from 'claude-code'
+import type { AskOptions, FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult, ProcessSpawnChunk, ProcessSpawnResult, RenderSurface } from 'claude-code'
 
 export type Host = {
   /** $HOME, or undefined when unset. */
@@ -38,8 +38,10 @@ export type Host = {
   status: (text: string | undefined) => void
   /** Shows a line on the notification bar for a few seconds. */
   toast: (text: string) => void
-  /** Asks the engine to draw this plugin's render hooks again. */
+  /** Asks the engine to draw this plugin's render hooks again, and saves what they draw from (see saved.ts). */
   invalidate: () => void
+  /** Saves the module's session state, so a reload of its code picks it up (see saved.ts). */
+  save: () => void
   /** Opens (or retitles) one of this plugin's panes. */
   openPane: (pane: PaneOpenArgs) => Promise<void>
   /** Closes one of this plugin's panes; an id that is not open is left alone. */
@@ -52,6 +54,8 @@ export type Host = {
   writeFile: (path: string, text: string) => Promise<void>
   /** Runs a host command by argv; rejects on timeout or a missing binary. */
   run: (argv: readonly string[], init?: ProcessRunInit) => Promise<ProcessRunResult>
+  /** Starts a host command by argv and streams its output; leaving the loop or return() ends it. Rejects on the first pull when it cannot start. */
+  spawn: (argv: readonly string[]) => AsyncGenerator<ProcessSpawnChunk, ProcessSpawnResult>
   /** A line for the debug log, led by the plugin's name. */
   debug: (text: string) => void
 }

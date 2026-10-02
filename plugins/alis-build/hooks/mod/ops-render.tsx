@@ -27,6 +27,7 @@ export function renderOpsRunning(kit: Kit, rendered: RenderElement, live: LiveWa
         <Text bold color={live.status.startsWith('failed') ? DANGER : live.status.startsWith('done') ? OK : RUNNING}>
           {live.status}
         </Text>
+        {live.progress ? <Text dimColor>{` · ${live.progress}`}</Text> : null}
       </Box>
     </Box>
   )

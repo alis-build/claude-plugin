@@ -8,17 +8,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/load-primer.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/load-primer.sh\"",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/inject-service-context.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/inject-service-context.sh\"",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/sync-skills.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/sync-skills.sh\"",
             "async": true
           }
         ]
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ]
@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/suggest-skills.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/suggest-skills.sh\"",
             "timeout": 2
           }
         ]
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ]
@@ -59,7 +59,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/allow-alis-cli.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/allow-alis-cli.sh\"",
             "timeout": 5
           }
         ]
@@ -68,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ],
@@ -80,7 +80,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ],
@@ -90,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/warn-secrets.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/warn-secrets.sh\"",
             "timeout": 5
           }
         ],
@@ -102,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ],
@@ -114,7 +114,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ],
@@ -126,7 +126,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ]
@@ -137,7 +137,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ]
@@ -148,7 +148,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/handoff.sh\"",
             "timeout": 10
           }
         ]

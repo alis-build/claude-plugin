@@ -4,6 +4,7 @@
 // own window. Polled from `alis workstation handoff status <id> --json`, with Cancel
 // and Reclaim buttons that confirm first and then run the CLI directly
 // (prompts are blocked in a claimed session).
+import type { HandoffPaneState, HandoffState } from '../../types'
 import type { Host } from './host'
 
 export const HANDOFF_PANE_ID = 'alis-handoff'
@@ -13,24 +14,7 @@ const STATUS_TIMEOUT_MS = 15_000
 const ACTION_TIMEOUT_MS = 60_000
 const HANDOFF_ID = /^[a-f0-9]{32}$/
 
-export type HandoffState = {
-  id: string
-  target: string
-  phase: string
-  safeToClose: boolean
-  error: string | null
-  url: string | null
-  reclaim: { phase?: string; error?: string; resumedIn?: string } | null
-  next: string | null
-}
-
-export type HandoffPaneState = {
-  isOpen: boolean
-  state: HandoffState | null
-  refreshedAt: number | null
-  error: string | null
-  busy: string | null
-}
+export type { HandoffPaneState, HandoffState }
 
 export const handoffPane: HandoffPaneState = { isOpen: false, state: null, refreshedAt: null, error: null, busy: null }
 
@@ -86,6 +70,15 @@ export async function openHandoffPane(host: Host, seed: HandoffState): Promise<v
 function schedule(host: Host, ms: number): void {
   cancelTimer?.()
   cancelTimer = host.every(ms, () => void refreshHandoff(host))
+}
+
+/** After a reload: opens again a pane the saved state calls open (see resumeOpsPane). */
+export async function resumeHandoffPane(host: Host): Promise<void> {
+  handoffPane.busy = null
+  const state = handoffPane.state
+  if (!handoffPane.isOpen || !state) return
+  handoffPane.isOpen = false
+  await openHandoffPane(host, state)
 }
 
 /** The person or the engine closed the pane: stop polling. */

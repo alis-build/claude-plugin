@@ -1,6 +1,6 @@
-// The alis plugin's function-hooks module (Claude Code early access, loaded
-// only where CLAUDE_CODE_ENABLE_FUNCTION_HOOKS is on). The classic shell
-// hooks in this folder stay the fallback; hooks/mod/tag.ts and
+// The alis plugin's function-hooks module (loaded from Claude Code 2.1.287
+// where the server-side rollout switch is on; earlier builds load it only
+// where CLAUDE_CODE_ENABLE_FUNCTION_HOOKS is on). The classic shell hooks in this folder stay the fallback; hooks/mod/tag.ts and
 // hooks/mod/classic.ts explain how the two sides avoid running one job twice.
 //
 // Every call on `$` is spelled in this file (see hooks/mod/host.ts for why);
@@ -9,24 +9,32 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
 import { renderAlisOutput } from './mod/alis-render'
-import { HANDOFF_PANE_ID, handoffActions, handoffPane, onHandoffPaneClosed } from './mod/handoff-pane'
+import { HANDOFF_PANE_ID, handoffActions, handoffPane, onHandoffPaneClosed, resumeHandoffPane } from './mod/handoff-pane'
 import { renderHandoffPane } from './mod/handoff-pane-view'
 import { liveAmong, liveOf, watchAlisCall } from './mod/ops-live'
-import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane } from './mod/ops-pane'
+import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane, resumeOpsPane } from './mod/ops-pane'
 import { renderOpsPane } from './mod/ops-pane-view'
 import { renderOpsResult, renderOpsRunning } from './mod/ops-render'
 import { passClassic } from './mod/classic'
 import { describeBash } from './mod/describe'
-import { confirmDeploy } from './mod/deploy-dialog'
+import { confirmGuarded } from './mod/guard-dialog'
 import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
+import { maskedToastOf, maskRow, noteBashCall } from './mod/secrets'
 import { suggestSkills } from './mod/suggest'
 import { dismissSuggestions, loadPromptOf, suggestBand } from './mod/suggest-band'
 import { renderSuggestBand } from './mod/suggest-band-view'
+import { restore, snapshot } from './mod/saved'
 
-type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session' | 'clock' | 'prompt' | 'plugin'>
+type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session' | 'clock' | 'prompt' | 'plugin' | 'state'>
+
+/** The module's session state in $.state (see mod/saved.ts). */
+const SAVED = { plugin: 'alis', key: 'session' } as const
 
 export function hostOf($: HostNouns): Host {
+  const save = () => {
+    $.state.set(SAVED, snapshot()).catch(error => $.ui.log(`alis: could not save state: ${String(error)}`, { to: 'debug' }))
+  }
   return {
     home: () => $.env.get('HOME'),
     pluginRoot: async () => $.plugin.root || (await $.env.get('CLAUDE_PLUGIN_ROOT')),
@@ -44,13 +52,20 @@ export function hostOf($: HostNouns): Host {
     stat: path => $.fs.stat(path),
     status: text => $.ui.status(text),
     toast: text => $.ui.toast(text),
-    invalidate: () => $.ui.invalidate('ui.render'),
-    openPane: pane => $.ui.open(pane),
+    invalidate: () => {
+      $.ui.invalidate('ui.render')
+      save()
+    },
+    save,
+    openPane: async pane => {
+      await $.ui.open(pane)
+    },
     closePane: id => $.ui.close({ id }),
     submitPrompt: text => $.prompt.submit({ text }),
     every: (ms, fn) => $.clock.every(ms, fn).cancel,
     writeFile: (path, text) => $.fs.write(path, text),
     run: (argv, init) => $.process.run(argv, init),
+    spawn: argv => $.process.spawn({ argv }),
     debug: text => $.ui.log(text, { to: 'debug' }),
   }
 }
@@ -60,7 +75,14 @@ export const register: Register = on => {
   // handoff lifecycle is relayed. Never answer without next here, since one
   // classic dispatch carries every other plugin's hooks; a failure passes
   // the event down untouched.
-  on('classic.*', ($, e, next) => passClassic(hostOf($), next.event, e, next)).catch(($, e, next) => next(e))
+  on('classic.*', async ($, e, next) => {
+    const host = hostOf($)
+    try {
+      return await passClassic(host, next.event, e, next)
+    } finally {
+      host.save()
+    }
+  }).catch(($, e, next) => next(e))
 
   // The permission gate for `alis …` commands (cli-hook.py's job). A failure
   // answers with the chain beneath; the gate's own throw is logged by the
@@ -91,8 +113,18 @@ export const register: Register = on => {
   })
 
   // /alis: registered once the session is ready, so it is listed by turn one.
+  // The engine fires session.start again after each reload of this code: the
+  // saved state comes back, and a pane that was open opens again.
   on('session.start', async ($, e, next) => {
     await $.command.register(COMMAND_SPEC).catch(error => $.ui.log(`alis: could not register /alis: ${String(error)}`, { to: 'debug' }))
+    const host = hostOf($)
+    try {
+      restore((await $.state.get(SAVED)).value)
+      await resumeOpsPane(host)
+      await resumeHandoffPane(host)
+    } catch (error) {
+      host.debug(`could not restore state: ${String(error)}`)
+    }
     return next(e)
   }).catch(($, e, next) => next(e))
   on('command.run', { command: 'alis' }, ($, e) => runAlisCommand(hostOf($), e.args))
@@ -102,7 +134,9 @@ export const register: Register = on => {
   // a summary in place of the NDJSON progress once it is done.
   on('tool.call', { tool: 'Bash' }, ($, e, next) => {
     const host = hostOf($)
-    return confirmDeploy(host, e, e2 => watchAlisCall(host, e2, next, next.signal))
+    noteBashCall(e)
+    host.save()
+    return confirmGuarded(host, e, e2 => watchAlisCall(host, e2, next, next.signal))
   }).catch(($, e, next) => next(e))
   on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
     const wait = liveOf(e.props.tool_use_id)
@@ -117,6 +151,7 @@ export const register: Register = on => {
   on('ui.render', { component: 'Pane', requestId: OPS_PANE_ID }, ($, e) => renderOpsPane($.ui.resolve(e), opsPane, opsActions(hostOf($)), e.props.bodyColumns))
   on('ui.close', { id: OPS_PANE_ID }, ($, e, next) => {
     onOpsPaneClosed()
+    hostOf($).save()
     return next(e)
   })
 
@@ -124,8 +159,21 @@ export const register: Register = on => {
   on('ui.render', { component: 'Pane', requestId: HANDOFF_PANE_ID }, ($, e) => renderHandoffPane($.ui.resolve(e), handoffPane, handoffActions(hostOf($))))
   on('ui.close', { id: HANDOFF_PANE_ID }, ($, e, next) => {
     onHandoffPaneClosed()
+    hostOf($).save()
     return next(e)
   })
+  // Secret-looking values in a tool result are masked before the model or
+  // the transcript gets the row (see secrets.ts); a failure stores it as is,
+  // and the PostToolUse warning still covers what was never masked.
+  on('session.append', { door: 'tool-result' }, ($, e, next) => {
+    const masked = maskRow(e.message)
+    const host = hostOf($)
+    host.save()
+    if (!masked.changed) return next(e)
+    if (masked.fresh.length > 0) host.toast(maskedToastOf(e.origin.kind === 'tool' ? e.origin.tool : 'tool', masked.fresh))
+    return next({ ...e, message: masked.message })
+  }).catch(($, e, next) => next(e))
+
   on('ui.render', { component: 'ToolResult', props: { tool: 'Bash' } }, ($, e, next) => renderOpsResult($.ui.resolve(e), e.props.output) ?? next(e))
   on('ui.render', { component: 'CommandOutput', props: { command: 'alis' } }, ($, e, next) => renderAlisOutput($.ui.resolve(e), e.props.text) ?? next(e))
 }

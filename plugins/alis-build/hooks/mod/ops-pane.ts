@@ -3,6 +3,7 @@
 // while the pane is open, with a Wait and a Cancel button per running one.
 // The buttons submit prompts rather than act on their own, so the
 // permission gate and the person's confirmation stay in charge.
+import type { OperationRow, OpsPaneState } from '../../types'
 import type { Host } from './host'
 
 export const OPS_PANE_ID = 'alis-ops'
@@ -11,23 +12,7 @@ export const REFRESH_MS = 5_000
 const LIST_LIMIT = 8
 const LIST_TIMEOUT_MS = 15_000
 
-export type OperationRow = {
-  name: string
-  type: string
-  target: string
-  startedAt: string
-  status: string | null
-  next: string | null
-  running: boolean
-}
-
-export type OpsPaneState = {
-  isOpen: boolean
-  rows: OperationRow[]
-  refreshedAt: number | null
-  error: string | null
-  isRefreshing: boolean
-}
+export type { OperationRow, OpsPaneState }
 
 export const opsPane: OpsPaneState = { isOpen: false, rows: [], refreshedAt: null, error: null, isRefreshing: false }
 
@@ -39,13 +24,26 @@ export async function toggleOpsPane(host: Host): Promise<string> {
     await host.closePane(OPS_PANE_ID)
     return 'ops: closed'
   }
+  await openOpsPane(host)
+  return `ops: open (${opsPane.rows.filter(r => r.running).length} running, refreshes every ${REFRESH_MS / 1000}s)`
+}
+
+async function openOpsPane(host: Host): Promise<void> {
   opsPane.isOpen = true
   opsPane.error = null
   await host.openPane({ id: OPS_PANE_ID, title: OPS_PANE_TITLE, rows: 14 })
   cancelTimer?.()
   cancelTimer = host.every(REFRESH_MS, () => void refreshOps(host))
   await refreshOps(host)
-  return `ops: open (${opsPane.rows.filter(r => r.running).length} running, refreshes every ${REFRESH_MS / 1000}s)`
+}
+
+/**
+ * After a reload: the engine dropped the pane with the old code, unheard,
+ * so a pane the saved state calls open is opened again and refreshed.
+ */
+export async function resumeOpsPane(host: Host): Promise<void> {
+  opsPane.isRefreshing = false
+  if (opsPane.isOpen) await openOpsPane(host)
 }
 
 /** The person or the engine closed the pane: stop refreshing. */

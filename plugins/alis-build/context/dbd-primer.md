@@ -138,11 +138,18 @@ directory.
   Never edit stored credential files or git auth config by hand.
 - **Production deploys are gated.** A production-targeting deploy exits with code 3 until
   re-run with `--confirm-production`; that flag requires the user's explicit approval —
-  never invent it or change the target (`alis docs safety`). Present the CLI's pinned
-  retry through Claude's native permission confirmation; that is the approval step,
-  so no additional chat question is needed first. The plugin requests confirmation
-  for guarded actions and never treats `auto`/`acceptEdits` as consent. Respect a
-  classifier or policy denial; complete independent work and report the exact blocker.
+  never invent it or change the target (`alis docs safety`). Before it runs, and before
+  an uninstall, an environment destroy/unset or a `--reveal`, the plugin asks the user
+  in its own dialog in every permission mode, `auto` included (Claude's permission
+  prompt where its function hooks are off). That answer is the approval, so no extra
+  chat question is needed first.
+- **`APPROVAL_REQUIRED` (manual automation tier).** Re-run with the CLI's `--approve`
+  only when the user explicitly asked for that action on that target ("build
+  marvel.sm.resources.v1", "deploy 1.16.10 to dev"). When the action was only implied
+  by a broader task, ask in chat first, naming the command; the session mode never
+  stands in for that. A refusal anywhere means stop: never retry it, reword it or work
+  around it. Respect a classifier or policy denial; complete independent work and
+  report the exact blocker.
 - **The CLI is self-documenting — consult it, don't memorise it.** `alis docs` is the
   complete agent operating manual and the source of truth for flags, output shapes and exit
   codes; the bullets above are the behavioural rules, not a restatement of it.

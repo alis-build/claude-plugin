@@ -1,7 +1,7 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { passClassic } from '../hooks/mod/classic'
-import { forgetSecrets, MAX_SCAN, secretKindsOf, secretsAnswer, warningOf } from '../hooks/mod/secrets'
+import { forgetSecrets, maskedToastOf, maskRow, maskText, MAX_SCAN, noteBashCall, secretKindsOf, secretsAnswer, warningOf } from '../hooks/mod/secrets'
 import { fakeHost } from './fixtures/fake-host'
 
 tier('user')
@@ -26,6 +26,8 @@ const REVEAL_COMMAND = 'alis environment variables alis.os --reveal --json'
 const bash = (command: string, stdout: string, extra: object = {}) => ({
   session_id: 'abc', hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command }, tool_response: { stdout, stderr: '' }, ...extra,
 })
+const write = (content: string) => ({ hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: { file_path: '/x/.env', content }, tool_response: { type: 'create', filePath: '/x/.env' } })
+const resultRow = (content: unknown, id = 'toolu_1') => ({ type: 'user' as const, role: 'user' as const, content: [{ type: 'tool_result', tool_use_id: id, content, is_error: false }] })
 
 describe('secrets', () => {
   test('secretKindsOf names each kind once with its count, in table order', () => {
@@ -80,12 +82,11 @@ describe('secrets', () => {
     expect(host.toasts).toHaveLength(3)
   })
 
-  test('a Bash result with secrets warns the person and the model, without the values', async () => {
+  test("a tool's arguments warn the person and the model, without the values", async () => {
     forgetSecrets()
     const host = fakeHost()
-    const answer = await secretsAnswer(host, bash('cat .env', `${FAKE.stripe}\n${FAKE.postgres}\n`))
+    const answer = await secretsAnswer(host, write(`${FAKE.stripe}\n${FAKE.postgres}\n`))
     expect(answer).toEqual({ additionalContext: [warningOf([{ kind: 'stripe', count: 1 }, { kind: 'postgres', count: 1 }])] })
-    expect(answer.additionalContext?.[0]).toContain('stripe')
     expect(answer.additionalContext?.[0]).toContain('rotate')
     expect(answer.additionalContext?.[0]).not.toContain(FAKE.stripe)
     expect(host.toasts).toHaveLength(1)
@@ -95,26 +96,98 @@ describe('secrets', () => {
     expect(host.toasts[0]).not.toMatch(/^alis:/)
   })
 
-  test('tool inputs are scanned too; a Read result is scanned; a clean result is silent', async () => {
+  test("a result that is masked on its way in does not warn; a command's own secrets still do", async () => {
     forgetSecrets()
     const host = fakeHost()
-    const write = { hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: { file_path: '/x/.env', content: FAKE.github }, tool_response: { type: 'create', filePath: '/x/.env' } }
-    expect((await secretsAnswer(host, write)).additionalContext?.[0]).toContain('github')
+    expect(await secretsAnswer(host, bash('cat .env', `${FAKE.stripe}\n${FAKE.postgres}\n`))).toEqual({})
     const read = { hook_event_name: 'PostToolUse', tool_name: 'Read', tool_input: { file_path: '/x/.env' }, tool_response: { type: 'text', file: { filePath: '/x/.env', content: FAKE.assignment } } }
-    expect((await secretsAnswer(host, read)).additionalContext?.[0]).toContain('assignment')
-    const mcp = { hook_event_name: 'PostToolUse', tool_name: 'mcp__x__y', tool_input: {}, tool_response: [{ type: 'text', text: FAKE.npm }] }
-    expect((await secretsAnswer(host, mcp)).additionalContext?.[0]).toContain('npm')
+    expect(await secretsAnswer(host, read)).toEqual({})
+    expect(await secretsAnswer(host, { hook_event_name: 'PostToolUse', tool_name: 'mcp__x__y', tool_input: {}, tool_response: [{ type: 'text', text: FAKE.npm }] })).toEqual({})
+    expect((await secretsAnswer(host, bash(`curl -H 'Authorization: ${FAKE.github}' x`, 'ok\n'))).additionalContext?.[0]).toContain('github')
     expect(await secretsAnswer(host, bash('echo ok', 'ok\n'))).toEqual({})
     expect(await secretsAnswer(host, { hook_event_name: 'PostToolUse', tool_name: 'Bash' })).toEqual({})
-    expect(host.toasts).toHaveLength(3)
+    expect(host.toasts).toHaveLength(1)
+  })
+
+  test('maskText replaces each value, keeping names, users and the text around it', () => {
+    for (const [kind, sample] of Object.entries(FAKE)) {
+      const masked = maskText(`value: ${sample} end`)
+      expect(masked.text).toContain(`[REDACTED:${kind}]`)
+      // A private key with no footer is masked to the end (see below).
+      if (kind !== 'privateKey') expect(masked.text).toEndWith(' end')
+      expect(masked.spans.map(s => s.kind)).toEqual([kind])
+      expect(secretKindsOf(masked.text)).toEqual([])
+    }
+    expect(maskText(FAKE.assignment).text).toBe('STRIPE_SECRET_KEY=[REDACTED:assignment]')
+    expect(maskText(`"GITHUB_TOKEN": "${'x'.repeat(20)}"`).text).toBe('"GITHUB_TOKEN": "[REDACTED:assignment]"')
+    expect(maskText(FAKE.postgres).text).toBe('postgres://app:[REDACTED:postgres]@db.example.test/app')
+    expect(maskText('nothing here').text).toBe('nothing here')
+  })
+
+  test('a private key is masked through its footer, or to the end when cut', () => {
+    const body = 'MIIFAKEFAKE\nFAKEFAKEFAKE\n'
+    const whole = `before\n${FAKE.privateKey}\n${body}-----END RSA PRIVATE KEY-----\nafter`
+    expect(maskText(whole).text).toBe('before\n[REDACTED:privateKey]\nafter')
+    expect(maskText(`before\n${FAKE.privateKey}\n${body}`).text).toBe('before\n[REDACTED:privateKey]')
+  })
+
+  test('maskRow masks string and block results, toasts each value once, and leaves a clean row alone', () => {
+    forgetSecrets()
+    const clean = resultRow('ok')
+    expect(maskRow(clean)).toEqual({ message: clean, changed: false, fresh: [] })
+    const first = maskRow(resultRow(`token ${FAKE.github}`))
+    expect(first.changed).toBe(true)
+    expect(JSON.stringify(first.message)).not.toContain(FAKE.github)
+    expect(first.message.content[0]).toEqual({ type: 'tool_result', tool_use_id: 'toolu_1', content: 'token [REDACTED:github]', is_error: false })
+    expect(first.fresh).toEqual([{ kind: 'github', count: 1 }])
+    const blocks = maskRow(resultRow([{ type: 'text', text: FAKE.github }, { type: 'image', source: { data: 'x' } }]))
+    expect(blocks.message.content[0]).toEqual({ type: 'tool_result', tool_use_id: 'toolu_1', content: [{ type: 'text', text: '[REDACTED:github]' }, { type: 'image', source: { data: 'x' } }], is_error: false })
+    // Masked again, but already toasted.
+    expect(blocks.fresh).toEqual([])
+    expect(maskedToastOf('Bash', first.fresh)).not.toContain(FAKE.github)
+  })
+
+  test("an environment command's result is left as printed, once, and still warns", async () => {
+    forgetSecrets()
+    const revealed = 'DB_PASSWORD=FAKE-long-value-uvwxyz\nSTRIPE=' + FAKE.stripe
+    noteBashCall({ command: 'alis environment refresh alis.os --reveal', tool_use_id: 'toolu_r', tool: 'Bash' })
+    noteBashCall({ command: 'cat .env', tool_use_id: 'toolu_c', tool: 'Bash' })
+    expect(maskRow(resultRow(revealed, 'toolu_r')).changed).toBe(false)
+    expect(maskRow(resultRow(revealed, 'toolu_c')).changed).toBe(true)
+    // The id is spent: a row reusing it is masked.
+    expect(maskRow(resultRow(revealed, 'toolu_r')).changed).toBe(true)
+    expect(await secretsAnswer(fakeHost(), bash('alis environment refresh alis.os --reveal', revealed))).not.toEqual({})
+  })
+
+  test('through the engine, a tool result row reaches the bottom masked', async ($, on) => {
+    forgetSecrets()
+    const toasts: string[] = []
+    // The kit (2.1.287) skips a test answer to session.append that does not
+    // call next, and nothing lies beneath; so read the row as it arrives.
+    let reached: { message?: unknown; uuid?: string } = {}
+    on('session.append', ($, e, next) => {
+      reached = e
+      return next(e)
+    })
+    on('ui.toast', ($, e) => {
+      toasts.push(JSON.stringify(e))
+      return { value: undefined }
+    })
+    await $.session.append({ message: resultRow(`key ${FAKE.npm}`), door: 'tool-result', origin: { kind: 'tool', tool: 'Bash' }, uuid: 'row-1' }).catch(() => undefined)
+    expect(reached.uuid).toBe('row-1')
+    expect(JSON.stringify(reached.message)).not.toContain(FAKE.npm)
+    expect(JSON.stringify(reached.message)).toContain('[REDACTED:npm]')
+    expect(toasts).toHaveLength(1)
+    expect(toasts[0]).toContain('npm')
+    expect(toasts[0]).not.toContain(FAKE.npm)
   })
 
   test('a value already warned about is not warned about again', async () => {
     forgetSecrets()
     const host = fakeHost()
-    expect(await secretsAnswer(host, bash('cat .env', FAKE.stripe))).not.toEqual({})
-    expect(await secretsAnswer(host, bash('cat .env', FAKE.stripe))).toEqual({})
-    expect(await secretsAnswer(host, bash('cat .env', `${FAKE.stripe}\n${FAKE.linear}`))).toEqual({ additionalContext: [warningOf([{ kind: 'linear', count: 1 }])] })
+    expect(await secretsAnswer(host, write(FAKE.stripe))).not.toEqual({})
+    expect(await secretsAnswer(host, write(FAKE.stripe))).toEqual({})
+    expect(await secretsAnswer(host, write(`${FAKE.stripe}\n${FAKE.linear}`))).toEqual({ additionalContext: [warningOf([{ kind: 'linear', count: 1 }])] })
     expect(host.toasts).toHaveLength(2)
   })
 
@@ -122,7 +195,7 @@ describe('secrets', () => {
     forgetSecrets()
     const handoff = '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"from handoff"}}'
     const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: handoff, stderr: '' }) })
-    const answer = await passClassic(host, 'classic.PostToolUse', bash('cat .env', FAKE.github), async () => ({}))
+    const answer = await passClassic(host, 'classic.PostToolUse', write(FAKE.github), async () => ({}))
     expect(answer).toEqual({ additionalContext: ['from handoff', warningOf([{ kind: 'github', count: 1 }])] })
   })
 })

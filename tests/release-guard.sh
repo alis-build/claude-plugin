@@ -47,18 +47,19 @@ config = json.loads((root / "hooks/hooks.json").read_text())
 for entries in config["hooks"].values():
     for entry in entries:
         for hook in entry["hooks"]:
+            # Quoted so a plugin root with a space stays one word.
             command = hook["command"]
-            prefix = "${CLAUDE_PLUGIN_ROOT}/"
-            if not command.startswith(prefix):
-                raise SystemExit("FAIL: hook is not plugin-relative")
-            path = root / command[len(prefix):]
+            prefix = '"${CLAUDE_PLUGIN_ROOT}/'
+            if not (command.startswith(prefix) and command.endswith('"')):
+                raise SystemExit("FAIL: hook is not a quoted plugin-relative path")
+            path = root / command[len(prefix):-1]
             if not path.is_file() or not os.access(path, os.X_OK):
                 raise SystemExit(f"FAIL: missing/non-executable hook: {path.name}")
 for path in (root / "hooks").glob("*.py"):
     ast.parse(path.read_text(), filename=str(path))
 PY
 
-# 4. Function hooks (early access): every module hooks.json names must exist,
+# 4. Function hooks: every module hooks.json names must exist,
 #    and the version the module reports must match plugin.json.
 for m in $(jq -r '.modules[]? // empty' "$repo/plugins/alis-build/hooks/hooks.json"); do
   [ -f "$repo/plugins/alis-build/hooks/$m" ] || { echo "FAIL: hooks module missing: $m" >&2; fail=1; }

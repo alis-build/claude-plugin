@@ -22,6 +22,15 @@ const CLI_TIMEOUT_MS = 10_000
 /** Whether the status line currently shows a claim, so it is cleared once. */
 let statusShown = false
 
+/** The claim toast's flag, kept across a reload (see saved.ts). */
+export function handoffStatusShown(): boolean {
+  return statusShown
+}
+
+export function restoreHandoffStatus(shown: boolean): void {
+  statusShown = shown
+}
+
 export type HandoffAnswer = ClassicAnswer & Partial<PreToolUseResult>
 
 /**

@@ -28,7 +28,7 @@ describe('describe', () => {
   })
 
   test('through the engine, the Bash description is rewritten and another tool is left alone', async ($, on) => {
-    on('process.run', () => ({ value: { exitCode: 0, stdout: '/usr/local/bin/alis\n', stderr: '' } }))
+    on('process.run', () => ({ value: { exitCode: 0, stdout: '/usr/local/bin/alis\n', stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }))
     on('tool.describe', ($, e) => ({ description: `engine: ${e.tool}` }))
     const bash = await $.tool.describe({ tool: 'Bash', description: 'engine: Bash', provider: { plugin: 'engine', tier: 'core' } })
     expect(bash.description).toBe('engine: Bash\n' + BASH_GUIDANCE)

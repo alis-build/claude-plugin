@@ -2,7 +2,9 @@
 // last prompt, with a Load button per skill. The model still gets the same
 // note as context (suggest.ts); the band lets the person decide too, and a
 // press hands Claude the load command as a prompt.
-export type Suggestion = { id: string; description: string }
+import type { Suggestion } from '../../types'
+
+export type { Suggestion }
 
 const HEADER = /^Possibly relevant Alis skills?:\s*(.*)$/
 const ITEM = /^\s*([a-z0-9][a-z0-9._-]*)\s+—\s+(.*)$/

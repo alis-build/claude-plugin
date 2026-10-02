@@ -1,9 +1,68 @@
-import type { AskOptions, FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult, RenderSurface } from 'claude-code'
+import type { AskOptions, FsEntry, FsStat, PaneOpenArgs, ProcessRunInit, ProcessRunResult, ProcessSpawnChunk, ProcessSpawnResult, RenderSurface } from 'claude-code'
 
 import type { Host } from '../../hooks/mod/host'
 
 export type Run = { argv: readonly string[]; init?: ProcessRunInit }
 export type Written = { path: string; text: string }
+// Fixtures spell only the fields a test is about; the rest default below.
+export type Answer = Pick<ProcessRunResult, 'exitCode' | 'stdout' | 'stderr'> & Partial<ProcessRunResult>
+export type Entry = Pick<FsEntry, 'name' | 'kind' | 'size'> & Partial<FsEntry>
+export type Stat = Pick<FsStat, 'kind' | 'size'> & Partial<FsStat>
+
+/** A child `spawn` started: the test writes its output and ends it; `returned` says the hook ended it. */
+export type FakeStream = {
+  argv: readonly string[]
+  write: (stream: ProcessSpawnChunk['stream'], text: string) => void
+  exit: (code?: number) => void
+  returned: boolean
+}
+
+function fakeStream(argv: readonly string[], startError: Error | undefined): { child: FakeStream; stream: AsyncGenerator<ProcessSpawnChunk, ProcessSpawnResult> } {
+  const queue: ProcessSpawnChunk[] = []
+  let exited: ProcessSpawnResult | null = null
+  let wake: (() => void) | null = null
+  const child: FakeStream = {
+    argv,
+    write: (stream, text) => {
+      queue.push({ stream, text })
+      wake?.()
+    },
+    exit: (code = 0) => {
+      exited = { code, signal: null }
+      wake?.()
+    },
+    returned: false,
+  }
+  async function* run(): AsyncGenerator<ProcessSpawnChunk, ProcessSpawnResult> {
+    if (startError) throw startError
+    for (;;) {
+      const chunk = queue.shift()
+      if (chunk) {
+        yield chunk
+        continue
+      }
+      if (exited) return exited
+      await new Promise<void>(resolve => (wake = resolve))
+      wake = null
+    }
+  }
+  const inner = run()
+  const stream: AsyncGenerator<ProcessSpawnChunk, ProcessSpawnResult> = {
+    next: (...args) => inner.next(...args),
+    throw: error => inner.throw(error),
+    return: value => {
+      child.returned = true
+      // A pending pull is woken so the loop sees the end.
+      exited ??= { code: null, signal: 'SIGTERM' }
+      wake?.()
+      return inner.return(value)
+    },
+    [Symbol.asyncIterator]() {
+      return this
+    },
+  }
+  return { child, stream }
+}
 
 /** A Host answering from memory and recording what the hooks did to it. */
 export type FakeHost = Host & {
@@ -18,14 +77,15 @@ export type FakeHost = Host & {
   /** Paths `exists` answers true for. */
   present: Set<string>
   /** What `list` answers per directory. */
-  entries: Record<string, FsEntry[]>
+  entries: Record<string, Entry[]>
   /** What `stat` answers per path; a missing path rejects. */
-  stats: Record<string, FsStat>
+  stats: Record<string, Stat>
   /** What `readFile` answers per path; a missing path rejects. */
   files: Record<string, string>
   statuses: (string | undefined)[]
   toasts: string[]
   invalidations: number
+  saves: number
   panes: { opened: PaneOpenArgs[]; closed: string[] }
   prompts: string[]
   /** Timers `every` registered, with their cancel state; call `fn` to tick. */
@@ -34,9 +94,13 @@ export type FakeHost = Host & {
   writes: Written[]
   logs: string[]
   /** What `run` answers, or throws when given an Error. */
-  answer: (run: Run) => ProcessRunResult | Error
+  answer: (run: Run) => Answer | Error
   /** When set, `writeFile` throws it. */
   writeError?: Error
+  /** Children `spawn` started, in order. */
+  spawns: FakeStream[]
+  /** When set, a spawned child fails to start with it. */
+  spawnError?: Error
 }
 
 export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | 'answer' | 'writeError'>> & { present?: string[] } = {}): FakeHost {
@@ -54,6 +118,7 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     statuses: [],
     toasts: [],
     invalidations: 0,
+    saves: 0,
     panes: { opened: [], closed: [] },
     prompts: [],
     timers: [],
@@ -62,6 +127,7 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     logs: [],
     answer: overrides.answer ?? (() => ({ exitCode: 0, stdout: '', stderr: '' })),
     writeError: overrides.writeError,
+    spawns: [],
     home: async () => host.env['HOME'],
     pluginRoot: async () => host.env['CLAUDE_PLUGIN_ROOT'],
     allowedSubcmds: async () => host.env['ALIS_ALLOWED_SUBCMDS'],
@@ -84,12 +150,12 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     exists: async path => host.present.has(path) || path in host.entries || path in host.files,
     list: async path => {
       if (!(path in host.entries)) throw new Error(`ENOENT ${path}`)
-      return host.entries[path] ?? []
+      return (host.entries[path] ?? []).map(entry => ({ mtimeMs: 0, isLink: false, ...entry }))
     },
     stat: async path => {
       const stat = host.stats[path]
       if (!stat) throw new Error(`ENOENT ${path}`)
-      return stat
+      return { mtimeMs: 0, isLink: false, ...stat }
     },
     status: text => {
       host.statuses.push(text)
@@ -99,6 +165,9 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     },
     invalidate: () => {
       host.invalidations += 1
+    },
+    save: () => {
+      host.saves += 1
     },
     openPane: async pane => {
       host.panes.opened.push(pane)
@@ -125,7 +194,12 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
       host.runs.push(run)
       const answered = host.answer(run)
       if (answered instanceof Error) throw answered
-      return answered
+      return { isStdoutTruncated: false, isStderrTruncated: false, ...answered }
+    },
+    spawn: argv => {
+      const { child, stream } = fakeStream(argv, host.spawnError)
+      host.spawns.push(child)
+      return stream
     },
     debug: text => {
       host.logs.push(text)
