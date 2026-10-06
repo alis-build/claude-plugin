@@ -22,8 +22,6 @@ import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
 import { maskedToastOf, maskRow, noteBashCall } from './mod/secrets'
 import { suggestSkills } from './mod/suggest'
-import { dismissSuggestions, loadPromptOf, suggestBand } from './mod/suggest-band'
-import { renderSuggestBand } from './mod/suggest-band-view'
 import { restore, snapshot } from './mod/saved'
 
 type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session' | 'clock' | 'prompt' | 'plugin' | 'state'>
@@ -95,22 +93,9 @@ export const register: Register = on => {
     return { description: await describeBash(hostOf($), description) }
   }).catch(($, e, next) => next(e))
 
-  // Per-prompt skill discovery (suggest-skills.sh's job), and the band above
-  // the prompt where the person can load a suggested skill.
+  // Per-prompt wake-word routing (suggest-skills.sh's job): "alis, …" and
+  // "capture this as a skill" name the router skill to invoke.
   on('prompt.submit', ($, e, next) => suggestSkills(hostOf($), e, next)).catch(($, e, next) => next(e))
-  on('ui.render', { component: 'AbovePrompt' }, ($, e, next) => {
-    if (e.props.hasSurvey || suggestBand.items.length === 0) return next(e)
-    const host = hostOf($)
-    return renderSuggestBand($.ui.resolve(e), suggestBand.items, {
-      load: id => {
-        void host.submitPrompt(loadPromptOf(id))
-        if (dismissSuggestions()) host.invalidate()
-      },
-      dismiss: () => {
-        if (dismissSuggestions()) host.invalidate()
-      },
-    }, e.props.bodyColumns)
-  })
 
   // /alis: registered once the session is ready, so it is listed by turn one.
   // The engine fires session.start again after each reload of this code: the

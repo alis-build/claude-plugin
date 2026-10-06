@@ -4,7 +4,6 @@ import { handoffPane, onHandoffPaneClosed, resumeHandoffPane } from '../hooks/mo
 import { onOpsPaneClosed, OPS_PANE_ID, opsPane, resumeOpsPane } from '../hooks/mod/ops-pane'
 import { restore, snapshot } from '../hooks/mod/saved'
 import { forgetSecrets, maskRow, noteBashCall, secretsAnswer } from '../hooks/mod/secrets'
-import { suggestBand } from '../hooks/mod/suggest-band'
 import { fakeHost } from './fixtures/fake-host'
 
 tier('user')
@@ -16,7 +15,6 @@ const write = (content: string) => ({ hook_event_name: 'PostToolUse', tool_name:
 
 function reset(): void {
   forgetSecrets()
-  suggestBand.items = []
   onOpsPaneClosed()
   Object.assign(opsPane, { rows: [], refreshedAt: null, error: null, isRefreshing: false })
   onHandoffPaneClosed()
@@ -29,7 +27,6 @@ describe('saved', () => {
     await secretsAnswer(fakeHost(), write(TOKEN))
     maskRow(row(TOKEN))
     noteBashCall({ command: 'alis environment variables x --reveal', tool_use_id: 'toolu_r' })
-    suggestBand.items = [{ id: 'alis.define', description: 'Define' }]
     const saved = JSON.parse(JSON.stringify(snapshot()))
     expect(JSON.stringify(saved)).not.toContain(TOKEN)
 

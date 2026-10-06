@@ -15,9 +15,9 @@ Use this plugin to let Claude Code work with Alis Build organisations, products,
 - A standing Define → Build → Deploy primer, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required. The full primer loads inside `~/alis.build` workspaces; other directories get a compressed digest when the `alis` CLI is installed, and nothing otherwise (override with `ALIS_PRIMER=full|digest|off`)
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
 - Quiet, local-first discovery and capture skills: `alis:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalog in ~40ms, and loads a registry skill only on a distinctive match; catalog metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
-- Confidence-gated per-prompt skill suggestions (a `UserPromptSubmit` hook backed by `alis skills suggest`) — a suggestion appears only when the match is distinctive; wake phrases (`alis, …`, `capture this as a skill`) route from any directory
+- Wake phrases (`alis, …`, `capture this as a skill`) route to `alis:discover` or `alis:capture` from any directory (a `UserPromptSubmit` hook backed by `alis skills suggest --hook`); the CLI's unsolicited per-prompt skill suggestions are dropped, because matching whole prompts suggested unrelated skills too often
 - Structured CLI workflows run with the CLI's automation tier; guarded actions use Claude's native confirmation
-- Function hooks (Claude Code mods): on Claude Code 2.1.287 or later, where Claude Code has the feature switched on, the permission gate, handoff lifecycle and skill suggestions run inside Claude Code's plugin engine instead of shell scripts, and `/alis status`, `/alis ops` and `/alis handoff [alias]` are available; elsewhere the shell hooks run exactly as before
+- Function hooks (Claude Code mods): on Claude Code 2.1.287 or later, where Claude Code has the feature switched on, the permission gate, handoff lifecycle and wake-phrase routing run inside Claude Code's plugin engine instead of shell scripts, and `/alis status`, `/alis ops` and `/alis handoff [alias]` are available; elsewhere the shell hooks run exactly as before
 
 ## Before You Start
 
@@ -133,11 +133,9 @@ With the module active:
   `--approve` / `--session-id` rewrites as the shell gate, computed in-process
 - the handoff lifecycle is relayed to `alis workstation handoff _hook` in-process,
   with a status line while a handoff claims the session
-- per-prompt skill suggestions come from the same `alis skills suggest --hook` call,
-  attached as context beside the prompt, and also shown in a band above the input
-  with a **Load** button per skill (it hands Claude the `alis skills load` command
-  as a prompt) and **Dismiss**; the band clears on the next prompt. Click it or
-  press ctrl+x tab to focus it, then `1`, `2`… load and `x` dismisses
+- wake-phrase routing comes from the same `alis skills suggest --hook` call,
+  attached as context beside the prompt; like the shell hook, it drops the CLI's
+  unsolicited skill suggestions and shows no suggestion band
 - `/alis status` shows the CLI version, workspace, what the module serves and the
   handoff claim without spending a model turn; `/alis handoff [alias]` runs
   `alis workstation handoff --session <this session> --json` for you (the
@@ -180,7 +178,7 @@ With the module active:
 - a reload of the plugin's code (a plugin update, `/reload-plugins`) picks up
   where it was: the module keeps its session state in Claude Code's `$.state`
   (declared in `types/index.d.ts`), so secrets already reported are not reported
-  again, the suggestion band stays, and an open `/alis ops` or handoff pane opens
+  again, and an open `/alis ops` or handoff pane opens
   again and resumes refreshing
 
 The two sides never run one job twice: the module tags each classic hook event

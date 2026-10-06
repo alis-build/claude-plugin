@@ -42,15 +42,11 @@ export type HandoffPaneState = {
   busy: string | null
 }
 
-/** A skill the suggestion band offers. */
-export type Suggestion = { id: string; description: string }
-
 /** Hashes of reported values (never the values), and Bash calls left unmasked. */
 export type SecretsMemo = { seen: string[]; masked: string[]; unmasked: string[] }
 
 export type SavedState = {
   secrets: SecretsMemo
-  suggestions: Suggestion[]
   opsPane: OpsPaneState
   handoffPane: HandoffPaneState
   handoffStatusShown: boolean

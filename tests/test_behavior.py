@@ -246,6 +246,39 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual(len(routing_eval.score_events(json.dumps(event)+"\n"+json.dumps(final))[1]), 2)
 
 
+class SuggestHookTests(unittest.TestCase):
+    """suggest-skills.sh passes wake-word hints through and drops ambient suggestions."""
+
+    def run_with(self, context, prompt, project="/tmp/plain"):
+        with tempfile.TemporaryDirectory() as home:
+            fake = Path(home, "alis")
+            out = json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": context}})
+            fake.write_text("#!/bin/sh\ncat >/dev/null; touch \"$HOME/called\"; echo " + shlex.quote(out) + "\n")
+            fake.chmod(0o700)
+            env = dict(os.environ, HOME=home, PATH=home + os.pathsep + os.environ["PATH"], CLAUDE_PROJECT_DIR=project)
+            env.pop("ALIS_SUGGEST_ALWAYS", None)
+            p = subprocess.run(["bash", str(HOOKS / "suggest-skills.sh")], input=json.dumps({"prompt": prompt}), text=True, capture_output=True, env=env)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            return p.stdout, Path(home, "called").exists()
+
+    def test_wake_hint_passes_through(self):
+        out, called = self.run_with("The user addressed alis by name. Invoke the alis:discover skill now.", "alis, add an endpoint")
+        self.assertTrue(called)
+        self.assertIn("alis:discover", out)
+
+    def test_ambient_suggestion_is_dropped(self):
+        # Ticket 0c78cf3e: a scratch-workspace reminder scored an iOS skill on a SendGrid question.
+        note = "Possibly relevant Alis skill: build-your-first-ios-app — Guide builders.\nLoad with `alis skills load <id>` if relevant; otherwise ignore this note."
+        out, called = self.run_with(note, "how are sendgrid templates managed across alis.os?")
+        self.assertTrue(called)
+        self.assertEqual(out, "")
+
+    def test_prompt_without_wake_word_skips_the_cli_even_in_a_workspace(self):
+        out, called = self.run_with("anything", "add an endpoint", "/x/alis.build/acme/build/sm/hello/v1")
+        self.assertFalse(called)
+        self.assertEqual(out, "")
+
+
 class LifecycleTests(unittest.TestCase):
     def test_sync_deadline_cleans_up_and_records_only_status(self):
         with tempfile.TemporaryDirectory() as home:

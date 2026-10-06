@@ -1,17 +1,20 @@
-// Per-prompt skill discovery (suggest-skills.sh's job): the alis CLI makes
-// every decision (wake words, gating, scoring, latency budget) and answers
-// with a hook envelope or nothing; this hook only asks it and attaches what
-// it said as context the model reads beside the prompt. Every failure path
-// leaves the prompt untouched: discovery must never break a prompt.
+// Per-prompt wake-word routing (suggest-skills.sh's job): when the person
+// addresses alis ("alis, …") or asks to capture work as a skill, the alis CLI
+// answers with a hook envelope naming the router skill to invoke, and this
+// hook attaches it as context the model reads beside the prompt. The CLI's
+// ambient "Possibly relevant Alis skill" notes are dropped: lexical matching
+// on whole prompts suggested unrelated skills too often to be worth showing.
+// Every failure path leaves the prompt untouched: routing must never break a
+// prompt.
 import type { PromptSubmitInput, PromptSubmitResult } from 'claude-code'
 
 import { classicState } from './classic'
 import { parseHookEnvelope } from './classic-result'
 import type { Host } from './host'
-import { dismissSuggestions, showSuggestions, suggestionsOf } from './suggest-band'
 
 const CLI_TIMEOUT_MS = 2_000
 const WAKE_WORDS = /alis|skill/i
+const AMBIENT_NOTE = /^Possibly relevant Alis skills?:/
 
 export async function suggestSkills(
   host: Host,
@@ -19,16 +22,11 @@ export async function suggestSkills(
   next: (e: PromptSubmitInput) => Promise<PromptSubmitResult>,
 ): Promise<PromptSubmitResult> {
   try {
-    // A new prompt clears the band; the answer below may fill it again.
-    if (dismissSuggestions()) host.invalidate()
+    // Only explicit addresses matter, so this cheap prefilter skips the CLI
+    // call for prompts that cannot contain one; the CLI's strict regexes make
+    // the actual decision. ALIS_SUGGEST_ALWAYS=1 disables the prefilter.
+    if ((await host.suggestAlways()) !== '1' && !WAKE_WORDS.test(e.text)) return next(e)
     const root = await host.root().catch(() => '')
-    if (!root.includes('/alis.build/')) {
-      // Outside an alis.build workspace only explicit addresses matter
-      // ("alis, …", "capture this as a skill"). This cheap prefilter skips the
-      // CLI call for prompts that cannot contain one; the CLI's strict regexes
-      // make the actual decision. ALIS_SUGGEST_ALWAYS=1 disables the prefilter.
-      if ((await host.suggestAlways()) !== '1' && !WAKE_WORDS.test(e.text)) return next(e)
-    }
     const payload = {
       hook_event_name: 'UserPromptSubmit',
       session_id: await host.sessionId().catch(() => ''),
@@ -39,12 +37,7 @@ export async function suggestSkills(
     const run = await host.run(['alis', 'skills', 'suggest', '--hook'], { stdin: JSON.stringify(payload), timeoutMs: CLI_TIMEOUT_MS })
     if (run.exitCode !== 0) return next(e)
     const text = parseHookEnvelope(run.stdout).additionalContext?.[0]
-    if (!text) return next(e)
-    const items = suggestionsOf(text)
-    if (showSuggestions(items)) {
-      host.invalidate()
-      if (items.length > 0) host.toast(`skill suggested: ${items.map(i => i.id).join(', ')} (band above the prompt)`)
-    }
+    if (!text || AMBIENT_NOTE.test(text.trim())) return next(e)
     return next({ ...e, context: [...(e.context ?? []), text] })
   } catch (error) {
     host.debug(`suggest: skipped: ${String(error)}`)

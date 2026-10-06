@@ -1,7 +1,7 @@
 // The module's session state, kept in $.state so a reload of its code (a
 // plugin update, /reload-plugins, a save while developing) picks up where
 // it was instead of starting blank: which secrets were already reported,
-// the suggestion band, the two panes and the handoff claim flag. Module
+// the two panes and the handoff claim flag. Module
 // variables stay the working copy; mod.ts writes this snapshot after each
 // change (Host.save, and Host.invalidate) and reads it back at
 // session.start, which the engine fires again after every reload.
@@ -12,12 +12,10 @@ import { handoffStatusShown, restoreHandoffStatus } from './handoff'
 import { handoffPane } from './handoff-pane'
 import { opsPane } from './ops-pane'
 import { restoreSecrets, secretsMemo } from './secrets'
-import { suggestBand } from './suggest-band'
 
 export function snapshot(): SavedState {
   return {
     secrets: secretsMemo(),
-    suggestions: suggestBand.items,
     opsPane: { ...opsPane },
     handoffPane: { ...handoffPane },
     handoffStatusShown: handoffStatusShown(),
@@ -28,7 +26,6 @@ export function snapshot(): SavedState {
 export function restore(saved: SavedState | undefined): void {
   if (!saved) return
   restoreSecrets(saved.secrets)
-  suggestBand.items = saved.suggestions
   Object.assign(opsPane, saved.opsPane)
   Object.assign(handoffPane, saved.handoffPane)
   restoreHandoffStatus(saved.handoffStatusShown)
