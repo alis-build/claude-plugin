@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in the plugin doesn't work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository is public. **Don't paste secrets, tokens, `.env` contents or `--reveal` output.**
+        Problems with the `alis` CLI or the Alis Build platform itself belong with Alis Build support.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start `claude` in ~/alis.build/<org>/build/<product>
+        2. Ask "build it"
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: From `/plugin` or `.claude-plugin/plugin.json`.
+      placeholder: 0.32.0
+    validations:
+      required: true
+  - type: input
+    id: claude-version
+    attributes:
+      label: Claude Code version
+      description: "`claude --version`"
+      placeholder: 2.1.295
+    validations:
+      required: true
+  - type: input
+    id: alis-version
+    attributes:
+      label: alis CLI version
+      description: "`alis --version`"
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Hook mode
+      description: "Function hooks are active when `/alis status` works, or `--debug` logs `hooks module alis loaded`."
+      options:
+        - Function hooks (module)
+        - Shell hooks only
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS and terminal
+      description: Include tmux or herdr if you use them.
+      placeholder: macOS 15, Ghostty inside tmux
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant lines from `claude --debug`, or `alis doctor --json`. Check them for secrets first.
+      render: text

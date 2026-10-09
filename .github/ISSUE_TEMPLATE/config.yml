@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/alis-build/claude-plugin/security/advisories/new
+    about: Report security problems privately, never in a public issue. See SECURITY.md.
+  - name: Alis CLI or platform problem
+    url: https://alis.build
+    about: Problems with the alis CLI, builds, deploys or your account go to Alis Build support, not this repository.

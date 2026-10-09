@@ -277,6 +277,9 @@ step aside for a job the module lists in it, and expires after an hour.
 
 ## Development checks
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository layout, versioning and
+pull requests.
+
 Run `RELEASE_GUARD_STRICT=1 tests/release-guard.sh`, the two shell hook tests,
 `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_behavior.py`, and
 `tests/routing-eval.sh --dry-run`. Behavioral tests use temporary homes and stub
