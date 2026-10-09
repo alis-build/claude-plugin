@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         This repository is public. **Don't paste secrets, tokens, `.env` contents or `--reveal` output.**
-        Problems with the `alis` CLI or the Alis Build platform itself belong with Alis Build support.
+        Problems with the `alis` CLI or the Alis Build platform itself belong with [Alis Build support](https://console.alisx.com/support).
   - type: textarea
     id: what
     attributes:

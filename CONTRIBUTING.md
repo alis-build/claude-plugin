@@ -7,7 +7,8 @@ versions and pull requests work.
 ## Before you start
 
 - Problems with the `alis` CLI itself, the Alis Build platform or your account
-  belong with Alis Build support, not this repository. Issues here are for the
+  belong with [Alis Build support](https://console.alisx.com/support), not
+  this repository. Issues here are for the
   plugin: its hooks, skills, primer and the function-hooks module.
 - Never post secrets, tokens, `.env` contents or `--reveal` output in an issue,
   pull request or test fixture. This repository is public. Report security
