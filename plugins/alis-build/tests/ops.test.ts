@@ -216,4 +216,21 @@ describe('ops-live', () => {
     expect(host.timers[0]?.cancelled).toBe(true)
     expect(liveOf('toolu_9')).toBe(undefined)
   })
+
+  test('the call keeps its own ending: the outcome it printed, or an interrupt', async () => {
+    const host = fakeHost({ answer: () => ({ exitCode: 1, stdout: '', stderr: '' }) })
+    const bash = (stdout: string, interrupted = false) => async () => ({ result: { stdout, stderr: '', interrupted } })
+    // Resolves before the watcher's own stream has said how the operation ended.
+    await watchAlisCall(host, envelope('alis operations wait operations/x --json'), bash('{"name":"operations/x","done":true,"version":"2.44.19"}'), new AbortController().signal)
+    expect(finishedOf('toolu_9')).toMatchObject({ result: { done: true, version: '2.44.19' } })
+    expect(finishedOf('toolu_9')?.interrupted).toBe(undefined)
+
+    await watchAlisCall(host, { ...envelope('alis operations wait operations/y --json'), tool_use_id: 'toolu_10' }, bash('', true), new AbortController().signal)
+    expect(finishedOf('toolu_10')?.interrupted).toBe(true)
+
+    const controller = new AbortController()
+    void watchAlisCall(host, { ...envelope('alis operations wait operations/z --json'), tool_use_id: 'toolu_11' }, () => new Promise(() => {}), controller.signal)
+    controller.abort()
+    expect(finishedOf('toolu_11')?.interrupted).toBe(true)
+  })
 })

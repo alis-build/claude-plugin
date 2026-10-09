@@ -11,7 +11,7 @@
 // held when the call ended.
 import { environmentsOf } from './deploy-dialog'
 import type { Host } from './host'
-import { alisCallOf, operationStateOf, type OperationState, progressEventsOf } from './ops'
+import { alisCallOf, type BashOutput, operationStateOf, type OperationState, progressEventsOf } from './ops'
 import { type OpView, productOf, viewOf } from './ops-progress'
 
 /** How often the row is redrawn (the clock), in milliseconds. */
@@ -46,6 +46,8 @@ export type LiveWait = {
   background?: boolean
   /** How the operation ended, once it has. */
   result?: OperationState
+  /** The call itself was interrupted (Esc), not the operation. */
+  interrupted?: boolean
 }
 
 const live = new Map<string, LiveWait>()
@@ -306,14 +308,24 @@ export function watchAlisCall<E extends object, R>(host: Host, e: E, next: (e: E
     while (finished.size > KEEP_FINISHED) finished.delete(finished.keys().next().value as string)
     host.invalidate()
   }
-  signal.addEventListener('abort', stop, { once: true })
+  const interrupt = () => {
+    state.interrupted = true
+    stop()
+  }
+  signal.addEventListener('abort', interrupt, { once: true })
   void identify()
   void follow()
   return pending.then(
     result => {
+      // The call's own ending outranks the watcher's: a folded group has no
+      // output of its own to read, and the watcher may not have seen the end.
+      const own = bashOf(result)
+      const outcome = operationStateOf(own?.stdout)
+      if (outcome) state.result = outcome
+      if (own?.interrupted === true) state.interrupted = true
       if (!stopped && isBackground(e, result) && !state.result) {
         // The call's own dispatch is over; the row now lives on the clock.
-        signal.removeEventListener('abort', stop)
+        signal.removeEventListener('abort', interrupt)
         state.background = true
         host.invalidate()
       } else stop()
@@ -324,6 +336,12 @@ export function watchAlisCall<E extends object, R>(host: Host, e: E, next: (e: E
       throw error
     },
   )
+}
+
+/** The Bash result inside what `tool.call` resolved with. */
+function bashOf(result: unknown): BashOutput | undefined {
+  const r = result && typeof result === 'object' ? (result as { result?: unknown }).result : undefined
+  return r && typeof r === 'object' ? (r as BashOutput) : undefined
 }
 
 function statusOf(state: OperationState): string {

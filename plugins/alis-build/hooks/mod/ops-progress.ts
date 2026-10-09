@@ -381,8 +381,12 @@ export function foldLineOf(input: {
   version?: string
   verb?: string
   waitedFor?: string
+  /** The CLI's own error, for a call that failed before any operation was seen. */
+  error?: string
 }): FoldLine {
   const view = input.view
+  const reason = view?.error ?? input.error
+  const why = reason ? compact(reason.split('\n')[0] ?? '', 300) : undefined
   const stages = view?.stages ?? []
   const version = view?.version ?? input.version
   const time = input.elapsedMs !== undefined ? durationOf(input.elapsedMs) : undefined
@@ -404,10 +408,10 @@ export function foldLineOf(input: {
     const failed = stages.find(s => s.state === 'failed')
     if (failed?.kind === 'build' || (!failed && isBuild && !deploys.some(d => d.state !== 'waiting'))) {
       const at = failed?.failedAt ? ` at step ${failed.failedAt}` : ''
-      return { tone: 'error', text: `Build failed${at}.${deploys.length ? ' Nothing was deployed.' : ''}`, time, sub: failed?.error ?? (view?.error ? compact(view.error.split('\n')[0] ?? '', 300) : undefined), logsUri: view?.buildLogsUri ?? view?.logsUri }
+      return { tone: 'error', text: `Build failed${at}.${deploys.length ? ' Nothing was deployed.' : ''}`, time, sub: failed?.error ?? why, logsUri: view?.buildLogsUri ?? view?.logsUri }
     }
     const where = failed?.name ?? joinNames(deploys.map(d => d.name))
-    return { tone: 'error', text: `Deploy${where ? ` to ${where}` : ''} failed.`, time, sub: failed?.error ?? (view?.error ? compact(view.error.split('\n')[0] ?? '', 300) : undefined), logsUri: failed?.logsUri ?? view?.logsUri }
+    return { tone: 'error', text: `Deploy${where ? ` to ${where}` : ''} failed.`, time, sub: failed?.error ?? why, logsUri: failed?.logsUri ?? view?.logsUri }
   }
   const envs = deploys.map(d => d.name)
   const subject = version ?? (isBuild ? 'The build' : 'The deploy')

@@ -205,4 +205,19 @@ describe('ops-render', () => {
     })
     expect(reached).toBe(1)
   })
+
+  test('a CLI error before any operation folds with its message', () => {
+    // The CLI rejected the deploy, so the watcher never saw an operation.
+    const last: LiveWait = { operation: null, target: 'acme.sm.hello.v1', verb: 'deploy', startedAt: 1_000, endedAt: 2_000, status: 'running', names: {} }
+    const stdout = JSON.stringify({ error: { code: 'APPROVAL_REQUIRED', message: 'deploy to production needs approval\nre-run with --approve' } })
+    expect(foldOf({ stdout, stderr: '', interrupted: false }, last)).toMatchObject({ tone: 'error', text: 'Deploy failed.', sub: 'deploy to production needs approval' })
+  })
+
+  test('a folded group goes by how the call ended, not by what the watcher last saw', () => {
+    // A call that resolved before the watcher's own stream said how the operation ended.
+    const midStream = { ...building(), endedAt: 200_000 }
+    expect(foldOf(undefined, midStream)).toBe(null)
+    expect(foldOf(undefined, { ...midStream, interrupted: true })).toMatchObject({ text: 'Still building on Alis', note: 'you stopped watching, not the build', cancel: true })
+    expect(foldOf(undefined, { ...midStream, result: { name: 'operations/040fff29', done: true, version: '2.44.19' } })).toMatchObject({ tone: 'ok' })
+  })
 })

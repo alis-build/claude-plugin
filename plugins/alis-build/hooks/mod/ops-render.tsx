@@ -202,11 +202,13 @@ export function foldOf(output: unknown, last: LiveWait | undefined, names: Recor
   const seen: OpView | undefined = last?.view ?? (streamed !== undefined ? (viewOf(streamed, all) ?? undefined) : undefined)
   const view = finalView ? mergeView(finalView, seen) : seen
   const warning = [...events].reverse().find(e => e.warning)
-  const interrupted = bash?.interrupted === true || (!state && !!last && !last.view?.done && events.length === 0)
+  const interrupted = bash?.interrupted === true || last?.interrupted === true
+  // Nothing says how the call ended: leave its row to the engine rather than guess.
+  if (!interrupted && !state && !view?.done && events.length === 0) return null
   const failed = !!state?.error || !!view?.error || !!view?.stages.some(s => s.state === 'failed')
   const outcome = interrupted ? 'interrupted' : failed ? 'failed' : warning ? 'detached' : state?.done === false ? 'running' : 'done'
   const elapsed = elapsedMs(events.at(-1)?.elapsed) ?? spanOf(view) ?? (last?.endedAt !== undefined ? last.endedAt - last.startedAt : undefined)
-  return foldLineOf({ view, outcome, elapsedMs: elapsed, version: last?.version ?? state?.version, verb: last?.verb })
+  return foldLineOf({ view, outcome, elapsedMs: elapsed, version: last?.version ?? state?.version, verb: last?.verb, ...(state?.error ? { error: state.error } : {}) })
 }
 
 export function renderOpsResult(kit: Kit, output: unknown, last?: LiveWait, surface: RenderSurface = 'terminal', actions?: FoldActions, names?: Record<string, string>): RenderElement | null {
