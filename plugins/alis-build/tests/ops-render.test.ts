@@ -44,14 +44,21 @@ describe('ops-render', () => {
       expect(drawn).toContain('Building 2.44.19')
       expect(drawn).toContain('1:17')
       expect(drawn).toContain('Step 15 of 18 · deploys to Development next')
-      expect(drawn).toContain('━')
-      expect(drawn).toContain('"color":"background"')
+      // The mark has a fixed slot, and the step line keeps it empty, so the step sits under the label.
+      expect(drawn.match(/"width":(3|5),"flexShrink":0/g)?.length).toBe(2)
+      expect(drawn).toContain('"alignItems":"center"')
       if (surface === 'terminal') {
+        expect(drawn).toContain('━')
+        expect(drawn).toContain('"color":"background"')
         expect(drawn).toContain('"Alis"')
         expect(drawn).not.toContain('Svg')
         expect(drawn).not.toContain('operations/040fff29')
       } else {
         expect(drawn).toContain('"type":"Svg"')
+        // The bar is a set-width SVG: it cannot wrap in the desktop's font.
+        expect(drawn).not.toContain('━')
+        expect(drawn).toContain('#009999')
+        expect(drawn).toContain('"alt":"78% done"')
         expect(drawn).toContain('viewBox=\\"0 0 53 91\\"')
         // The hover card holds the docker step and the operation.
         expect(drawn).toContain('[node-builder 7/7] RUN pnpm run build')

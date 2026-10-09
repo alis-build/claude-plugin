@@ -24,7 +24,7 @@ const BAR_MAX = 64
 /** The live row's indent under the engine's own row. */
 const INDENT = 2
 
-/** One line of heavy rules: done cells in the running key, the rest on the track. */
+/** One line of heavy rules (terminal): done cells in the running key, the rest on the track. */
 function bar(kit: Kit, fill: number, cells: number): RenderElement {
   const { Text } = kit
   const on = Math.max(0, Math.min(cells, Math.round(cells * fill)))
@@ -36,39 +36,102 @@ function bar(kit: Kit, fill: number, cells: number): RenderElement {
   )
 }
 
-/** The bar's width: what the line has left after the mark, label and clock. */
+/**
+ * The desktop's bar: a thin rounded track as SVG at a set width, so it never
+ * wraps the way a run of rule characters does in the desktop's own font, and
+ * its cyan does not hang on how the desktop maps a theme key. The cyan is
+ * Claude Code's light-theme running colour, which holds on both grounds.
+ */
+export const BAR_FILL = '#009999'
+const BAR_TRACK = '#8a8a8a'
+const BAR_PX_MIN = 96
+const BAR_PX_MAX = 320
+/** CSS pixels the desktop gives a cell, conservatively, for the bar's width. */
+const DESKTOP_CELL_PX = 6
+
+export function barSvg(fill: number, width: number): string {
+  const w = Math.round(width)
+  const on = Math.max(0, Math.min(w, Math.round(w * fill)))
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="6" viewBox="0 0 ${w} 6">` +
+    `<rect x="0" y="2" width="${w}" height="2" rx="1" fill="${BAR_TRACK}" fill-opacity="0.35"/>` +
+    (on > 0 ? `<rect x="0" y="1.5" width="${on}" height="3" rx="1.5" fill="${BAR_FILL}"/>` : '') +
+    '</svg>'
+  )
+}
+
+/** The bar's width: what the line has left after the mark, label and clock (in cells). */
 export function barCells(columns: number, surface: RenderSurface, label: string, clock: string): number {
-  const spare = columns - INDENT - markCells(surface) - 1 - label.length - 4 - clock.length - 2
+  const spare = columns - INDENT - slotCells(surface) - label.length - 4 - clock.length - 2
   const cells = Math.min(BAR_MAX, spare)
   return cells < BAR_MIN ? 0 : cells
 }
 
-/** The live row's own tree: the mark, then a column of the two lines. */
+/** The mark's slot, mark and gap: the step line keeps the same slot empty, so it sits under the label. */
+function slotCells(surface: RenderSurface): number {
+  return surface === 'terminal' ? markCells(surface) + 1 : 3
+}
+
+/** The progress bar for the surface, or null when there is no room or no measure. */
+function progress(kit: Kit, surface: RenderSurface, fill: number | null, cells: number): RenderElement | null {
+  if (fill === null || cells <= 0) return null
+  const { Box, Svg } = kit
+  if (surface !== 'terminal' && Svg) {
+    const width = Math.max(BAR_PX_MIN, Math.min(BAR_PX_MAX, cells * DESKTOP_CELL_PX))
+    return (
+      <Box marginLeft={2} marginRight={2} flexShrink={0}>
+        <Svg source={barSvg(fill, width)} alt={`${Math.round(fill * 100)}% done`} width={width} height={6} />
+      </Box>
+    )
+  }
+  return (
+    <Box marginLeft={2} marginRight={2} flexShrink={0}>
+      {bar(kit, fill, cells)}
+    </Box>
+  )
+}
+
+/** A line under the first: an empty slot where the mark is, then the text. */
+function under(kit: Kit, surface: RenderSurface, text: string, color: string): RenderElement {
+  const { Box, Text } = kit
+  return (
+    <Box flexDirection="row">
+      <Box width={slotCells(surface)} flexShrink={0} />
+      <Box flexShrink={1}>
+        <Text color={color} wrap="truncate-end">
+          {text}
+        </Text>
+      </Box>
+    </Box>
+  )
+}
+
+/** The live row's own tree: the mark, label, bar and clock on one line; the step under the label. */
 export function liveRow(kit: Kit, surface: RenderSurface, line: LiveLine, columns: number): RenderElement {
   const { Box, Text } = kit
   const cells = line.fill === null ? 0 : barCells(columns, surface, line.label, line.clock)
   const detail = surface === 'desktop' ? line.detail : undefined
   return (
-    <Box key="alis-live" flexDirection="row">
-      <Box marginRight={1}>{mark(kit, surface)}</Box>
-      <Box flexDirection="column" flexGrow={1} flexShrink={1}>
-        <Box flexDirection="row">
-          <Text wrap="truncate-end">{line.label}</Text>
-          {line.note ? <Text color={KEY.quiet} wrap="truncate-end">{` · ${line.note}`}</Text> : null}
-          {cells > 0 && line.fill !== null ? (
-            <Box marginLeft={2} marginRight={2}>
-              {bar(kit, line.fill, cells)}
-            </Box>
-          ) : null}
-          <Box flexGrow={1} />
+    <Box key="alis-live" flexDirection="column">
+      <Box flexDirection="row" alignItems="center">
+        <Box width={slotCells(surface)} flexShrink={0}>
+          {mark(kit, surface)}
+        </Box>
+        <Box flexShrink={0}>
+          <Text>{line.label}</Text>
+        </Box>
+        {line.note ? (
+          <Box flexShrink={1}>
+            <Text color={KEY.quiet} wrap="truncate-end">{` · ${line.note}`}</Text>
+          </Box>
+        ) : null}
+        {progress(kit, surface, line.fill, cells)}
+        <Box flexGrow={1} />
+        <Box flexShrink={0}>
           <Text color={KEY.quiet}>{line.clock}</Text>
         </Box>
-        {line.sub ? (
-          <Text color={line.subTone === 'warning' ? KEY.warning : KEY.quiet} wrap="truncate-end">
-            {line.sub}
-          </Text>
-        ) : null}
       </Box>
+      {line.sub ? under(kit, surface, line.sub, line.subTone === 'warning' ? KEY.warning : KEY.quiet) : null}
       {detail ? (
         <Box position="absolute" top={-4} left={3} display="none" hover={{ display: 'flex' }} flexDirection="column" borderStyle="round" borderColor={KEY.track} paddingX={1}>
           <Text>{detail.title}</Text>
@@ -125,33 +188,42 @@ export function foldRow(kit: Kit, surface: RenderSurface, fold: FoldLine, action
   const { Box, Text, Button, Link } = kit
   const sign = fold.tone === 'ok' ? <Text color={KEY.done}>{'✓ '}</Text> : fold.tone === 'error' ? <Text color={KEY.failed}>{'✕ '}</Text> : null
   return (
-    <Box key="alis-fold" flexDirection="row">
-      <Box marginRight={1}>{mark(kit, surface)}</Box>
-      <Box flexDirection="column" flexGrow={1} flexShrink={1}>
-        <Box flexDirection="row">
-          {sign}
-          <Text wrap="truncate-end">{fold.text}</Text>
-          {fold.note ? <Text color={KEY.quiet} wrap="truncate-end">{` · ${fold.note}`}</Text> : null}
-          <Box flexGrow={1} />
-          {fold.time ? <Text color={KEY.quiet}>{fold.time}</Text> : null}
-          {fold.logsUri ? (
-            <Box marginLeft={2}>
-              <Link href={fold.logsUri}>Logs</Link>
-            </Box>
-          ) : null}
+    <Box key="alis-fold" flexDirection="column">
+      <Box flexDirection="row" alignItems="center">
+        <Box width={slotCells(surface)} flexShrink={0}>
+          {mark(kit, surface)}
         </Box>
-        {fold.sub ? (
-          <Text color={KEY.quiet} wrap="truncate-end">
-            {fold.sub}
-          </Text>
+        <Box flexShrink={0}>
+          {sign}
+          <Text>{fold.text}</Text>
+        </Box>
+        {fold.note ? (
+          <Box flexShrink={1}>
+            <Text color={KEY.quiet} wrap="truncate-end">{` · ${fold.note}`}</Text>
+          </Box>
         ) : null}
-        {actions && (fold.follow || fold.cancel) ? (
+        <Box flexGrow={1} />
+        {fold.time ? (
+          <Box flexShrink={0} marginLeft={2}>
+            <Text color={KEY.quiet}>{fold.time}</Text>
+          </Box>
+        ) : null}
+        {fold.logsUri ? (
+          <Box flexShrink={0} marginLeft={2}>
+            <Link href={fold.logsUri}>Logs</Link>
+          </Box>
+        ) : null}
+      </Box>
+      {fold.sub ? under(kit, surface, fold.sub, KEY.quiet) : null}
+      {actions && (fold.follow || fold.cancel) ? (
+        <Box flexDirection="row">
+          <Box width={slotCells(surface)} flexShrink={0} />
           <Box flexDirection="row" gap={1}>
             {fold.follow ? <Button key="alis-follow" label="Follow" variant="primary" onPress={actions.follow} /> : null}
             {fold.cancel ? <Button key="alis-cancel" label="Cancel build" onPress={actions.cancel} /> : null}
           </Box>
-        ) : null}
-      </Box>
+        </Box>
+      ) : null}
     </Box>
   )
 }
