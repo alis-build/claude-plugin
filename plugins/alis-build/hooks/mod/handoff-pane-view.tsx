@@ -3,7 +3,7 @@
 // Draws the handoff pane: the target and phase, the one line that matters
 // (safe to close, or keep the laptop open), the destination link, errors,
 // and the buttons the current phase allows.
-import type { RenderElement } from 'claude-code'
+import type { RenderElement, RenderSurface } from 'claude-code'
 
 import { ACCENT, badge, DANGER, OK, RUNNING } from './brand'
 import { type HandoffPaneState, TERMINAL_PHASES } from './handoff-pane'
@@ -13,7 +13,7 @@ export type HandoffPaneActions = { cancel: () => void; reclaim: () => void; refr
 
 const FAILED = new Set(['failed', 'failed_before_stop', 'cancelled', 'unresponsive', 'interrupted'])
 
-export function renderHandoffPane(kit: PaneKit, pane: HandoffPaneState, actions: HandoffPaneActions): RenderElement {
+export function renderHandoffPane(kit: PaneKit, pane: HandoffPaneState, actions: HandoffPaneActions, surface: RenderSurface = 'terminal'): RenderElement {
   const { Box, Text, Button, Link } = kit
   const s = pane.state
   const failed = s ? FAILED.has(s.phase) || Boolean(s.error) : false
@@ -26,7 +26,7 @@ export function renderHandoffPane(kit: PaneKit, pane: HandoffPaneState, actions:
   return (
     <Box flexDirection="column" key="alis-handoff">
       <Box marginBottom={1}>
-        {badge(kit, failed ? DANGER : ACCENT)}
+        {badge(kit, surface)}
         <Text bold>{` handoff${s ? ` → ${s.target}` : ''}`}</Text>
       </Box>
       {s ? (

@@ -142,6 +142,7 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     },
     suggestAlways: async () => host.env['ALIS_SUGGEST_ALWAYS'],
     primerMode: async () => host.env['ALIS_PRIMER'],
+    terminalEnv: async () => ({ termProgram: host.env['TERM_PROGRAM'], term: host.env['TERM'], kittyWindow: host.env['KITTY_WINDOW_ID'], tmux: host.env['TMUX'] }),
     readFile: async path => {
       const text = host.files[path]
       if (text === undefined) throw new Error(`ENOENT ${path}`)

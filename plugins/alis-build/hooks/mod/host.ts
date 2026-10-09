@@ -24,6 +24,8 @@ export type Host = {
   ask: (question: string, options: AskOptions) => Promise<string>
   /** ALIS_SUGGEST_ALWAYS, or undefined. */
   suggestAlways: () => Promise<string | undefined>
+  /** The terminal's own variables, for whether it draws pictures. */
+  terminalEnv: () => Promise<{ termProgram?: string; term?: string; kittyWindow?: string; tmux?: string }>
   /** ALIS_PRIMER (full | digest | off), or undefined. */
   primerMode: () => Promise<string | undefined>
   /** Reads a text file; rejects when missing. */

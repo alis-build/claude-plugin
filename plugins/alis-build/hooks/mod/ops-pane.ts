@@ -28,6 +28,11 @@ export async function toggleOpsPane(host: Host): Promise<string> {
   return `ops: open (${opsPane.rows.filter(r => r.running).length} running, refreshes every ${REFRESH_MS / 1000}s)`
 }
 
+/** Opens the pane when it is not open (a live row's Follow). */
+export async function showOpsPane(host: Host): Promise<void> {
+  if (!opsPane.isOpen) await openOpsPane(host)
+}
+
 async function openOpsPane(host: Host): Promise<void> {
   opsPane.isOpen = true
   opsPane.error = null
