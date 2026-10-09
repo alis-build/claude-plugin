@@ -4,12 +4,12 @@
 // footer with the refresh time. Sized to the pane's body width. No hotkeys:
 // a docked pane leaves the keyboard to the prompt, so its buttons are
 // clicked (or the pane is toggled with /alis ops).
-import type { Elements, RenderElement } from 'claude-code'
+import type { Elements, RenderElement, RenderSurface } from 'claude-code'
 
-import { badge, OK, RUNNING } from './brand'
+import { badge, type MarkKit, OK, RUNNING } from './brand'
 import { agoOf, type OperationRow, type OpsPaneState, REFRESH_MS } from './ops-pane'
 
-export type PaneKit = Pick<Elements['terminal'], 'Box' | 'Text' | 'Button' | 'Link'>
+export type PaneKit = Pick<Elements['terminal'], 'Box' | 'Text' | 'Button' | 'Link'> & Pick<MarkKit, 'Svg' | 'Image'>
 
 export type OpsPaneActions = {
   wait: (row: OperationRow) => void
@@ -18,13 +18,13 @@ export type OpsPaneActions = {
   close: () => void
 }
 
-export function renderOpsPane(kit: PaneKit, state: OpsPaneState, actions: OpsPaneActions, bodyColumns: number, now = Date.now()): RenderElement {
+export function renderOpsPane(kit: PaneKit, state: OpsPaneState, actions: OpsPaneActions, bodyColumns: number, now = Date.now(), surface: RenderSurface = 'terminal'): RenderElement {
   const { Box, Text, Button } = kit
   const wide = bodyColumns >= 70
   return (
     <Box flexDirection="column" key="alis-ops">
       <Box marginBottom={1}>
-        {badge(kit)}
+        {badge(kit, surface)}
         <Text bold>{' operations'}</Text>
         <Text dimColor>{`  ${state.rows.filter(r => r.running).length} running`}</Text>
       </Box>

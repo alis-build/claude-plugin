@@ -1,28 +1,75 @@
 /* @jsxRuntime classic */
 /* @jsx h */
-// One look for everything the module draws: an inverse `alis` badge in the
-// brand's primary colour at the head of a line, so a band, a live line or a
-// summary row is spotted at a glance. The Alis Exchange brand colours:
-// Primary F02222, Petrol 27323A, Cyan 006383, Green C5E4CE, L.Grey F0F0F0.
-import type { Elements, RenderElement } from 'claude-code'
+// One look for everything the module draws. Each line it owns starts with
+// the Alis mark, always the brand asset itself (assets/alis-mark.svg, a
+// byte-for-byte copy of design.v1's Brand/alis.svg): its markup on remote
+// surfaces, and in a terminal that draws pictures (Ghostty, kitty) the
+// PNG rendered from it (assets/alis-mark-cell.png, one cell). Elsewhere the
+// bold name: the brand rules forbid boxing, redrawing or approximating the
+// mark. State is coloured with Claude Code's theme keys, so a row reads
+// right in every theme; Alis red is the mark's alone.
+import type { Elements, ImageProps, RenderElement, RenderSurface, SvgProps } from 'claude-code'
 
-/** Primary: the badge, and anything that must be seen. */
-export const ACCENT = '#F02222'
-/** Brand cyan: a running state. */
+/** Alis red: the mark only. */
+export const ALIS_RED = '#F02222'
+
+/** Claude Code theme keys for state. `background` is the theme's cyan, the nearest key to brand cyan. */
+export const KEY = {
+  running: 'background',
+  done: 'success',
+  failed: 'error',
+  warning: 'warning',
+  quiet: 'inactive',
+  track: 'subtle',
+} as const
+
+/** The legacy pane colours, until the panes move to theme keys too. */
 export const RUNNING = '#006383'
-/** Brand green: a finished state. */
 export const OK = '#C5E4CE'
-/** Failed or interrupted: the terminal's own red, distinct from the badge. */
 export const DANGER = 'red'
+export const ACCENT = ALIS_RED
 
-type TextKit = Pick<Elements['terminal'], 'Text'>
+/** assets/alis-mark.svg, verbatim. */
+export const MARK_SVG = "<svg width=\"53\" height=\"91\" viewBox=\"0 0 53 91\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M26.1758 14.5421C30.1915 14.5421 33.4469 11.2868 33.4469 7.27106C33.4469 3.25536 30.1915 0 26.1758 0C22.1601 0 18.9048 3.25536 18.9048 7.27106C18.9048 11.2868 22.1601 14.5421 26.1758 14.5421Z\" fill=\"#F02222\"/>\n<path d=\"M26.1758 33.4469C30.1915 33.4469 33.4469 30.1915 33.4469 26.1758C33.4469 22.1601 30.1915 18.9048 26.1758 18.9048C22.1601 18.9048 18.9048 22.1601 18.9048 26.1758C18.9048 30.1915 22.1601 33.4469 26.1758 33.4469Z\" fill=\"#F02222\"/>\n<path d=\"M26.1758 52.3505C30.1915 52.3505 33.4469 49.0951 33.4469 45.0795C33.4469 41.0638 30.1915 37.8084 26.1758 37.8084C22.1601 37.8084 18.9048 41.0638 18.9048 45.0795C18.9048 49.0951 22.1601 52.3505 26.1758 52.3505Z\" fill=\"#F02222\"/>\n<path d=\"M45.0794 14.5421C49.0951 14.5421 52.3505 11.2868 52.3505 7.27106C52.3505 3.25536 49.0951 0 45.0794 0C41.0638 0 37.8084 3.25536 37.8084 7.27106C37.8084 11.2868 41.0638 14.5421 45.0794 14.5421Z\" fill=\"#F02222\"/>\n<path d=\"M45.0794 33.4469C49.0951 33.4469 52.3505 30.1915 52.3505 26.1758C52.3505 22.1601 49.0951 18.9048 45.0794 18.9048C41.0638 18.9048 37.8084 22.1601 37.8084 26.1758C37.8084 30.1915 41.0638 33.4469 45.0794 33.4469Z\" fill=\"#F02222\"/>\n<path d=\"M45.0794 52.3505C49.0951 52.3505 52.3505 49.0951 52.3505 45.0795C52.3505 41.0638 49.0951 37.8084 45.0794 37.8084C41.0638 37.8084 37.8084 41.0638 37.8084 45.0795C37.8084 49.0951 41.0638 52.3505 45.0794 52.3505Z\" fill=\"#F02222\"/>\n<path d=\"M7.27106 52.3505C11.2868 52.3505 14.5421 49.0951 14.5421 45.0795C14.5421 41.0638 11.2868 37.8084 7.27106 37.8084C3.25536 37.8084 0 41.0638 0 45.0795C0 49.0951 3.25536 52.3505 7.27106 52.3505Z\" fill=\"#F02222\"/>\n<path d=\"M7.27106 71.2553C11.2868 71.2553 14.5421 67.9999 14.5421 63.9842C14.5421 59.9685 11.2868 56.7132 7.27106 56.7132C3.25536 56.7132 0 59.9685 0 63.9842C0 67.9999 3.25536 71.2553 7.27106 71.2553Z\" fill=\"#F02222\"/>\n<path d=\"M7.27106 90.16C11.2868 90.16 14.5421 86.9047 14.5421 82.889C14.5421 78.8733 11.2868 75.6179 7.27106 75.6179C3.25536 75.6179 0 78.8733 0 82.889C0 86.9047 3.25536 90.16 7.27106 90.16Z\" fill=\"#F02222\"/>\n<path d=\"M26.1758 71.2553C30.1915 71.2553 33.4469 67.9999 33.4469 63.9842C33.4469 59.9685 30.1915 56.7132 26.1758 56.7132C22.1601 56.7132 18.9048 59.9685 18.9048 63.9842C18.9048 67.9999 22.1601 71.2553 26.1758 71.2553Z\" fill=\"#F02222\"/>\n<path d=\"M26.1758 90.16C30.1915 90.16 33.4469 86.9047 33.4469 82.889C33.4469 78.8733 30.1915 75.6179 26.1758 75.6179C22.1601 75.6179 18.9048 78.8733 18.9048 82.889C18.9048 86.9047 22.1601 90.16 26.1758 90.16Z\" fill=\"#F02222\"/>\n</svg>\n"
 
-/** The ` alis ` badge, inverse in the accent colour. */
-export function badge(kit: TextKit, color: string = ACCENT): RenderElement {
-  const { Text } = kit
-  return (
-    <Text bold inverse color={color}>
-      {' alis '}
-    </Text>
-  )
+/** The PNG of the mark for one terminal cell (96 × 192, the mark centred), in the plugin's assets. */
+export const MARK_CELL_PNG = 'assets/alis-mark-cell.png'
+
+/** The cell PNG's absolute path when this terminal draws pictures (Ghostty, kitty, outside tmux); set at session start. */
+let markFile: string | null = null
+export function setMarkFile(path: string | null): void {
+  markFile = path
 }
+
+/** Reads the terminal's own variables: Ghostty or kitty, and not inside tmux, which passes no pictures. */
+export function graphicsFrom(env: { termProgram?: string; term?: string; kittyWindow?: string; tmux?: string }): boolean {
+  if (env.tmux) return false
+  const program = (env.termProgram ?? '').toLowerCase()
+  const term = (env.term ?? '').toLowerCase()
+  return program === 'ghostty' || program === 'kitty' || term.includes('ghostty') || term.includes('kitty') || !!env.kittyWindow
+}
+
+/** The mark's size beside a line of text, in CSS pixels (the asset is 53 × 91). */
+const MARK_W = 10
+const MARK_H = 17
+
+export type MarkKit = Pick<Elements['terminal'], 'Text'> & { Svg?: (props: SvgProps) => RenderElement; Image?: (props: ImageProps) => RenderElement }
+
+/** Cells the mark takes on a line, for layout sums. */
+export function markCells(surface: RenderSurface): number {
+  return surface !== 'terminal' ? 2 : markFile ? 1 : 4
+}
+
+/**
+ * The Alis mark at the head of a line: the asset as SVG on remote surfaces,
+ * a one-cell picture in a terminal that draws them, else the bold name.
+ */
+export function mark(kit: MarkKit, surface: RenderSurface): RenderElement {
+  const { Text, Svg, Image } = kit
+  if (surface !== 'terminal' && Svg) return <Svg source={MARK_SVG} alt="Alis" width={MARK_W} height={MARK_H} />
+  if (surface === 'terminal' && markFile && Image) return <Image source={{ file: markFile, format: 'png' }} columns={1} rows={1} alt="A" />
+  return <Text bold>Alis</Text>
+}
+
+/** Older name for the mark, kept for the panes. */
+export const badge = mark

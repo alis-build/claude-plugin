@@ -18,6 +18,7 @@ Use this plugin to let Claude Code work with Alis Build organisations, products,
 - Wake phrases (`alis, …`, `capture this as a skill`) route to `alis:discover` or `alis:capture` from any directory (a `UserPromptSubmit` hook backed by `alis skills suggest --hook`); the CLI's unsolicited per-prompt skill suggestions are dropped, because matching whole prompts suggested unrelated skills too often
 - Structured CLI workflows run with the CLI's automation tier; guarded actions use Claude's native confirmation
 - Function hooks (Claude Code mods): on Claude Code 2.1.287 or later, where Claude Code has the feature switched on, the permission gate, handoff lifecycle and wake-phrase routing run inside Claude Code's plugin engine instead of shell scripts, and `/alis status`, `/alis ops` and `/alis handoff [alias]` are available; elsewhere the shell hooks run exactly as before
+- A live row under every build and deploy Claude runs or waits on (in the foreground or the background): what is happening, a progress bar, the step and what comes next, folding to one outcome line ("✓ 2.44.19 is live on Development · 4m 09s · Logs") when it ends. Each row starts with the Alis mark: the brand SVG on desktop, a one-cell picture in Ghostty and kitty, the name elsewhere
 
 ## Before You Start
 

@@ -11,10 +11,12 @@ import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
 import { renderAlisOutput } from './mod/alis-render'
 import { HANDOFF_PANE_ID, handoffActions, handoffPane, onHandoffPaneClosed, resumeHandoffPane } from './mod/handoff-pane'
 import { renderHandoffPane } from './mod/handoff-pane-view'
-import { liveAmong, liveOf, watchAlisCall } from './mod/ops-live'
-import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane, resumeOpsPane } from './mod/ops-pane'
+import { finishedAmong, finishedOf, liveAmong, liveOf, namesFor, watchAlisCall } from './mod/ops-live'
+import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane, resumeOpsPane, showOpsPane } from './mod/ops-pane'
 import { renderOpsPane } from './mod/ops-pane-view'
-import { renderOpsResult, renderOpsRunning } from './mod/ops-render'
+import { renderLiveRow, renderOpsResult, renderOpsRunning, withRowBelow } from './mod/ops-render'
+import { productOf } from './mod/ops-progress'
+import { graphicsFrom, MARK_CELL_PNG, setMarkFile } from './mod/brand'
 import { passClassic } from './mod/classic'
 import { describeBash } from './mod/describe'
 import { confirmGuarded } from './mod/guard-dialog'
@@ -39,6 +41,12 @@ export function hostOf($: HostNouns): Host {
     allowedSubcmds: () => $.env.get('ALIS_ALLOWED_SUBCMDS'),
     suggestAlways: () => $.env.get('ALIS_SUGGEST_ALWAYS'),
     primerMode: () => $.env.get('ALIS_PRIMER'),
+    terminalEnv: async () => ({
+      termProgram: await $.env.get('TERM_PROGRAM'),
+      term: await $.env.get('TERM'),
+      kittyWindow: await $.env.get('KITTY_WINDOW_ID'),
+      tmux: await $.env.get('TMUX'),
+    }),
     readFile: path => $.fs.read(path),
     sessionId: () => $.session.id(),
     cwd: () => $.session.cwd(),
@@ -65,6 +73,14 @@ export function hostOf($: HostNouns): Host {
     run: (argv, init) => $.process.run(argv, init),
     spawn: argv => $.process.spawn({ argv }),
     debug: text => $.ui.log(text, { to: 'debug' }),
+  }
+}
+
+/** What a folded row's Follow and Cancel build do. */
+function opsFollow(host: Host, operation: string | null | undefined) {
+  return {
+    follow: () => void showOpsPane(host),
+    cancel: () => void host.submitPrompt(operation ? `Cancel ${operation} with: alis operations cancel ${operation} --json` : 'Cancel the running alis build with alis operations cancel.'),
   }
 }
 
@@ -103,6 +119,11 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register(COMMAND_SPEC).catch(error => $.ui.log(`alis: could not register /alis: ${String(error)}`, { to: 'debug' }))
     const host = hostOf($)
+    // Ghostty and kitty draw the mark's PNG; it is read from the plugin's assets by the terminal itself.
+    const root = await host.pluginRoot().catch(() => undefined)
+    const cell = root ? `${root}/${MARK_CELL_PNG}` : null
+    const pictures = graphicsFrom(await host.terminalEnv().catch(() => ({})))
+    setMarkFile(pictures && cell && (await host.exists(cell)) ? cell : null)
     try {
       restore((await $.state.get(SAVED)).value)
       await resumeOpsPane(host)
@@ -125,15 +146,20 @@ export const register: Register = on => {
   }).catch(($, e, next) => next(e))
   on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
     const wait = liveOf(e.props.tool_use_id)
-    return wait && e.props.isRunning ? renderOpsRunning($.ui.resolve(e), await next(e), wait) : next(e)
+    return wait && e.props.isRunning ? renderOpsRunning($.ui.resolve(e), await next(e), wait, Date.now(), e.surface, e.viewport?.columns) : next(e)
   })
   on('ui.render', { component: 'ToolGroup' }, async ($, e, next) => {
-    const wait = e.props.isExpanded ? undefined : liveAmong(e.props.calls)
-    return wait ? renderOpsRunning($.ui.resolve(e), await next(e), wait) : next(e)
+    if (e.props.isExpanded) return next(e)
+    const wait = liveAmong(e.props.calls)
+    if (wait) return renderOpsRunning($.ui.resolve(e), await next(e), wait, Date.now(), e.surface, e.viewport?.columns)
+    // A folded group hides its results: the last alis call's outcome shows under it.
+    const ended = finishedAmong(e.props.calls)
+    const fold = ended ? renderOpsResult($.ui.resolve(e), undefined, ended, e.surface, opsFollow(hostOf($), ended.operation)) : null
+    return fold ? withRowBelow($.ui.resolve(e), await next(e), fold) : next(e)
   })
   // The operations pane (/alis ops): drawn from the module's state while
   // open, refreshed on the clock; a close from anywhere stops the refresh.
-  on('ui.render', { component: 'Pane', requestId: OPS_PANE_ID }, ($, e) => renderOpsPane($.ui.resolve(e), opsPane, opsActions(hostOf($)), e.props.bodyColumns))
+  on('ui.render', { component: 'Pane', requestId: OPS_PANE_ID }, ($, e) => renderOpsPane($.ui.resolve(e), opsPane, opsActions(hostOf($)), e.props.bodyColumns, Date.now(), e.surface))
   on('ui.close', { id: OPS_PANE_ID }, ($, e, next) => {
     onOpsPaneClosed()
     hostOf($).save()
@@ -141,7 +167,7 @@ export const register: Register = on => {
   })
 
   // The handoff pane: opened by /alis handoff.
-  on('ui.render', { component: 'Pane', requestId: HANDOFF_PANE_ID }, ($, e) => renderHandoffPane($.ui.resolve(e), handoffPane, handoffActions(hostOf($))))
+  on('ui.render', { component: 'Pane', requestId: HANDOFF_PANE_ID }, ($, e) => renderHandoffPane($.ui.resolve(e), handoffPane, handoffActions(hostOf($)), e.surface))
   on('ui.close', { id: HANDOFF_PANE_ID }, ($, e, next) => {
     onHandoffPaneClosed()
     hostOf($).save()
@@ -159,6 +185,22 @@ export const register: Register = on => {
     return next({ ...e, message: masked.message })
   }).catch(($, e, next) => next(e))
 
-  on('ui.render', { component: 'ToolResult', props: { tool: 'Bash' } }, ($, e, next) => renderOpsResult($.ui.resolve(e), e.props.output) ?? next(e))
+  // The folded result of a call that streamed an alis operation.
+  on('ui.render', { component: 'ToolResult', props: { tool: 'Bash' } }, async ($, e, next) => {
+    const host = hostOf($)
+    // A background call's result row carries its live row until the operation ends.
+    const running = liveOf(e.props.tool_use_id)
+    if (running?.background) return renderLiveRow($.ui.resolve(e), running, Date.now(), e.surface, e.viewport?.columns)
+    const last = finishedOf(e.props.tool_use_id)
+    let names = last?.names ?? {}
+    if (Object.keys(names).length === 0) {
+      // A row drawn without a watcher (after a resume): the result's own deployments name the product.
+      const stdout = (e.props.output as { stdout?: unknown } | undefined)?.stdout
+      const deployment = typeof stdout === 'string' ? /"name"\s*:\s*"(organisations\/[^"]+\/deployments\/[^"]+)"/.exec(stdout)?.[1] : undefined
+      const product = deployment ? productOf(deployment) : undefined
+      if (product) names = await namesFor(host, product).catch(() => ({}))
+    }
+    return renderOpsResult($.ui.resolve(e), e.props.output, last, e.surface, opsFollow(host, last?.operation), names) ?? next(e)
+  })
   on('ui.render', { component: 'CommandOutput', props: { command: 'alis' } }, ($, e, next) => renderAlisOutput($.ui.resolve(e), e.props.text) ?? next(e))
 }

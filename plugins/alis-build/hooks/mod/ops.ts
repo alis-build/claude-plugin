@@ -1,7 +1,8 @@
 // Alis operations as the CLI shows them under --json: progress as NDJSON
 // lines on stderr ({ elapsed, progress?, warning?, operation?, next? }, one
 // per appended progress line), the result as one JSON object on stdout.
-// This file reads both shapes; ops-live.ts and ops-render.tsx draw them.
+// This file reads both shapes; ops-progress.ts reads the snapshots, and
+// ops-live.ts and ops-render.tsx draw them.
 import { commandPath } from './cli-gate'
 import { literalArgv } from './shell'
 
@@ -17,7 +18,7 @@ export type ProgressEvent = {
 /** What an `alis …` Bash command is about, when it streams an operation. */
 export type AlisCall =
   | { kind: 'wait'; operation: string }
-  | { kind: 'start'; verb: string; target: string | null; async: boolean }
+  | { kind: 'start'; verb: string; target: string | null; async: boolean; version?: string }
 
 const STREAMING_VERBS = new Set(['define', 'build', 'deploy'])
 
@@ -35,7 +36,11 @@ export function alisCallOf(command: unknown): AlisCall | null {
   }
   const verb = words[0]
   if (verb && STREAMING_VERBS.has(verb)) {
-    return { kind: 'start', verb, target: words[1] ?? null, async: argv.includes('--async') }
+    const call: AlisCall = { kind: 'start', verb, target: words[1] ?? null, async: argv.includes('--async') }
+    const flag = argv.findIndex(word => word === '--version' || word.startsWith('--version='))
+    const version = flag === -1 ? undefined : argv[flag]?.includes('=') ? argv[flag]?.slice('--version='.length) : argv[flag + 1]
+    if (version) call.version = version
+    return call
   }
   return null
 }
@@ -93,35 +98,3 @@ export function operationStateOf(stdout: unknown): OperationState | null {
 
 /** A Bash tool result as the engine records it. */
 export type BashOutput = { stdout?: unknown; stderr?: unknown; interrupted?: unknown }
-
-/**
- * The `key: value` lines that summarize a finished streamed operation, or
- * null when the output carries no progress line (not an alis operation).
- */
-export function summaryLinesOf(output: unknown): string[] | null {
-  if (!output || typeof output !== 'object') return null
-  const { stdout, stderr, interrupted } = output as BashOutput
-  const events = progressEventsOf(stderr)
-  if (events.length === 0) return null
-  const state = operationStateOf(stdout)
-  const last = events.at(-1) as ProgressEvent
-  const warning = [...events].reverse().find(e => e.warning)
-  const outcome =
-    interrupted === true ? 'interrupted'
-    : state?.error ? `failed: ${state.error}`
-    : warning ? 'detached'
-    : state?.done === false ? 'still running'
-    : state ? 'done'
-    : 'ended'
-  const lines = [`alis operation: ${outcome}${state?.version ? ` → ${state.version}` : ''}`]
-  const operation = state?.name ?? warning?.operation ?? events.find(e => e.operation)?.operation
-  if (operation) lines.push(`operation: ${operation}`)
-  lines.push(`elapsed: ${last.elapsed}`)
-  const progress = [...events].reverse().find(e => e.progress)?.progress
-  if (progress) lines.push(`last progress: ${progress}`)
-  if (warning?.warning) lines.push(`warning: ${warning.warning}`)
-  const next = warning?.next ?? [...events].reverse().find(e => e.next)?.next
-  if (next) lines.push(`next: ${next}`)
-  lines.push(`progress lines: ${events.length}`)
-  return lines
-}
