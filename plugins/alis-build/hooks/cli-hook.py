@@ -7,13 +7,19 @@ import shlex
 import sys
 import time
 from pathlib import Path
-from health import observe
+from health import observe, plugin_version
 
 GUIDANCE = ("Run one standalone alis command and read its complete JSON result. "
             "Use alis --cwd /absolute/workspace/path instead of cd &&. "
             "Keep stderr progress separate; no head/tail, pipes, redirects or sleep loops. "
             "A Claude background-task ID is not an Alis operation ID.")
-GLOBALS = {"--cwd", "--session-id"}
+GLOBALS = {"--cwd", "--session-id", "--client-plugin"}
+# The CLI accepts --client-plugin <id>/<version> from 1.165.6 and reports it with
+# every command's outcome; older CLIs reject the unknown flag. The hook adds it
+# only when the CLI's own detection cache (written by the binary that last ran
+# a version check) says the installed one is new enough. Without the flag the
+# CLI still attributes the plugin from ~/.alis/claude-plugin-health.json.
+CLIENT_PLUGIN_SINCE = (1, 165, 6)
 BOOLS = {"--json", "--verbose", "--approve", "--confirm-production", "--yes", "--reveal", "--help", "-h"}
 READ_TOP = {"docs", "doctor", "whoami", "version", "ask"}
 READ_PATHS = {
@@ -97,6 +103,26 @@ def command_path(argv, depth=2):
     return tuple(words)
 
 
+def installed_cli_version():
+    """The installed CLI's version as a tuple from ~/.alis/versions-cache.json, or None."""
+    try:
+        text = json.loads((Path.home() / ".alis/versions-cache.json").read_text()).get("cliVersion")
+        match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?", text) if isinstance(text, str) else None
+        return tuple(int(part) for part in match.groups()) if match else None
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+
+
+def client_plugin():
+    """The --client-plugin value when the installed CLI accepts the flag, else None."""
+    version = installed_cli_version()
+    if version is None or version < CLIENT_PLUGIN_SINCE: return None
+    try:
+        return "claude/" + plugin_version()
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
 def insert_flags(argv, flags):
     split = argv.index("--") if "--" in argv else len(argv)
     return argv[:split] + flags + argv[split:]
@@ -151,6 +177,9 @@ def decide(payload):
     sid = payload.get("session_id", "")
     if isinstance(sid, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", sid) and "--session-id" not in flags:
         argv = insert_flags(argv, ["--session-id", sid])
+    plugin = client_plugin() if "--client-plugin" not in flags else None
+    if plugin:
+        argv = insert_flags(argv, ["--client-plugin", plugin])
     updated = dict(tool_input, command=shlex.join(argv))
     if updated != tool_input: result["updatedInput"] = updated
     return {"hookSpecificOutput": result}

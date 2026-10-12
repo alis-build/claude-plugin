@@ -10,7 +10,7 @@ export const GUIDANCE =
   'Keep stderr progress separate; no head/tail, pipes, redirects or sleep loops. ' +
   'A Claude background-task ID is not an Alis operation ID.'
 
-const GLOBALS = new Set(['--cwd', '--session-id'])
+const GLOBALS = new Set(['--cwd', '--session-id', '--client-plugin'])
 const BOOLS = new Set(['--json', '--verbose', '--approve', '--confirm-production', '--yes', '--reveal', '--help', '-h'])
 const READ_TOP = new Set(['docs', 'doctor', 'whoami', 'version', 'ask'])
 const READ_PATHS = new Set(
@@ -55,6 +55,11 @@ export type GateInput = {
   sessionId?: unknown
   /** The ALIS_ALLOWED_SUBCMDS variable, space-separated top-level commands. */
   allowedSubcmds?: string
+  /**
+   * This plugin as `<id>/<version>` for the CLI's --client-plugin flag, only
+   * when the installed CLI accepts it (health.clientPluginOf); absent otherwise.
+   */
+  clientPlugin?: string
 }
 
 /**
@@ -148,6 +153,10 @@ export function decide(input: GateInput): GateDecision {
   const sid = input.sessionId
   if (typeof sid === 'string' && SESSION_ID.test(sid) && !flags.has('--session-id')) {
     argv = insertFlagsBeforeSeparator(argv, ['--session-id', sid])
+  }
+  // The plugin names itself so the CLI's outcome facts carry its version.
+  if (input.clientPlugin && !flags.has('--client-plugin')) {
+    argv = insertFlagsBeforeSeparator(argv, ['--client-plugin', input.clientPlugin])
   }
   const updated = { ...toolInput, command: shellJoin(argv) }
   if (updated['command'] !== command) result.updatedInput = updated

@@ -10,7 +10,7 @@ import { decide } from './cli-gate'
 import { classicState } from './classic'
 import { mergeClassic, toPreToolUseResult } from './classic-result'
 import { approvedCalls } from './deploy-dialog'
-import { observe } from './health'
+import { clientPluginOf, observe } from './health'
 import type { Host } from './host'
 
 export const HEALTH_FILE = 'claude-plugin-health.json'
@@ -28,6 +28,7 @@ export async function cliGateClassic<E extends object>(
     permissionMode,
     sessionId: await host.sessionId().catch(() => undefined),
     allowedSubcmds: await host.allowedSubcmds(),
+    clientPlugin: await clientPluginOf(host),
   })
   // The person already confirmed this exact call in the alis dialog (a
   // guarded command, or a production deploy): that stands in for the native

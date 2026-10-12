@@ -138,6 +138,19 @@ class SecretsTests(unittest.TestCase):
 
 
 class PermissionTests(unittest.TestCase):
+    def setUp(self):
+        # A home of its own: the gate reads the CLI's detection cache from it.
+        self.home = tempfile.TemporaryDirectory()
+        self.addCleanup(self.home.cleanup)
+        env = patch.dict(os.environ, {"HOME": self.home.name})
+        env.start()
+        self.addCleanup(env.stop)
+
+    def cli_version(self, text):
+        alis = Path(self.home.name, ".alis")
+        alis.mkdir(exist_ok=True)
+        (alis / "versions-cache.json").write_text(text if text.startswith("{") else json.dumps({"cliVersion": text, "components": []}))
+
     def decision(self, command, mode="auto", session="session-a"):
         return hook.decide({"tool_name":"Bash", "permission_mode":mode, "session_id":session,
                             "tool_input":{"command":command,"timeout":120000,"run_in_background":True}}).get("hookSpecificOutput", {})
@@ -196,6 +209,31 @@ class PermissionTests(unittest.TestCase):
             self.assertEqual(shlex.split(updated["command"]), shlex.split(command) + ["--session-id",session])
             self.assertEqual(updated["timeout"], 120000)
             self.assertTrue(updated["run_in_background"])
+
+    def test_plugin_names_itself_only_to_a_cli_that_accepts_the_flag(self):
+        command = "alis define example.app.api.v1 --json"
+        plugin = "claude/" + json.loads((ROOT / "plugins/alis-build/.claude-plugin/plugin.json").read_text())["version"]
+        with_flag = shlex.split(command) + ["--session-id", "session-a", "--client-plugin", plugin]
+        without = shlex.split(command) + ["--session-id", "session-a"]
+        self.assertIsNone(hook.installed_cli_version())
+        self.assertEqual(shlex.split(self.decision(command)["updatedInput"]["command"]), without)
+        for text, expected in (("1.166.3", with_flag), ("v1.165.6", with_flag), ("1.165.6-rc1", with_flag), ("1.165.5", without),
+                               ("1.164.9", without), ("dev", without), ("{not json", without), ('{"components": []}', without)):
+            with self.subTest(cliVersion=text):
+                self.cli_version(text)
+                self.assertEqual(shlex.split(self.decision(command)["updatedInput"]["command"]), expected)
+        self.cli_version("1.165.5")
+        self.assertEqual(hook.installed_cli_version(), (1, 165, 5))
+        # The flag rides on guarded and read-only calls alike, before any `--`,
+        # and is never doubled when the command already names a plugin.
+        self.cli_version("1.166.3")
+        guarded = shlex.split(self.decision("alis blocks uninstall blocks/example --json")["updatedInput"]["command"])
+        self.assertEqual(guarded[-4:], ["--session-id", "session-a", "--client-plugin", plugin])
+        self.assertIn("--approve", guarded)
+        self.assertEqual(shlex.split(self.decision("alis ask -- 'what now'")["updatedInput"]["command"]),
+                         ["alis", "ask", "--session-id", "session-a", "--client-plugin", plugin, "--", "what now"])
+        self.assertNotIn("updatedInput", self.decision("alis whoami --session-id session-a --client-plugin other/1.0"))
+        self.assertEqual(hook.command_path(["alis", "--client-plugin", "claude/1", "define"]), ("define",))
 
     def test_allowlist_and_unknown_commands_do_not_grant(self):
         with patch.dict(os.environ, {"ALIS_ALLOWED_SUBCMDS":"context doctor"}):

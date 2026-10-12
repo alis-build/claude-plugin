@@ -52,7 +52,7 @@ export function deployCallOf(command: unknown): DeployCall | null {
       case '--version': call.version = value() ?? null; break
       case '--confirm-production': call.confirmProduction = true; break
       case '--plan-only': call.planOnly = true; break
-      case '--cwd': case '--session-id': case '--timeout': case '--poll-interval': value(); break
+      case '--cwd': case '--session-id': case '--client-plugin': case '--timeout': case '--poll-interval': value(); break
       default:
         if (!token.startsWith('-')) positional.push(token)
     }
