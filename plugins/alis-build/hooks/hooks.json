@@ -95,6 +95,17 @@
           }
         ],
         "matcher": "*"
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/report-skill-load.sh\"",
+            "timeout": 5,
+            "async": true
+          }
+        ]
       }
     ],
     "PermissionRequest": [
