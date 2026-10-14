@@ -86,7 +86,9 @@ directory.
 
 - **One standalone command per Bash call.** Use `alis --cwd /absolute/path <command>`
   for another workspace; after `service new`, use its `buildFolder`. Bash directory
-  changes can be reset or lost when work moves to background. Preserve the exact package,
+  changes can be reset or lost when work moves to background. Never prefix `alis` with an
+  environment assignment (`VAR=… alis …`) or `env`: the plugin recognises `alis` only as the
+  first token, so a prefixed call is not auto-allowed. Preserve the exact package,
   version and environment. Consult `alis --help` once if `--cwd` support is unknown;
   an older CLI needs updating before using this option.
 - **Discover environments without values.** Use `alis environment list <org>.<product>

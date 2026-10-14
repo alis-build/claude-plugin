@@ -188,6 +188,24 @@ class PermissionTests(unittest.TestCase):
         self.assertEqual(self.decision("alis environment variables alis.os --reveal", "plan")["permissionDecision"], "deny")
         self.assertEqual(self.decision("alis environment list alis.os --json")["permissionDecision"], "allow")
 
+    def test_help_on_guarded_verbs_is_read_only(self):
+        # Cobra prints usage and exits before any verb runs, so help on a secret
+        # or destructive verb never prints values or uninstalls anything.
+        for cmd in ("alis environment variables --help",
+                    "alis env vars -h",
+                    "alis environment refresh --help",
+                    "alis blocks uninstall example --help",
+                    "alis deploy --help",
+                    "alis --help",
+                    "alis -v"):
+            with self.subTest(command=cmd):
+                result = self.decision(cmd)
+                self.assertEqual(result.get("permissionDecision"), "allow")
+                self.assertNotIn("--approve", shlex.split(result.get("updatedInput", {}).get("command", cmd)))
+                self.assertEqual(self.decision(cmd, "plan").get("permissionDecision"), "allow")
+        # A help token swallowed as the value of a value-taking flag is not help.
+        self.assertEqual(self.decision("alis environment variables alis.os --name --help").get("permissionDecision"), "ask")
+
     def test_plan_never_auto_allows_mutations(self):
         self.assertEqual(self.decision("alis build example.app.api.v1 --json", "plan")["permissionDecision"], "deny")
         self.assertEqual(self.decision("alis operations describe operations/a --json", "plan")["permissionDecision"], "allow")

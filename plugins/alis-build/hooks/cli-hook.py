@@ -140,7 +140,11 @@ def decide(payload):
         result["additionalContext"] = GUIDANCE
         return {"hookSpecificOutput": result}
     path = command_path(argv)
-    if not path: return {"hookSpecificOutput": result}
+    if not path:
+        # Bare `alis --help` / `alis -v`: no verb, nothing executes.
+        if argv[1:] and all(a.startswith("-") for a in argv[1:]) and set(argv[1:]) & {"--help", "-h", "--version", "-v"}:
+            result.update(permissionDecision="allow", permissionDecisionReason="Alis CLI help or version output; nothing executes.")
+        return {"hookSpecificOutput": result}
     top = path[0]
     allowed = os.environ.get("ALIS_ALLOWED_SUBCMDS", "").split()
     options = argv[1:argv.index("--")] if "--" in argv else argv[1:]
@@ -153,8 +157,18 @@ def decide(payload):
     # bare command asks too.
     secrets = top == "environment" and ("--reveal" in flags or any(v in options for v in ("variables", "vars", "refresh")))
     guarded = guarded or secrets
+    # Help never executes: cobra prints usage and exits before any verb runs, so
+    # `alis environment variables --help` and `alis blocks uninstall x --help` are
+    # read-only. A help token swallowed as the value of a preceding value-taking
+    # flag (`--name --help`) is not a help request.
+    help_requested = any(
+        tok in ("--help", "-h") and not (i > 0 and options[i - 1].startswith("-")
+                                          and "=" not in options[i - 1]
+                                          and options[i - 1] not in BOOLS)
+        for i, tok in enumerate(options))
+    if help_requested: guarded = secrets = False
     handoff_read = command_path(argv, 3) in {("workstation", "handoff", "status"), ("workstation", "handoff", "targets")}
-    read_only = top in READ_TOP or path in READ_PATHS or handoff_read or bool(flags & {"--help", "-h"})
+    read_only = top in READ_TOP or path in READ_PATHS or handoff_read or help_requested
     if payload.get("permission_mode") == "plan" and (guarded or not read_only):
         result.update(permissionDecision="deny", permissionDecisionReason="This Alis action changes state. Finish the plan and obtain execution approval first.")
         return {"hookSpecificOutput": result}
