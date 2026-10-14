@@ -25,9 +25,10 @@ versions and pull requests work.
 | `plugins/alis-build/hooks/*.sh`, `*.py`, `hooks.json` | Shell hooks (every Claude Code version) |
 | `plugins/alis-build/hooks/mod.ts`, `hooks/mod/` | Function-hooks module (Claude Code 2.1.287+) |
 | `plugins/alis-build/skills/` | `discover`, `capture`, `handoff`, `frontend-preview` |
+| `plugins/alis-build/agents/` | The specialist subagents `ideate`, `platform`, `dbd`, `support`, fed their manual by `hooks/agent-manual.py` |
 | `plugins/alis-build/context/` | The DBD primer and digest injected at session start |
 | `plugins/alis-build/tests/` | Module tests (`claude plugin test`) |
-| `plugins/alis-build/evals/` | Uplift evals for the `discover` skill |
+| `plugins/alis-build/evals/` | Uplift evals for the `discover` skill and the specialists |
 | `tests/` | Release guard, shell hook tests, Python behaviour tests, routing eval |
 
 ### The shell hooks and the module do the same jobs
@@ -91,7 +92,11 @@ Every user-visible change bumps the version, in all three places at once:
 - `.claude-plugin/marketplace.json`
 - `plugins/alis-build/hooks/mod/meta.ts` (`PLUGIN_VERSION`)
 
-`tests/release-guard.sh` fails when they disagree. Use a patch bump for fixes
+`tests/release-guard.sh` fails when they disagree. It also checks the agents: each
+`agents/*.md` is named after its file, has a description, starts with the same shared
+block (the text before `# Your part`) byte for byte, carries no `{{placeholder}}`, and is
+named by both `hooks/agent-manual.py`'s `SECTIONS` and the `SubagentStart` matcher in
+`hooks/hooks.json`. Use a patch bump for fixes
 and a minor bump for features. Maintainers tag releases `vX.Y.Z` on `main`, and
 a tag build runs the guard in strict mode, which also fails on any leftover
 `__PLACEHOLDER__` marker.

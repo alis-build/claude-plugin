@@ -164,6 +164,18 @@
           }
         ]
       }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "^alis:(ideate|platform|dbd|support)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/agent-manual.sh\"",
+            "timeout": 60
+          }
+        ]
+      }
     ]
   }
 }

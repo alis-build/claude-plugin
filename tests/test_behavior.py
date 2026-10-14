@@ -23,6 +23,7 @@ def load(name, path):
 hook = load("cli_hook", HOOKS / "cli-hook.py")
 sync = load("sync_skills", HOOKS / "sync-skills.py")
 secrets = load("secrets_hook", HOOKS / "secrets-hook.py")
+manual = load("agent_manual", HOOKS / "agent-manual.py")
 import routing_eval
 
 
@@ -337,6 +338,124 @@ class LifecycleTests(unittest.TestCase):
                 self.assertEqual(p.stdout, expected)
 
 
+STUB_ALIS = r"""#!/bin/sh
+# A stand-in alis for the manual hook: logs every call, answers docs, help and version.
+echo "$*" >> "$ALIS_TEST_LOG"
+case " ${ALIS_TEST_FAIL:-} " in *" $* "*) echo boom >&2; exit 1 ;; esac
+case "$*" in
+  "version --json") echo '{"version":"9.9.9"}' ;;
+  "docs --list") printf 'output      the output contract\nexit-codes  what each exit code means\nsafety      hard limits\ncontext     package ids and cwd\ndbd         define build deploy recipes\n' ;;
+  docs\ *) printf '# Topic %s\n\nWords about %s.\n' "$2" "$2" ;;
+  "--help") printf 'Stay in flow.\n\nUsage:\n  alis [command]\n\nAvailable Commands:\n  define      Define a service\n  operations  Inspect operations\n  environment Manage environments\n  help        Help about any command\n\nFlags:\n  -h, --help   help for alis\n' ;;
+  "operations --help") printf 'Inspect operations.\n\nUsage:\n  alis operations [command]\n\nAvailable Commands:\n  describe    Show an operation\n  wait        Wait for an operation\n  help        Help about any command\n\nFlags:\n  -h, --help   help for operations\n\nGlobal Flags:\n      --json   output as JSON\n\nUse "alis operations [command] --help" for more information about a command.\n' ;;
+  *" --help") printf 'Leaf help for %s.\n\nFlags:\n  -h, --help   help\n\nGlobal Flags:\n      --json   output as JSON\n\nUse "alis x [command] --help" for more information about a command.\n' "$1" ;;
+  *) echo "unknown: $*" >&2; exit 1 ;;
+esac
+"""
+
+
+class AgentManualTests(unittest.TestCase):
+    """SubagentStart: the alis CLI's own docs and help, read on this machine, written to a file and
+    introduced by a cover sheet under Claude Code's 10,000-character cap."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
+        self.home = Path(self.tmp.name)
+        bindir = self.home / "bin"; bindir.mkdir()
+        (bindir / "alis").write_text(STUB_ALIS); (bindir / "alis").chmod(0o700)
+        self.log = self.home / "calls.log"
+        self.env = {"HOME": str(self.home), "PATH": str(bindir) + os.pathsep + "/usr/bin:/bin",
+                    "CLAUDE_PLUGIN_ROOT": str(HOOKS.parent), "PYTHONDONTWRITEBYTECODE": "1", "ALIS_TEST_LOG": str(self.log)}
+
+    def run_hook(self, payload, **env):
+        p = subprocess.run(["bash", str(HOOKS / "agent-manual.sh")], input=json.dumps(payload), text=True, capture_output=True, env=dict(self.env, **env), timeout=60)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        return p.stdout
+
+    def calls(self):
+        return self.log.read_text().splitlines() if self.log.exists() else []
+
+    def start(self, agent="alis:dbd", event="SubagentStart"):
+        return {"session_id": "abc", "hook_event_name": event, "agent_type": agent, "agent_id": "agent-1", "cwd": str(self.home)}
+
+    def cover(self, out):
+        answer = json.loads(out)
+        self.assertEqual(set(answer), {"hookSpecificOutput"})
+        self.assertEqual(set(answer["hookSpecificOutput"]), {"hookEventName", "additionalContext"})
+        self.assertEqual(answer["hookSpecificOutput"]["hookEventName"], "SubagentStart")
+        return answer["hookSpecificOutput"]["additionalContext"]
+
+    def test_only_a_specialist_starting_gets_a_manual(self):
+        self.assertEqual(self.run_hook(self.start("Explore")), "")
+        self.assertEqual(self.run_hook(self.start("alis:coding")), "")
+        self.assertEqual(self.run_hook(dict(self.start(), agent_type=None)), "")
+        self.assertEqual(self.run_hook(self.start(event="SessionStart")), "")
+        self.assertEqual(self.run_hook(self.start(), ALIS_AGENT_MANUAL="off"), "")
+        self.assertEqual(self.run_hook("not a dict"), "")
+        self.assertEqual(self.calls(), [])
+        self.assertEqual(self.run_hook(self.start(), PATH="/usr/bin:/bin"), "")  # no alis on PATH
+        self.assertEqual(json.loads((self.home / ".alis/claude-agent-manual-health.json").read_text())["status"], "cli-missing")
+
+    def test_manual_is_read_from_the_cli_once_per_version_and_the_cover_names_it(self):
+        cover = self.cover(self.run_hook(self.start()))
+        path = self.home / ".alis/claude-agent-manual/9.9.9/dbd.md"
+        self.assertTrue(path.is_file())
+        self.assertIn(str(path), cover)
+        self.assertLess(len(cover), 10000)
+        for line in ("- `alis docs dbd` - define build deploy recipes", "- `alis operations wait` - Wait for an operation", "- `alis environment` - Manage environments"):
+            self.assertIn(line, cover)
+        self.assertIn("Read it with the Read tool before your first alis command", cover)
+        import re
+        line = int(re.search(r"- `alis operations wait` - Wait for an operation \(line (\d+)\)", cover).group(1))
+        self.assertEqual(path.read_text().splitlines()[line - 1], "## alis operations wait --help")  # the cover's line numbers land on the section
+        text = path.read_text()
+        self.assertIn("printed by the alis CLI (9.9.9)", text)
+        for heading in ("## alis docs output", "## alis docs dbd", "## alis operations --help", "## alis operations wait --help", "## alis environment --help"):
+            self.assertIn(heading, text)
+        self.assertIn("Words about dbd.", text)
+        self.assertNotIn("Global Flags", text); self.assertNotIn("for more information", text)
+        self.assertNotIn("could not be read", text)
+        self.assertTrue(text.index("## alis docs output") < text.index("## alis docs dbd") < text.index("## alis define --help") < text.index("## alis operations wait --help"))
+        first = self.calls()
+        self.assertIn("docs dbd", first); self.assertIn("operations wait --help", first); self.assertNotIn("operations help --help", first)
+        health = json.loads((self.home / ".alis/claude-agent-manual-health.json").read_text())
+        self.assertEqual((health["status"], health["member"], health["cliVersion"], health["failed"]), ("built", "dbd", "9.9.9", 0))
+        self.assertEqual(self.cover(self.run_hook(self.start())), cover)   # cached: only the version is asked, no page
+        self.assertEqual([c for c in self.calls()[len(first):] if c != "version --json"], [])
+        self.assertEqual(json.loads((self.home / ".alis/claude-agent-manual-health.json").read_text())["status"], "cached")
+        self.assertIn("alis docs ideate", self.cover(self.run_hook(self.start("ideate"))))  # the bare member name works too
+
+    def test_a_failed_page_is_marked_and_not_cached(self):
+        cover = self.cover(self.run_hook(self.start(), ALIS_TEST_FAIL="docs safety"))
+        self.assertIn("## Could not be read on this machine", cover); self.assertIn("`alis docs safety`: exit 1: boom", cover)
+        path = self.home / ".alis/claude-agent-manual/9.9.9/dbd.md"
+        self.assertIn("## alis docs safety\n\n(could not be read: exit 1: boom. Run it yourself.)", path.read_text())
+        self.assertFalse((self.home / ".alis/claude-agent-manual/9.9.9/dbd.cover.md").exists())
+        self.assertEqual(json.loads((self.home / ".alis/claude-agent-manual-health.json").read_text())["status"], "partial")
+        before = len(self.calls())
+        self.assertNotIn("Could not be read", self.cover(self.run_hook(self.start())))  # read again, whole this time
+        self.assertGreater(len(self.calls()), before)
+
+    def test_version_comes_from_the_cli_cache_first_and_a_stale_cover_is_rebuilt(self):
+        (self.home / ".alis").mkdir(); (self.home / ".alis/versions-cache.json").write_text(json.dumps({"cliVersion": "v1.2.3"}))
+        self.cover(self.run_hook(self.start()))
+        self.assertTrue((self.home / ".alis/claude-agent-manual/1.2.3/dbd.md").is_file())
+        self.assertNotIn("version --json", self.calls())
+        cover = self.home / ".alis/claude-agent-manual/1.2.3/dbd.cover.md"
+        os.utime(cover, (0, 0))
+        before = len(self.calls())
+        self.cover(self.run_hook(self.start()))
+        self.assertGreater(len(self.calls()), before)
+
+    def test_the_cover_sheet_is_cut_to_the_cap(self):
+        blurbs = {("x",): "y"}
+        pages = {("docs", "output"): ("doc", "")}
+        pages.update({("group", "sub%d" % i, "--help"): ("help", "") for i in range(2000)})
+        cover = manual.cover_sheet("dbd", "9.9.9", Path("/m.md"), "text", {}, ("output",), ("group",), pages, blurbs, {})
+        self.assertLess(len(cover), 10000)
+        self.assertTrue(cover.endswith("- … (the rest is in the manual)\n"))
+
+
 class TagGuardTests(unittest.TestCase):
     """Function-hooks handshake: a shell hook steps aside only on its own token."""
 
@@ -366,15 +485,18 @@ class TagGuardTests(unittest.TestCase):
                 "handoff.sh": ("handoff", lambda out: "deny" in out),
                 "allow-alis-cli.sh": ("cli", lambda out: '"allow"' in out),
                 "sync-skills.sh": ("sync", lambda out: Path(home, "synced").exists()),
+                # The manual hook keys off SubagentStart; the stub alis fails every page, and the cover sheet still says so.
+                "agent-manual.sh": ("manual", lambda out: "in its own words" in out, {"hook_event_name": "SubagentStart", "agent_type": "alis:dbd"}),
             }
-            for script, (token, check) in cases.items():
+            for script, (token, check, *overlay) in cases.items():
                 with self.subTest(script=script):
+                    payload = dict(base, **(overlay[0] if overlay else {}))
                     for tag in ("", "other primer-x", "handoffs"):
-                        self.assertEqual(self.run_hook(script, dict(base, alis_module=tag), env), self.run_hook(script, base, env))
-                    self.assertTrue(check(self.run_hook(script, base, env)))
+                        self.assertEqual(self.run_hook(script, dict(payload, alis_module=tag), env), self.run_hook(script, payload, env))
+                    self.assertTrue(check(self.run_hook(script, payload, env)))
                     Path(home, "synced").unlink(missing_ok=True)
-                    self.assertEqual(self.run_hook(script, dict(base, alis_module="cli " + token + " suggest"), env), "")
-                    self.assertEqual(self.run_hook(script, dict(base, alis_module=token), env), "")
+                    self.assertEqual(self.run_hook(script, dict(payload, alis_module="cli " + token + " suggest"), env), "")
+                    self.assertEqual(self.run_hook(script, dict(payload, alis_module=token), env), "")
             self.assertFalse(Path(home, "synced").exists())
 
     def test_pretooluse_hooks_step_aside_on_a_fresh_session_marker_only(self):

@@ -57,6 +57,50 @@ for entries in config["hooks"].values():
                 raise SystemExit(f"FAIL: missing/non-executable hook: {path.name}")
 for path in (root / "hooks").glob("*.py"):
     ast.parse(path.read_text(), filename=str(path))
+
+# 3b. Agents: every agents/*.md is a plugin subagent whose frontmatter names it after
+#     its file, has a description, and whose body starts with the one shared block (the
+#     text before "# Your part") byte for byte; no v2 template placeholder ({{owner}},
+#     {{lock}}, …) may ship. The manual hook's SECTIONS and the SubagentStart matcher in
+#     hooks.json must name exactly these agents.
+import importlib.util, re
+agents = sorted((root / "agents").glob("*.md"))
+if not agents:
+    raise SystemExit("FAIL: no agents under plugins/alis-build/agents")
+shared = None
+for path in agents:
+    text = path.read_text()
+    if "{{" in text:
+        raise SystemExit(f"FAIL: {path.name} carries a template placeholder")
+    parts = text.split("---\n", 2)
+    if len(parts) < 3 or parts[0] != "":
+        raise SystemExit(f"FAIL: {path.name} has no frontmatter")
+    front = dict(line.split(":", 1) for line in parts[1].splitlines() if re.match(r"^[a-z][A-Za-z]*:", line))
+    front = {k: v.strip() for k, v in front.items()}
+    if front.get("name") != path.stem:
+        raise SystemExit(f"FAIL: {path.name} frontmatter name is {front.get('name')!r}, not {path.stem!r}")
+    if "description" not in front:
+        raise SystemExit(f"FAIL: {path.name} has no description")
+    body = parts[2]
+    if "\n# Your part" not in body:
+        raise SystemExit(f"FAIL: {path.name} has no '# Your part' heading")
+    head = body.split("\n# Your part", 1)[0]
+    if shared is None: shared = head
+    elif head != shared:
+        raise SystemExit(f"FAIL: {path.name}'s shared block differs from {agents[0].name}'s")
+names = {p.stem for p in agents}
+spec = importlib.util.spec_from_file_location("agent_manual", root / "hooks/agent-manual.py")
+sys.path.insert(0, str(root / "hooks"))
+manual = importlib.util.module_from_spec(spec); spec.loader.exec_module(manual)
+if set(manual.SECTIONS) != names:
+    raise SystemExit(f"FAIL: agent-manual.py SECTIONS {sorted(manual.SECTIONS)} != agents {sorted(names)}")
+matchers = [entry.get("matcher", "") for entry in config["hooks"].get("SubagentStart", [])]
+listed = set()
+for m in matchers:
+    found = re.fullmatch(r"\^alis:\(([a-z|]+)\)\$", m)
+    if found: listed |= set(found.group(1).split("|"))
+if listed != names:
+    raise SystemExit(f"FAIL: SubagentStart matcher names {sorted(listed)}, agents are {sorted(names)}")
 PY
 
 # 4. Function hooks: every module hooks.json names must exist,

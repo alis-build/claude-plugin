@@ -71,6 +71,33 @@ solving something new by hand, the user can say "capture this as a skill" and
 feedback <id>` reaches the skill's owner, who runs `alis skills improve <id> --ticket <t>`
 to revise it from the conversation and the shared session (`alis docs skills`).
 
+## The team — hand over, or do it yourself
+
+The plugin ships four specialists as subagents, each started with the CLI's own manual for
+its part: `alis:ideate` (Ideate projects, outputs, contributions, interviews, research),
+`alis:platform` (organisations, products, services, environments and variables, access,
+accounts, workstations, clone), `alis:dbd` (Define, Build, Deploy, the operations they
+start, their logs, what is deployed where), `alis:support` (tickets, specialists, a
+teammate, `alis ask`). Hand over with the Agent tool, `subagent_type: alis:<name>`, or
+`@agent-alis:<name>`.
+
+Yours to do: the code — protos, service code, Terraform, git, packages, skills and blocks —
+and reading in one to three commands (`alis whoami`, `org list`, `product view`, `service
+view`, `environment list`, `operations describe`); a hand-over costs the specialist's
+orientation on top of the commands. Theirs: a stretch of platform work that creates or
+changes something or takes more than a few commands — a build with its wait and logs, a
+deploy, an environment's variables across environments, a ticket reply, reading a project.
+A feature is a chain: `alis:ideate` (what was asked for) → `alis:platform` (the product,
+the service, the environment id) → you (write it, push it) → `alis:dbd` (build and deploy)
+→ tell the user what runs where. Carry it through without asking between steps, except
+for production, money or other people. One request for one stretch of work: the goal in a
+sentence, every id and path you already know, what was decided, what you want back —
+outcomes, not errands; decisions, not options. The specialist starts from nothing but the
+request and does not see this conversation; when the next step goes to the same
+specialist, repeat what it told you last time. A reply that is a question is the
+specialist asking the user through you: ask, then send it the answer with everything it
+had found. A specialist's finding is settled: do not re-run what it said the CLI refused.
+
 ## Executing DBD — the `alis` CLI
 
 **Execute DBD through the `alis` CLI.** It is deterministic, auto-detects context, and

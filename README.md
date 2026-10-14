@@ -13,6 +13,7 @@ Use this plugin to let Claude Code work with Alis Build organisations, products,
 ## What You Get
 
 - A standing Define → Build → Deploy primer, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required. The full primer loads inside `~/alis.build` workspaces; other directories get a compressed digest when the `alis` CLI is installed, and nothing otherwise (override with `ALIS_PRIMER=full|digest|off`)
+- Four specialist subagents - `alis:ideate`, `alis:platform`, `alis:dbd` and `alis:support` - ported from the Alis agent's own team: each is told only its part of the `alis` CLI, starts with the CLI's own manual for it (read from the installed CLI, so it is the version it runs), and hands a report back. The session keeps the code and quick reads to itself and hands a stretch of platform work over
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
 - Quiet, local-first discovery and capture skills: `alis:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalog in ~40ms, and loads a registry skill only on a distinctive match; catalog metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
 - Wake phrases (`alis, …`, `capture this as a skill`) route to `alis:discover` or `alis:capture` from any directory (a `UserPromptSubmit` hook backed by `alis skills suggest --hook`); the CLI's unsolicited per-prompt skill suggestions are dropped, because matching whole prompts suggested unrelated skills too often
@@ -239,6 +240,56 @@ The handoff command follows Claude's normal permission handling.
 
 Discovery is skill-native: describe platform-shaped work in your own words and the `alis:discover` skill routes it — local catalog probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis:capture` saves it for your team. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
 
+## Agents
+
+The Alis agent that runs on the platform (`alis.os.agent.v2`) works as a team: a
+coordinator and specialists, each told only its own `alis` commands and given the
+CLI's own documentation for them at startup. This plugin ships the four CLI
+specialists as Claude Code subagents under `plugins/alis-build/agents/`; the
+session itself plays the coordinator and the engineer, as it does today.
+
+| Agent | Give it |
+|---|---|
+| `alis:ideate` | What should be built and why: an Alis Ideate project, its outputs, contributions, interviews and research; adding a note, files, an interview or a research run |
+| `alis:platform` | The shape of the workspace: organisations, products, services, environments and their variables, access, accounts, workstations, cloning a product |
+| `alis:dbd` | Define, Build and Deploy on pushed commits, the operations they start, their logs, Terraform previews, what is deployed where |
+| `alis:support` | People: reading and replying to tickets, writing to a build specialist or a teammate with the session attached, diagnostics, `alis ask` |
+
+Claude hands over with the Agent tool (`subagent_type: alis:<name>`) when a
+stretch of platform work creates or changes something or takes more than a few
+commands; a lookup of one to three commands and all code work stay in the
+session. You can name one yourself: `@agent-alis:dbd build and deploy
+marvel.sm.helloworld.v1 to the development environment`. The primer's "The
+team" section carries the routing rules; a specialist starts from nothing but
+the request, so the request carries every id and path, and its final message is
+its report.
+
+**The manual.** When a specialist starts, a `SubagentStart` hook
+(`hooks/agent-manual.sh`) does what the platform agent does at startup: it runs
+`alis docs <topic>` for the specialist's topics and `alis <group> [<sub>]
+--help` for its command families, trims them, and writes them to
+`~/.alis/claude-agent-manual/<cli version>/<agent>.md`. Claude Code caps what a
+hook can add to a subagent's context at 10,000 characters, so the hook injects a
+cover sheet - where the file is, and the topics and the commands one line each with
+the line their section starts on - and the specialist reads the file, or one section
+of it, before its first `alis` command. The manual is
+rebuilt when the CLI version changes and once a day; `ALIS_AGENT_MANUAL=off`
+disables the hook, and `~/.alis/claude-agent-manual-health.json` records the
+last build (member, version, pages, failures). The reads run with
+`ALIS_NO_TELEMETRY=1` and never run the specialist's own commands.
+
+Inside a specialist the plugin's Bash gate applies exactly as in the session:
+structured workflows run, and a production deploy, `--approve`, `--reveal` and
+the destructive verbs ask you first. Each specialist keeps its own memory under
+`~/.claude/agent-memory/alis-<name>/` (Claude Code's `memory: user`, which needs
+auto memory on); nothing is shared between specialists.
+
+To see a specialist start: `claude --plugin-dir /absolute/path/to/plugins/alis-build
+--debug-file /tmp/claude-debug.txt`, ask for something DBD-shaped, then grep the
+debug file for `SubagentStart`; the subagent's transcript under
+`~/.claude/projects/<project>/<session>/subagents/` shows the cover sheet and the
+`Read` of the manual.
+
 ## Troubleshooting
 
 If Claude asks you to paste a support ticket or tries to reconstruct private
@@ -280,7 +331,9 @@ step aside for a job the module lists in it, and expires after an hour.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository layout, versioning and
 pull requests.
 
-Run `RELEASE_GUARD_STRICT=1 tests/release-guard.sh`, the two shell hook tests,
+Run `RELEASE_GUARD_STRICT=1 tests/release-guard.sh` (which also checks that every
+`agents/*.md` is named after its file, shares one preamble and is listed by the manual
+hook and the `SubagentStart` matcher), the two shell hook tests,
 `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_behavior.py`, and
 `tests/routing-eval.sh --dry-run`. Behavioral tests use temporary homes and stub
 executables; no deployment, uninstall or message is sent.

@@ -45,6 +45,12 @@ match (`distinctive` ≥ 3); no match means no skill and no narration. Generic c
 skill owns execution. After solving something new by hand, the user can say "capture this
 as a skill" and `alis:capture` saves it for their team.
 
+Specialists `alis:dbd` (build/deploy/operations), `alis:platform` (products, services,
+environments), `alis:ideate` and `alis:support` are subagents started with the CLI's own
+manual: Agent tool, `subagent_type: alis:<name>`. Code and reads of one to three commands
+are yours; a stretch of platform work goes to a specialist with every id you know. Their
+finding is settled.
+
 Production changes need explicit confirmation: a production deploy exits with code 3 until
 re-run with `--confirm-production`, and that flag requires the user's explicit approval —
 never invent it; the plugin asks the user before it runs (and before an uninstall,
