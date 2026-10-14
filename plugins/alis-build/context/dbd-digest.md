@@ -60,7 +60,9 @@ Use `environment list <org>.<product> --json` for target IDs and production flag
 without variable values. Check CLI help when using a newly introduced command.
 Start long DBD work with `--async`; retain `name` and run `next`. Start/wait/describe
 use common top-level fields (`schemaVersion: 1`, `done`, `status`, `version`); legacy
-start `metadata` is different from typed wait output. Read full JSON and errors.
+start `metadata` is different from typed wait output. Read full JSON and errors. A
+deployment's `state` `RUNNING` means up and serving (the state after a successful
+deploy), not a deploy in progress; `done: true` with `status: succeeded` is finished.
 Claude background-task IDs are separate from Alis operation names; stopping a local
 wait never cancels server work. Use logs and build cancellation with a matching
 CLI/backend release. Diagnose auth, package DNS and platform failures separately.
