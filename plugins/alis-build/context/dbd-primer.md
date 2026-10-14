@@ -105,6 +105,11 @@ directory.
   `version`, `notes` and `logsUri` when available (`schemaVersion: 1`). Start also
   retains legacy `metadata`; do not use that parser for wait/describe. With older
   CLIs, a missing `done` means false. Check errors before claiming success.
+  `status` is the operation's; a deployment's `state`/`status` is the deployed
+  service's lifecycle, where `RUNNING` means up and serving — the steady state
+  after a successful deploy, not a deploy in progress (newer CLIs add
+  `live: true` beside it). `done: true` with `status: succeeded` is finished:
+  do not keep polling it.
 - **Never poll with `sleep` loops.** Long operations print an operation name — block on it
   with `alis operations wait <op> --json` (`--async` results carry the exact command in
   `next`); `alis operations list --active --json` shows what is still running.
