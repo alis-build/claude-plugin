@@ -1,6 +1,6 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
-import { commandPath, decide, GUIDANCE, SECRET_REASON } from '../hooks/mod/cli-gate'
+import { BARE_REASON, commandPath, decide, GUIDANCE, SECRET_REASON } from '../hooks/mod/cli-gate'
 import { shlexSplit } from '../hooks/mod/shell'
 
 tier('user')
@@ -111,9 +111,19 @@ describe('cli-gate', () => {
     expect(decide({ toolInput: { command: 42 } })).toEqual({ matched: false })
   })
 
-  test('an alis line with only flags is matched but undecided', () => {
+  test('an alis line with only flags is matched but undecided, unless it asks for help or the version', () => {
     expect(decision('alis --json')).toEqual({ matched: true })
-    expect(decision('alis --help')).toEqual({ matched: true })
+    for (const command of ['alis --help', 'alis -h', 'alis -v', 'alis --version']) {
+      expect(decision(command)).toEqual({ matched: true, decision: 'allow', reason: BARE_REASON })
+    }
+  })
+
+  test('help on a guarded verb is read-only, but a help token taken as a flag value is not help', () => {
+    for (const command of ['alis environment variables alis.os --help', 'alis blocks uninstall blocks/example -h', 'alis deploy x --confirm-production --help']) {
+      expect(decision(command, 'plan')).toMatchObject({ decision: 'allow' })
+    }
+    expect(decision('alis environment set dev --name --help')).not.toHaveProperty('decision')
+    expect(decision('alis blocks uninstall --name -h')).toMatchObject({ decision: 'ask' })
   })
 
   test('read commands are allowed in plan but execution and the internal protocol are not', () => {

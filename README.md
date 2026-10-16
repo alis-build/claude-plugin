@@ -106,6 +106,8 @@ Guarded actions (`--confirm-production`, `--approve`, `--yes`, block uninstall, 
 
 After every tool call the plugin looks for secret-looking values in the result and in the call's own arguments (Stripe, GitHub, npm, PyPI, Linear, SendGrid, AWS, Google and Slack keys, connection strings with passwords, private keys, `NAME=value` lines whose upper-case name says secret, and every row an `alis environment … --reveal` printed). With the function hooks (Claude Code 2.1.287 or later), a tool result is masked before Claude reads it: each value becomes `[REDACTED:kind]`, its name kept (`DB_PASSWORD=[REDACTED:assignment]`), and a toast names the kinds. The value never goes to the model, but the session's transcript file on your machine still holds the raw output, because Claude Code stores a structured copy of each tool result that hooks cannot rewrite. Two things cannot be masked and get a warning instead: the values in a call's own arguments, and what an approved `alis environment … --reveal` printed, which reaches Claude as you asked. A warned-about value cannot be unprinted, so the plugin shows which kinds landed and that they need rotating, and tells the model not to repeat them. Without the function hooks, every hit gets that warning. Values never appear in a toast or warning, and each value is reported once per session. The CLI masks its own uploads and `environment variables` output since 1.146.1; this covers `cat .env`, `printenv`, a written `.env` and the like.
 
+On the manual automation tier the CLI refuses every Define/Build/Deploy, `authorise` and package change without `--approve`. The hook reads the tier the CLI itself enforces (the server tier cached in `~/.alis/profile-cache.json`, tightened by `approvals.maxTier` in `~/.alis/settings.json`), and on `manual` asks before those workflows with `--approve` already added, instead of letting the CLI refuse them once. A `define --dry-run`, help and reads still run without asking; a missing cache keeps today's behaviour.
+
 `ALIS_ALLOWED_SUBCMDS` restricts automatic allows (for example `context doctor operations`); it does not disable required confirmation. Missing Python causes the permission hook to fall back to Claude's normal handling.
 
 ## Function hooks
@@ -149,8 +151,9 @@ With the module active:
 - the same dialog asks before an `alis blocks uninstall`, an
   `alis environment destroy`/`unset` and an `alis environment … --reveal`, in every
   permission mode including auto, which could otherwise answer the native prompt on
-  its own. A plain `--approve` (a build or non-production deploy under a manual
-  automation tier) gets no dialog: the primer tells Claude that your explicit request
+  its own. On the manual automation tier it also asks before each Define/Build/Deploy,
+  `authorise` and package change, with `--approve` added. A plain `--approve` Claude
+  added itself gets no dialog: the primer tells Claude that your explicit request
   for that action is the approval, and to ask in chat when it was only implied
 - `/alis handoff [alias]` opens a pane beside the transcript instead of the CLI's
   separate progress window: the target, the phase, a prominent "safe to close the

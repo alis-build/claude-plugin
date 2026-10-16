@@ -7,7 +7,8 @@ import { PARITY } from './fixtures/parity'
 tier('user')
 
 // tests/fixtures/parity.ts holds what hooks/cli-hook.py decide() answered for
-// each command × permission mode × ALIS_ALLOWED_SUBCMDS; the port must agree
+// each command × permission mode × ALIS_ALLOWED_SUBCMDS × automation tier; the
+// port must agree
 // on every case. Regenerate it with (from the repo root):
 //
 //   python3 - <<'PY'
@@ -15,7 +16,9 @@ tier('user')
 //   HOOKS = Path("plugins/alis-build/hooks").resolve(); sys.path.insert(0, str(HOOKS))
 //   spec = importlib.util.spec_from_file_location("cli_hook", HOOKS / "cli-hook.py")
 //   m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-//   ... (same command list, modes auto/plan/default, allowed ""/"context doctor")
+//   ... (same command list, modes auto/plan/default, allowed ""/"context doctor",
+//        tier ""/"manual" passed as decide(payload, tier or None), HOME pointed at
+//        an empty directory so no ~/.alis cache leaks into the answers)
 //   PY
 describe('parity', () => {
   test('decide() agrees with the Python gate on every recorded case', () => {
@@ -27,16 +30,17 @@ describe('parity', () => {
           permissionMode: c.mode,
           sessionId: 'session-a',
           allowedSubcmds: c.allowed,
+          automationTier: c.tier || undefined,
           toolInput: { command: c.command, timeout: 120000 },
         }),
       )
       const theirs = fromPython(c.python)
       if (JSON.stringify(mine) !== JSON.stringify(theirs)) {
-        mismatches.push(`${JSON.stringify(c.command)} mode=${c.mode} allowed=${JSON.stringify(c.allowed)}\n  ts: ${JSON.stringify(mine)}\n  py: ${JSON.stringify(theirs)}`)
+        mismatches.push(`${JSON.stringify(c.command)} mode=${c.mode} allowed=${JSON.stringify(c.allowed)} tier=${c.tier}\n  ts: ${JSON.stringify(mine)}\n  py: ${JSON.stringify(theirs)}`)
       }
     }
     expect(mismatches).toEqual([])
-    expect(PARITY.length).toBeGreaterThan(300)
+    expect(PARITY.length).toBeGreaterThan(800)
   })
 })
 

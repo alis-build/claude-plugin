@@ -8,20 +8,24 @@
 // Abort or a dismissed dialog refuses it. Where nothing draws (a -p run)
 // the gate's native ask is all there is.
 //
-// A plain --approve or --yes (a build, a define, a non-production deploy
-// under a manual automation tier) gets no dialog: the person's explicit
-// request for that work is the approval, and the primer tells Claude to ask
-// in chat when the request was only implied.
+// On the manual automation tier a structured workflow (a define, build,
+// deploy, authorise or package change) asks here too: the gate adds
+// --approve, and the person's answer is the approval the CLI wants. A plain
+// --approve or --yes Claude added itself gets no dialog: the person's
+// explicit request for that work is the approval, and the primer tells
+// Claude to ask in chat when the request was only implied.
 import { classicState } from './classic'
-import { commandPath, decide, SECRET_REASON } from './cli-gate'
+import { commandPath, decide, MANUAL_REASON, SECRET_REASON } from './cli-gate'
 import { approvedCalls, ASK_OPTIONS, confirmDeploy, deployCallOf } from './deploy-dialog'
 import type { Host } from './host'
 import { literalArgv } from './shell'
+import { automationTierOf } from './tier'
 
 export const REFUSE_REASON = 'The person refused this alis command in the alis confirmation dialog. Do not retry it or work around it; ask them what to do instead.'
 
 /** The question for a guarded command, naming it exactly as it will run. */
-export function guardQuestionOf(command: string, secrets: boolean): string {
+export function guardQuestionOf(command: string, secrets: boolean, manual = false): string {
+  if (manual) return `Your Alis automation tier is manual. Claude wants to run this alis command with --approve. Allow it?\n\n${command}`
   return secrets
     ? `Claude wants to run an alis command that prints secret values into the session. Allow it?\n\n${command}`
     : `Claude wants to run an alis command that cannot be undone. Allow it?\n\n${command}`
@@ -56,15 +60,17 @@ export async function confirmGuarded<E extends object, R>(
     toolInput: { command },
     permissionMode: classicState.permissionMode,
     allowedSubcmds: await host.allowedSubcmds(),
+    automationTier: await automationTierOf(host),
   })
   if (!decision.matched || decision.decision !== 'ask') return next(e)
   const secrets = decision.reason === SECRET_REASON
-  if (!secrets && !isDestructive(command)) return next(e)
+  const manual = decision.reason === MANUAL_REASON
+  if (!secrets && !manual && !isDestructive(command)) return next(e)
   if (!(await host.surface().catch(() => null))) return next(e)
 
   let answer: string
   try {
-    answer = await host.ask(guardQuestionOf(command, secrets), { options: ASK_OPTIONS, header: 'Alis' })
+    answer = await host.ask(guardQuestionOf(command, secrets, manual), { options: ASK_OPTIONS, header: 'Alis' })
   } catch (error) {
     host.debug(`guard: the confirmation was dismissed: ${String(error)}`)
     return { deny: REFUSE_REASON }
