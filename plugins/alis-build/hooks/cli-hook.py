@@ -37,6 +37,14 @@ READ_PATHS = {
 # Arbitrary process runners and messaging verbs do not get a blanket allow.
 WORKFLOW_TOP = {"define", "build", "deploy", "authorise"}
 WORKFLOW_PATHS = {("packages", x) for x in ("install", "upgrade", "add")}
+# On the manual automation tier the CLI refuses every mutating command without
+# --approve (APPROVAL_REQUIRED). It decides from its effective tier: the server
+# tier cached in ~/.alis/profile-cache.json, tightened by approvals.maxTier in
+# ~/.alis/settings.json (approval.EffectiveTier). The gate reads the same two
+# files, so it can confirm a workflow up front instead of letting it bounce.
+TIERS = ("manual", "balanced", "autonomous")
+MANUAL_REASON = ("Your Alis automation tier is manual, so the CLI needs approval for this action. "
+                 "Confirm this exact Alis action and its target; the plugin adds --approve.")
 ALIASES = {"env": "environment", "envs": "environment", "environments": "environment", "block": "blocks", "op": "operations", "ops": "operations"}
 
 
@@ -123,12 +131,26 @@ def client_plugin():
         return None
 
 
+def automation_tier():
+    """The CLI's effective automation tier, or None when neither file names one."""
+    def read(name, *keys):
+        try:
+            value = json.loads((Path.home() / ".alis" / name).read_text())
+            for key in keys: value = value.get(key)
+            value = value.strip().lower()
+            return value if value in TIERS else None
+        except (OSError, ValueError, TypeError, AttributeError):
+            return None
+    known = [t for t in (read("profile-cache.json", "automationTier"), read("settings.json", "approvals", "maxTier")) if t]
+    return min(known, key=TIERS.index) if known else None
+
+
 def insert_flags(argv, flags):
     split = argv.index("--") if "--" in argv else len(argv)
     return argv[:split] + flags + argv[split:]
 
 
-def decide(payload):
+def decide(payload, tier=None):
     tool_input = payload.get("tool_input") or {}
     if not isinstance(tool_input, dict): return {}
     command = tool_input.get("command", "")
@@ -183,8 +205,15 @@ def decide(payload):
             argv = insert_flags(argv, ["--approve"])
     elif allowed and top not in allowed:
         return {}
-    elif read_only or top in WORKFLOW_TOP or path in WORKFLOW_PATHS:
+    elif read_only:
         result.update(permissionDecision="allow", permissionDecisionReason="Alis structured CLI workflow; CLI automation and production gates remain in force.")
+    elif top in WORKFLOW_TOP or path in WORKFLOW_PATHS:
+        # A define --dry-run creates nothing, so the CLI does not gate it.
+        if tier == "manual" and not (top == "define" and "--dry-run" in flags):
+            result.update(permissionDecision="ask", permissionDecisionReason=MANUAL_REASON)
+            argv = insert_flags(argv, ["--approve"])
+        else:
+            result.update(permissionDecision="allow", permissionDecisionReason="Alis structured CLI workflow; CLI automation and production gates remain in force.")
     else:
         return {"hookSpecificOutput": result}
     # Identity travels with this call, never a shared file, and grants nothing.
@@ -204,7 +233,7 @@ def main():
         payload = json.load(sys.stdin)
         if not isinstance(payload, dict): return
         if served_by_module(payload, "cli"): return
-        response = decide(payload)
+        response = decide(payload, automation_tier())
         if response:
             observe("claude-plugin-health.json", permissionMode=payload.get("permission_mode", "unknown"), approvalSource="native-confirmation-and-cli-tier")
             print(json.dumps(response))
