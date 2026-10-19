@@ -27,7 +27,10 @@ self-documenting: `alis docs` and `alis <cmd> --help` are the source of truth. U
 hand-roll package-manager environments — `alis packages` handles the private registries
 and credentials for you. The working directory is the context — after `alis service new`,
 use `alis --cwd /absolute/buildFolder ...` before continuing. When a conversation
-references an Ideate project (`ideas/<id>`), run `alis ideate context <id>` first.
+references an Ideate project (`ideas/<id>`), run `alis ideate context <id>` first. Sharing an
+HTML page, report or file as a link is `alis artifacts create <folder> --title …
+--publish [--password-file <f> | --emails …] --json` (private, versioned, branded;
+bundle assets locally), not a Cloud Run deployment — see `alis docs artifacts`.
 
 If a local build cannot download private Alis packages, first run
 `alis packages install <pkg> --language go --json` (select the relevant language).
