@@ -21,6 +21,7 @@ allowed-tools:
   - "Bash(terminal-browser ls*)"
   - "mcp__terminal-browser__open"
   - "mcp__playwright"
+  - "mcp__alis-preview"
 ---
 
 # Frontend preview: see and drive a service's page
@@ -53,13 +54,21 @@ Read the result:
 
 - `opened: true`: the page is beside the conversation. Go to step 2.
 - `preview_pane: true`: this is a workstation whose shell has a browser
-  Preview pane, showing the browser your `playwright` MCP tools drive. Open
+  Preview pane: a real browser the person shares with you, with their tabs
+  and logins, which your `playwright` MCP tools drive and which opens beside
+  their terminals as you start browsing. Open your own tab first
+  (`browser_tabs` with `action: new`) when they have tabs open, then open
   the result's `url` with `browser_navigate` and drive it with the same tools
   (`browser_snapshot`, `browser_click`, `browser_type`,
   `browser_console_messages`, `browser_take_screenshot`), not
-  `terminal-browser`; skip step 2. If the person is not watching, pass on the
-  `hint`: they click Preview in the browser shell (`shell_url`). Leave the
-  page open when you finish.
+  `terminal-browser`; skip step 2. Never close a tab you did not open. On a
+  sign-in page, a 2FA prompt or anything only the person can answer, call
+  `preview_wait_for_person` from the `alis-preview` MCP with what you need
+  ("sign in to GitHub"): they do it in the pane and press Continue, and you
+  carry on in the same tab. `preview_show` brings a tab in front of them;
+  `preview_notes` reads notes they made with Annotate that reached no
+  terminal. If the person has not got the shell open, pass on the `hint`
+  (`shell_url`). Leave the page open when you finish.
 - `workstation_url`: this machine is a workstation, whose browser terminal
   cannot draw the browser. Give the user that address and the `hint`. Do not retry.
 - `guessed: true`: no frontend or port was found, so the page may not answer.
@@ -125,8 +134,11 @@ page and check the result.
 
 Inside herdr the user can also press `prefix+f` to open the same preview
 beside any pane. A workstation shell's Preview pane sends the same kind of
-message from its Annotate button; check the result there with your
-`playwright` tools.
+message from its Annotate button: `> [preview] <selector> "<text>" on <url>
+(source: <file>) | <comment> (screenshot: <path>) (note: <path>)`, several
+notes as one line listing them. Read the screenshot and the note's JSON
+when the selector is not enough, make the change, and check the result
+there with your `playwright` tools: the person is looking at that browser.
 
 ## Not for
 
