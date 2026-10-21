@@ -12,7 +12,8 @@ Define, Build, Deploy. Protobuf contracts live in the org's define repo
 (`~/alis.build/<org>/define`); Define pins the contract to a pushed commit and generates
 language packages plus platform artifacts (Spanner protobundles, Pub/Sub topics). Go
 services (neurons) live in product build repos (`~/alis.build/<org>/build/<product>`);
-Build runs from the latest *pushed* commit — commit and push before building. Deploy
+Build runs from the latest *pushed* commit — commit and push before building (`--local`
+builds that commit's images with the machine's Docker instead, when there is one). Deploy
 provisions the runtime (Cloud Run plus supporting resources) from the neuron's Terraform
 under `infra/`; validate via the generated playground.
 

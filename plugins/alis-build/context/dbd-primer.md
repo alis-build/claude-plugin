@@ -51,6 +51,12 @@ ticket reading is unsupported from an empty filtered help search.
   identically, compare the commit hash in the build output against your fix before
   re-diagnosing. Docker build paths are relative to the neuron folder (a top-level
   Dockerfile uses `.`, not `demo/v1`).
+- **Local builds.** `alis build <pkg> --json --local` builds the images on this machine with
+  Docker instead of on the platform's builder — the same pushed commit (staged in a temporary
+  worktree), credentials and linux/amd64 platform — pushes them and registers the version;
+  `--deploy` chains as usual and Docker's output streams to stderr. Use it when Docker is
+  available and the platform builder is slow or queued. `LOCAL_BUILD_UNAVAILABLE` (no Docker,
+  an agent sandbox) means drop `--local`: the envelope's retry is that command.
 
 ## Deploy — provision and update the runtime
 
