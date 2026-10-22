@@ -197,19 +197,13 @@ the engine still marks the API as subject to change between releases.
 
 ### See the frontend
 
-The `frontend-preview` skill shows a service's web frontend in
-[terminal-browser](https://terminal-browser.com), a real browser drawn in a
-terminal pane beside Claude, and drives it: it runs `alis preview --json`,
-then `terminal-browser action` to snapshot, click, fill and read the console,
-and ends with `terminal-browser action done`. Select an element in the browser
-and press ctrl+g to send it to Claude as the thing to change. With the dev
-server on a workstation, `alis preview --ssh alis-<org>-<id>` keeps the
-browser on the laptop and routes its traffic through the workstation.
-
-It needs terminal-browser (`alis setup` offers it; `terminal-browser setup`
-links its own skill) and a terminal that draws kitty graphics and can split:
-Ghostty, kitty, WezTerm, tmux or herdr. A workstation's browser terminal cannot
-draw it, so there `alis preview` returns the port's public address instead.
+The `frontend-preview` skill shows a service's web frontend in the browser
+Claude's own tools drive and checks it there: it runs `alis preview --json`
+for the address, then opens it with Claude in Chrome or a Playwright MCP to
+snapshot, click, fill and read the console in your own browser. Nothing is
+installed or launched by the CLI. On a workstation the shell's Preview pane
+shows the browser the agent drives, and its Annotate button sends Claude the
+element to change.
 
 ### Resume on my workstation
 
