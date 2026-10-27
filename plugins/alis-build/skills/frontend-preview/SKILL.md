@@ -129,8 +129,19 @@ message from its Annotate button; check the result there with your
 `playwright` tools. On a workstation the app's own port address
 (`https://<port>-<id>-ws.<org>.alis.dev`) carries the same Annotate in the
 person's own browser, and sends the same line with the element's screenshot
-and a note file holding its markup; check that page with your `playwright`
-tools too.
+and a note file holding its markup and the page's last console errors.
+
+That tab is yours to drive as well: the `alis-preview` MCP server's `page_*`
+tools (`page_tabs`, `page_snapshot`, `page_click`, `page_type`,
+`page_press_key`, `page_select_option`, `page_navigate`, `page_navigate_back`,
+`page_evaluate`, `page_screenshot`, `page_console`, `page_wait_for`) act in
+the person's own browser, with their logins and no shared Chromium in
+between. Call `page_tabs` first; when it lists a tab, prefer these over the
+`browser_*` tools, take a `page_snapshot` and use its `[ref=eN]` refs as
+targets, and take a fresh snapshot after the page changes. The person sees
+who is driving and can pause you; a paused tab answers with an error that
+says so. A `page_screenshot` may ask the person to share the tab once; the
+snapshot never does.
 
 ## Not for
 
