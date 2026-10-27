@@ -126,7 +126,11 @@ page and check the result.
 Inside herdr the user can also press `prefix+f` to open the same preview
 beside any pane. A workstation shell's Preview pane sends the same kind of
 message from its Annotate button; check the result there with your
-`playwright` tools.
+`playwright` tools. On a workstation the app's own port address
+(`https://<port>-<id>-ws.<org>.alis.dev`) carries the same Annotate in the
+person's own browser, and sends the same line with the element's screenshot
+and a note file holding its markup; check that page with your `playwright`
+tools too.
 
 ## Not for
 
