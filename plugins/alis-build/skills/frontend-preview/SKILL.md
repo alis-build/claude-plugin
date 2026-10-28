@@ -2,8 +2,8 @@
 name: frontend-preview
 description: >-
   Show an Alis service's web frontend in a real browser beside the
-  conversation (terminal-browser, or a workstation shell's Preview pane) and
-  drive it: open the page, click through
+  conversation (terminal-browser, or the person's own tab of a workstation
+  port's address) and drive it: open the page, click through
   it, read its console and errors, screenshot it, check a UI change. Use when
   the user asks to see, open, preview, check or test the app, a page, a form
   or a UI change of a service with a web frontend, or sends an element from
@@ -17,10 +17,12 @@ when_to_use: >-
   questions.
 allowed-tools:
   - "Bash(alis preview *)"
+  - "Bash(alis run *)"
   - "Bash(terminal-browser action *)"
   - "Bash(terminal-browser ls*)"
   - "mcp__terminal-browser__open"
   - "mcp__playwright"
+  - "mcp__alis-preview"
 ---
 
 # Frontend preview: see and drive a service's page
@@ -32,7 +34,9 @@ the conversation, the user watches it, and you drive it.
 
 1. The dev server must answer. If it is not running, start `alis run` in the
    service folder as a background task (it stays in the foreground) and wait
-   until it listens.
+   until it listens. On a workstation pass `--port <n>` when the service
+   folder does not name its port, and `--share <email>` for each person who
+   should open the app and leave notes for you.
 2. Run `alis preview --json` in the service folder, or
    `alis --cwd <service folder> preview --json` from elsewhere. It opens the
    service's `.claude/launch.json` port, else the Makefile's `APP_URL`, else a
@@ -52,16 +56,20 @@ the conversation, the user watches it, and you drive it.
 Read the result:
 
 - `opened: true`: the page is beside the conversation. Go to step 2.
-- `preview_pane: true`: this is a workstation whose shell has a browser
-  Preview pane, showing the browser your `playwright` MCP tools drive. Open
-  the result's `url` with `browser_navigate` and drive it with the same tools
-  (`browser_snapshot`, `browser_click`, `browser_type`,
-  `browser_console_messages`, `browser_take_screenshot`), not
-  `terminal-browser`; skip step 2. If the person is not watching, pass on the
-  `hint`: they click Preview in the browser shell (`shell_url`). Leave the
-  page open when you finish.
-- `workstation_url`: this machine is a workstation, whose browser terminal
-  cannot draw the browser. Give the user that address and the `hint`. Do not retry.
+- `workstation_url`: this machine is a workstation, and that is the port's
+  public address, behind the platform sign-in. Call `page_tabs`
+  (`alis-preview` MCP): a listed tab is the person's own browser on that
+  address, signed in - drive it with the `page_*` tools (step 3), not
+  `terminal-browser`. With no tab, open the result's `url` (the local
+  address; the public one asks for a sign-in your browser has not got) with
+  your `playwright` tools (`browser_navigate`, `browser_snapshot`,
+  `browser_click`, `browser_type`, `browser_console_messages`,
+  `browser_take_screenshot`). If the app needs a sign-in, `preview_ports`
+  says whether the person shared one for the port: load that file first
+  with `browser_set_storage_state {filename}`; if none, ask with
+  `preview_wait_for_person` - they press *Share sign-in and continue* in the
+  page - and load the file it returns. Give the user the address if they are
+  not on it. Do not retry.
 - `guessed: true`: no frontend or port was found, so the page may not answer.
   Tell the user which address you tried.
 - `warnings`: pass them on. herdr older than 0.9.1 shows the page only after
@@ -124,19 +132,22 @@ it as the thing to change: find it in the code, change it, then reload the
 page and check the result.
 
 Inside herdr the user can also press `prefix+f` to open the same preview
-beside any pane. A workstation shell's Preview pane sends the same kind of
-message from its Annotate button; check the result there with your
-`playwright` tools. On a workstation the app's own port address
-(`https://<port>-<id>-ws.<org>.alis.dev`) carries the same Annotate in the
-person's own browser, and sends the same line with the element's screenshot
-and a note file holding its markup and the page's last console errors.
+beside any pane. On a workstation the app's own port address
+(`https://<port>-<id>-ws.<org>.alis.dev`) carries the Alis toolbar in the
+person's own browser, and sends the same line - starting
+`> [preview] from <email>:` - with the element's screenshot and a note file
+holding its markup and the page's last console errors. The line names who
+sent it: a reviewer the port is shared with is not the owner, so address
+your reply to them. The notes go to the agent session attached to the
+port; `alis run` attaches the one it runs in, and `preview_notes` lists
+notes left while none was attached.
 
 That tab is yours to drive as well: the `alis-preview` MCP server's `page_*`
 tools (`page_tabs`, `page_snapshot`, `page_click`, `page_type`,
 `page_press_key`, `page_select_option`, `page_navigate`, `page_navigate_back`,
 `page_evaluate`, `page_screenshot`, `page_console`, `page_wait_for`) act in
-the person's own browser, with their logins and no shared Chromium in
-between. Call `page_tabs` first; when it lists a tab, prefer these over the
+the person's own browser, with their logins; `page_tabs` names whose each
+tab is. Call `page_tabs` first; when it lists a tab, prefer these over the
 `browser_*` tools, take a `page_snapshot` and use its `[ref=eN]` refs as
 targets, and take a fresh snapshot after the page changes. The person sees
 who is driving and can pause you; a paused tab answers with an error that
