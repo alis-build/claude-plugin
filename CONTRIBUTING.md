@@ -96,12 +96,29 @@ and a minor bump for features. Maintainers tag releases `vX.Y.Z` on `main`, and
 a tag build runs the guard in strict mode, which also fails on any leftover
 `__PLACEHOLDER__` marker.
 
+Every version gets its own tag, on the `main` commit that sets it (the merge
+commit when it came in through a pull request):
+
+```sh
+git tag -a v0.37.0 -m "v0.37.0 manual automation tier confirms DBD workflows up front"
+git push origin v0.37.0
+```
+
+Pushing the tag runs `.github/workflows/changelog.yml`, which rebuilds
+`CHANGELOG.md` with [git-cliff](https://git-cliff.org) (`cliff.toml`), commits
+it to `main`, and publishes the tag's section as its GitHub Release. An untagged
+version folds into the next tagged one. `CHANGELOG.md` is generated, so don't
+edit it by hand; preview it with `npx --yes git-cliff@2.14.2 -o CHANGELOG.md`.
+
 ## Commits and pull requests
 
 - Commit subjects follow `type: summary`, with the version when the commit
   bumps it: `feat: v0.32.0 live operation row`, `fix: v0.31.0 drop ambient
   skill suggestions`. Types used here: `feat`, `fix`, `docs`, `chore`, `style`,
   `test`.
+- The commit body is the release note: the changelog and the GitHub Release
+  print it in full under the subject. Say what changed for a user and why.
+  `test` and `ci` commits are left out of the changelog.
 - Keep a pull request to one change. Update the README when behaviour a user
   can see changes.
 - Fill in the pull request template's test plan with what you actually ran.
