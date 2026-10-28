@@ -76,7 +76,10 @@ to revise it from the conversation and the shared session (`alis docs skills`).
 **Execute DBD through the `alis` CLI.** It is deterministic, auto-detects context, and
 chains steps into one call:
 
-- **Define** (and publish packages): `alis define <pkg> --json --install --async`
+- **Define** (and install packages): `alis define <pkg> --json --install` — this one waits:
+  `--install` runs after the operation completes, so the CLI rejects it with `--async`
+  (`FLAG_CONFLICT`). Started with `--async`, wait on the operation, then run
+  `alis packages install <pkg> --json`.
 - **Build** (optionally deploy): `alis build <pkg> --json --deploy -e <env> --async`
 - **Deploy**: `alis deploy <pkg> --version <version> -e <env> --json --async`
 - **Packages**: `alis packages install|upgrade|add <pkg> --json`
@@ -162,9 +165,11 @@ directory.
   only when the user explicitly asked for that action on that target ("build
   marvel.sm.resources.v1", "deploy 1.16.10 to dev"). When the action was only implied
   by a broader task, ask in chat first, naming the command; the session mode never
-  stands in for that. A refusal anywhere means stop: never retry it, reword it or work
-  around it. Respect a classifier or policy denial; complete independent work and
-  report the exact blocker.
+  stands in for that. When the plugin can read the user's tier, it asks them itself
+  before each define, build, deploy, `authorise` and package command and adds
+  `--approve`: run those without the flag, and their answer is the approval. A refusal
+  anywhere means stop: never retry it, reword it or work around it. Respect a
+  classifier or policy denial; complete independent work and report the exact blocker.
 - **The CLI is self-documenting — consult it, don't memorise it.** `alis docs` is the
   complete agent operating manual and the source of truth for flags, output shapes and exit
   codes; the bullets above are the behavioural rules, not a restatement of it.

@@ -54,14 +54,16 @@ never invent it; the plugin asks the user before it runs (and before an uninstal
 environment destroy/unset or `--reveal`), in its own dialog in every mode. No extra chat question
 is needed first. On `APPROVAL_REQUIRED` (manual tier), re-run with `--approve` only when the
 user explicitly asked for that action on that target; when it was only implied, ask in chat
-first. Session modes grant nothing, and a refusal means stop.
+first. When the plugin knows the tier is manual it asks the user itself and adds `--approve`,
+so run DBD commands without it. Session modes grant nothing, and a refusal means stop.
 
 Run one standalone Alis command per Bash call: no pipes, output trimming or redirects.
 Read help in full too; check the relevant subcommand's `--help` before concluding
 that a capability is missing.
 Use `environment list <org>.<product> --json` for target IDs and production flags,
 without variable values. Check CLI help when using a newly introduced command.
-Start long DBD work with `--async`; retain `name` and run `next`. Start/wait/describe
+Start long DBD work with `--async`; retain `name` and run `next`. The exception is
+`define --install`, which waits (the CLI rejects it with `--async`). Start/wait/describe
 use common top-level fields (`schemaVersion: 1`, `done`, `status`, `version`); legacy
 start `metadata` is different from typed wait output. Read full JSON and errors. A
 deployment's `state` `RUNNING` means up and serving (the state after a successful

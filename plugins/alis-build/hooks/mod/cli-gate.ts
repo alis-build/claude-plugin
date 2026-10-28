@@ -38,6 +38,7 @@ const ALIASES: Record<string, string> = {
 const GUARD_FLAGS = new Set(['--confirm-production', '--approve', '--yes'])
 const CONSENT_FLAGS = new Set(['--approve', '--yes'])
 const HELP_FLAGS = new Set(['--help', '-h'])
+const BARE_FLAGS = new Set(['--help', '-h', '--version', '-v'])
 const ALIS_LINE = /(?:^|[;&|\n])\s*alis\s/
 const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/
 
@@ -46,6 +47,10 @@ export const ASK_REASON = 'Confirm this exact Alis action and its target. The pl
 export const SECRET_REASON =
   'This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.'
 export const ALLOW_REASON = 'Alis structured CLI workflow; CLI automation and production gates remain in force.'
+export const BARE_REASON = 'Alis CLI help or version output; nothing executes.'
+export const MANUAL_REASON =
+  'Your Alis automation tier is manual, so the CLI needs approval for this action. ' +
+  'Confirm this exact Alis action and its target; the plugin adds --approve.'
 
 /** What the classic PreToolUse payload gives decide(), as plain fields. */
 export type GateInput = {
@@ -60,6 +65,12 @@ export type GateInput = {
    * when the installed CLI accepts it (health.clientPluginOf); absent otherwise.
    */
   clientPlugin?: string
+  /**
+   * The CLI's effective automation tier (tier.ts automationTierOf); absent
+   * when unknown. On `manual` a structured workflow asks up front with
+   * --approve added, rather than letting the CLI refuse it once.
+   */
+  automationTier?: string
 }
 
 /**
@@ -111,7 +122,14 @@ export function decide(input: GateInput): GateDecision {
   let argv = literalArgv(command)
   if (!argv) return { matched: true, additionalContext: GUIDANCE }
   const path = commandPath(argv)
-  if (path.length === 0) return { matched: true }
+  if (path.length === 0) {
+    // Bare `alis --help` / `alis -v`: no verb, nothing executes.
+    const rest = argv.slice(1)
+    if (rest.length > 0 && rest.every(a => a.startsWith('-')) && rest.some(a => BARE_FLAGS.has(a))) {
+      return { matched: true, decision: 'allow', reason: BARE_REASON }
+    }
+    return { matched: true }
+  }
   const top = path[0] as string
   const allowed = (input.allowedSubcmds ?? '').split(/\s+/).filter(Boolean)
   const separator = argv.indexOf('--')
@@ -125,10 +143,20 @@ export function decide(input: GateInput): GateDecision {
   // `variables|vars` and `refresh` print secret values on CLIs before 1.146.1
   // and behind --reveal from then on; the gate cannot see the version, so the
   // bare command asks too.
-  const secrets = top === 'environment' && (flags.has('--reveal') || ['variables', 'vars', 'refresh'].some(v => options.includes(v)))
+  let secrets = top === 'environment' && (flags.has('--reveal') || ['variables', 'vars', 'refresh'].some(v => options.includes(v)))
   guarded ||= secrets
+  // Help never executes: cobra prints usage and exits before any verb runs, so
+  // `alis environment variables --help` and `alis blocks uninstall x --help` are
+  // read-only. A help token swallowed as the value of a preceding value-taking
+  // flag (`--name --help`) is not a help request.
+  const helpRequested = options.some((token, i) => {
+    if (!HELP_FLAGS.has(token)) return false
+    const before = i > 0 ? (options[i - 1] as string) : ''
+    return !(before.startsWith('-') && !before.includes('=') && !BOOLS.has(before))
+  })
+  if (helpRequested) guarded = secrets = false
   const handoffRead = HANDOFF_READ.has(commandPath(argv, 3).join(' '))
-  const readOnly = READ_TOP.has(top) || READ_PATHS.has(path.join(' ')) || handoffRead || hasAny(HELP_FLAGS)
+  const readOnly = READ_TOP.has(top) || READ_PATHS.has(path.join(' ')) || handoffRead || helpRequested
 
   const result: GateDecision & { matched: true } = { matched: true }
   if (input.permissionMode === 'plan' && (guarded || !readOnly)) {
@@ -143,9 +171,19 @@ export function decide(input: GateInput): GateDecision {
     if (!hasAny(CONSENT_FLAGS)) argv = insertFlagsBeforeSeparator(argv, ['--approve'])
   } else if (allowed.length > 0 && !allowed.includes(top)) {
     return { matched: false }
-  } else if (readOnly || WORKFLOW_TOP.has(top) || WORKFLOW_PATHS.has(path.join(' '))) {
+  } else if (readOnly) {
     result.decision = 'allow'
     result.reason = ALLOW_REASON
+  } else if (WORKFLOW_TOP.has(top) || WORKFLOW_PATHS.has(path.join(' '))) {
+    // A define --dry-run creates nothing, so the CLI does not gate it.
+    if (input.automationTier === 'manual' && !(top === 'define' && flags.has('--dry-run'))) {
+      result.decision = 'ask'
+      result.reason = MANUAL_REASON
+      argv = insertFlagsBeforeSeparator(argv, ['--approve'])
+    } else {
+      result.decision = 'allow'
+      result.reason = ALLOW_REASON
+    }
   } else {
     return result
   }

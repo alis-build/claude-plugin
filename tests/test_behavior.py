@@ -253,6 +253,54 @@ class PermissionTests(unittest.TestCase):
         self.assertNotIn("updatedInput", self.decision("alis whoami --session-id session-a --client-plugin other/1.0"))
         self.assertEqual(hook.command_path(["alis", "--client-plugin", "claude/1", "define"]), ("define",))
 
+    def write_alis(self, name, value):
+        alis = Path(self.home.name, ".alis")
+        alis.mkdir(exist_ok=True)
+        (alis / name).write_text(value if isinstance(value, str) else json.dumps(value))
+
+    def test_tier_is_the_stricter_of_the_cached_server_tier_and_the_local_cap(self):
+        self.assertIsNone(hook.automation_tier())
+        self.write_alis("profile-cache.json", {"automationTier": "manual", "fetchedAt": "2026-09-24T15:35:50Z"})
+        self.assertEqual(hook.automation_tier(), "manual")
+        self.write_alis("profile-cache.json", {"automationTier": " Balanced "})
+        self.assertEqual(hook.automation_tier(), "balanced")
+        self.write_alis("settings.json", {"approvals": {"maxTier": "manual"}})
+        self.assertEqual(hook.automation_tier(), "manual")
+        self.write_alis("settings.json", {"approvals": {"maxTier": "autonomous"}})
+        self.assertEqual(hook.automation_tier(), "balanced")
+        self.write_alis("profile-cache.json", "{not json")
+        self.assertEqual(hook.automation_tier(), "autonomous")
+        self.write_alis("settings.json", {"approvals": "manual"})
+        self.assertIsNone(hook.automation_tier())
+
+    def test_manual_tier_asks_for_structured_workflows_with_approve_added(self):
+        def decide(command, tier, mode="auto"):
+            return hook.decide({"tool_name": "Bash", "permission_mode": mode, "session_id": "session-a",
+                                "tool_input": {"command": command}}, tier).get("hookSpecificOutput", {})
+        for cmd in ("alis define example.app.api.v1 --json --install", "alis build example.app.api.v1 --json --async",
+                    "alis deploy example.app.api.v1 -e dev --json", "alis authorise example.app --json",
+                    "alis packages install example.app.api.v1 --json", "alis packages upgrade example.app.api.v1 --json",
+                    "alis packages add example.app.api.v1 --json"):
+            with self.subTest(command=cmd):
+                result = decide(cmd, "manual")
+                self.assertEqual(result["permissionDecision"], "ask")
+                self.assertIn("manual", result["permissionDecisionReason"])
+                self.assertEqual(shlex.split(result["updatedInput"]["command"]), shlex.split(cmd) + ["--approve", "--session-id", "session-a"])
+                for tier in (None, "balanced", "autonomous"):
+                    self.assertEqual(decide(cmd, tier)["permissionDecision"], "allow")
+                self.assertEqual(decide(cmd, "manual", "plan")["permissionDecision"], "deny")
+        for cmd in ("alis define example.app.api.v1 --dry-run --json", "alis build --help", "alis operations list --json"):
+            with self.subTest(command=cmd):
+                self.assertEqual(decide(cmd, "manual")["permissionDecision"], "allow")
+        with patch.dict(os.environ, {"ALIS_ALLOWED_SUBCMDS": "context doctor"}):
+            self.assertEqual(decide("alis build example.app.api.v1 --json", "manual"), {})
+        # The hook process reads the tier the CLI itself will enforce.
+        self.write_alis("profile-cache.json", {"automationTier": "manual"})
+        env = dict(os.environ, HOME=self.home.name, PYTHONDONTWRITEBYTECODE="1")
+        p = subprocess.run(["bash", str(HOOKS / "allow-alis-cli.sh")], input=json.dumps({"tool_input": {"command": "alis build example.app.api.v1 --json"}, "permission_mode": "auto", "session_id": "a"}),
+                           capture_output=True, text=True, env=env, check=True)
+        self.assertEqual(json.loads(p.stdout)["hookSpecificOutput"]["permissionDecision"], "ask")
+
     def test_allowlist_and_unknown_commands_do_not_grant(self):
         with patch.dict(os.environ, {"ALIS_ALLOWED_SUBCMDS":"context doctor"}):
             self.assertNotIn("permissionDecision", self.decision("alis build example.app.api.v1 --json"))
