@@ -4,6 +4,16 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.37.1](https://github.com/alis-build/claude-plugin/compare/v0.37.0...v0.37.1) (2026-10-28)
+
+### Fixes
+
+#### Align CLI terminology and artifact commands ([5b5f05c](https://github.com/alis-build/claude-plugin/commit/5b5f05c39d191dd053fa3477b9a04799000b5910))
+
+Use build environment, service and conversation consistently in the plugin guidance. Read Ideate artifacts with alis ideate artifacts read; legacy read paths remain available and mutating actions retain their approval requirements.
+
+The new artifact reader accompanies the CLI copy pass proposed for 1.174.2. Older CLIs retain ideate output-artifact.
+
 ## [0.37.0](https://github.com/alis-build/claude-plugin/compare/v0.36.0...v0.37.0) (2026-10-28)
 
 ### Features
