@@ -1,0 +1,76 @@
+# Changelog generation with git-cliff (https://git-cliff.org). Each vX.Y.Z tag
+# is one release; .github/workflows/changelog.yml rebuilds CHANGELOG.md from
+# the tags and commit messages when one is pushed. To preview it locally:
+#
+#     npx --yes git-cliff@2.14.2 -o CHANGELOG.md
+#
+# The commit body is the release note, so it is printed in full under its
+# subject. Anything not in Conventional Commits form (merges included) is
+# skipped, as are tests, CI and the changelog's own commits.
+
+[changelog]
+postprocessors = [
+    { pattern = '\$REPO', replace = "https://github.com/alis-build/claude-plugin" },
+    { pattern = '\n{3,}', replace = "\n\n" },
+]
+
+header = """
+# Changelog
+
+What changed in each release of the Alis Build plugin for Claude Code. This
+file is generated from release tags and commit messages; do not edit it by
+hand.\n
+"""
+
+# Commits after the latest tag are left out: a release is what a tag shipped.
+body = """
+{% if version %}\
+    {% if previous.version %}\
+        ## [{{ version | trim_start_matches(pat="v") }}]($REPO/compare/{{ previous.version }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+    {% else %}\
+        ## {{ version | trim_start_matches(pat="v") }} ({{ timestamp | date(format="%Y-%m-%d") }})
+    {% endif %}\
+    {% for group, commits in commits | group_by(attribute="group") %}
+        ### {{ group | striptags | trim }}
+        {% for commit in commits %}
+            #### {{ commit.message | upper_first }} ([{{ commit.id | truncate(length=7, end="") }}]($REPO/commit/{{ commit.id }}))
+            {% if commit.body %}
+{# Odd parts sit outside `code`: escape < there so GitHub does not drop a
+   bare <placeholder> as an unknown HTML tag. #}\
+{% for part in commit.body | trim | split(pat="`") %}{% if loop.index is odd %}{{ part | replace(from="<", to="&lt;") }}{% else %}`{{ part }}`{% endif %}{% endfor %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endif %}\n
+"""
+
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+protect_breaking_commits = true
+filter_commits = true
+topo_order = false
+sort_commits = "oldest"
+tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+# Release subjects carry their version (feat: v0.37.0 manual automation tier
+# ...); the section heading already says it, so drop it from the entry.
+commit_preprocessors = [
+    { pattern = '^(\w+(\([^)]*\))?!?): v[0-9]+\.[0-9]+\.[0-9]+ (— )?', replace = "$1: " },
+]
+
+# The <!-- n --> prefixes order the groups; the template strips them.
+commit_parsers = [
+    { message = "^chore\\(changelog\\)", skip = true },
+    { message = "^feat", group = "<!-- 0 -->Features" },
+    { message = "^fix", group = "<!-- 1 -->Fixes" },
+    { message = "^perf", group = "<!-- 2 -->Performance" },
+    { message = "^refactor", group = "<!-- 3 -->Refactoring" },
+    { message = "^style", group = "<!-- 4 -->Style" },
+    { message = "^docs", group = "<!-- 5 -->Documentation" },
+    { message = "^chore", group = "<!-- 6 -->Other" },
+    { message = "^(test|ci|build)", skip = true },
+]
