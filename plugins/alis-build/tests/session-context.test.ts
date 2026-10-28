@@ -55,7 +55,7 @@ describe('session-context', () => {
     expect(await serviceContext(host, WS)).toBe(
       [
         'This Claude session is inside an Alis Build service implementation (build) directory.',
-        '  Package id:  acme.x.v1',
+        '  Package ID:  acme.x.v1',
         '  The protobuf definitions (the API contract — the DBD "Define" step) are available here:',
         '    /r/alis.build/acme/define/acme/x/v1',
         '  Proto files: x.proto, y.proto',
@@ -71,7 +71,7 @@ describe('session-context', () => {
     expect(await serviceContext(define, '/r/alis.build/acme/define/acme/x/v1')).toBe(
       [
         'This Claude session is inside an Alis Build definitions (define) directory — the protobuf API contract.',
-        '  Package id:  acme.x.v1',
+        '  Package ID:  acme.x.v1',
         '  Proto files: x.proto',
         '  The implementation (the DBD "Build" step) is available here:',
         '    /r/alis.build/acme/build/x/v1',
@@ -104,7 +104,7 @@ describe('session-context', () => {
     const result = await passClassic(host, 'classic.SessionStart', { session_id: 'abc', hook_event_name: 'SessionStart', source: 'startup', cwd: WS }, async () => ({ additionalContext: ['beneath'] }))
     expect(result.additionalContext?.[0]).toBe('beneath')
     expect(result.additionalContext?.[1]).toBe(PRIMER)
-    expect(result.additionalContext?.[2]).toContain('Package id:  acme.x.v1')
+    expect(result.additionalContext?.[2]).toContain('Package ID:  acme.x.v1')
     for (let i = 0; i < 20; i++) await Promise.resolve()
     expect(host.runs.some(r => r.argv[1] === 'skills' && r.argv[2] === 'sync')).toBe(true)
   })

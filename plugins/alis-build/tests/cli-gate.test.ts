@@ -60,6 +60,46 @@ describe('cli-gate', () => {
     expect(decision('alis environment list alis.os --json')).toMatchObject({ decision: 'allow' })
   })
 
+  test('Ideate reads and compatibility names stay read-only', () => {
+    for (const command of [
+      "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+      "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+      "alis ideate artifacts list project --json",
+      "alis ideate artifacts get artifact --json",
+      "alis ideate output-artifact artifact --project project --json",
+      "alis ideate output-artifacts project --json",
+      "alis ideate sessions project --json",
+      "alis ideate session session --json"
+]) {
+      for (const mode of ['auto', 'plan', 'default']) {
+        const result = decision(command, mode)
+        expect(result).toMatchObject({ decision: 'allow' })
+        if (!result.matched) throw new Error('unreachable')
+        expect(shlexSplit(result.updatedInput?.['command'] as string)).toEqual([...shlexSplit(command), '--session-id', 'session-a'])
+      }
+    }
+  })
+
+  test('artifact mutations and hidden release keep their approval path', () => {
+    for (const command of [
+      "alis ideate artifacts configure artifact --json",
+      "alis ideate artifacts regenerate artifact --json",
+      "alis ideate artifacts migrate artifact --json",
+      "alis ideate artifacts future-mutation artifact --json",
+      "alis release example.app.api.v1 --json"
+]) {
+      expect(decision(command)).not.toHaveProperty('decision')
+      expect(decision(command, 'plan')).toMatchObject({ decision: 'deny' })
+    }
+    for (const mode of ['auto', 'default', 'acceptEdits', 'bypassPermissions', 'dontAsk']) {
+      const result = decision("alis release example.app.api.v1 --confirm-production --json", mode)
+      expect(result).toMatchObject({ decision: 'ask' })
+      if (!result.matched) throw new Error('unreachable')
+      expect(shlexSplit(result.updatedInput?.['command'] as string).includes('--confirm-production')).toBe(true)
+    }
+    expect(decision("alis release example.app.api.v1 --confirm-production --json", 'plan')).toMatchObject({ decision: 'deny' })
+  })
+
   test('plan never auto-allows mutations', () => {
     expect(decision('alis build example.app.api.v1 --json', 'plan')).toMatchObject({ decision: 'deny' })
     expect(decision('alis operations describe operations/a --json', 'plan')).toMatchObject({ decision: 'allow' })

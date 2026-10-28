@@ -206,6 +206,28 @@ class PermissionTests(unittest.TestCase):
         # A help token swallowed as the value of a value-taking flag is not help.
         self.assertEqual(self.decision("alis environment variables alis.os --name --help").get("permissionDecision"), "ask")
 
+    def test_ideate_artifact_reads_and_compatibility_names_are_read_only(self):
+        for command in ['alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json', 'alis --cwd /tmp/work --json ideate artifacts read artifact --project project', 'alis ideate artifacts list project --json', 'alis ideate artifacts get artifact --json', 'alis ideate output-artifact artifact --project project --json', 'alis ideate output-artifacts project --json', 'alis ideate sessions project --json', 'alis ideate session session --json']:
+            for mode in ("auto", "plan", "default"):
+                with self.subTest(command=command, mode=mode):
+                    result = self.decision(command, mode)
+                    self.assertEqual(result.get("permissionDecision"), "allow")
+                    argv = shlex.split(result["updatedInput"]["command"])
+                    self.assertEqual(argv[:-2], shlex.split(command))
+                    self.assertEqual(argv[-2:], ["--session-id", "session-a"])
+                    self.assertNotIn("--approve", argv)
+
+    def test_artifact_mutations_and_hidden_release_keep_their_approval_path(self):
+        for command in ['alis ideate artifacts configure artifact --json', 'alis ideate artifacts regenerate artifact --json', 'alis ideate artifacts migrate artifact --json', 'alis ideate artifacts future-mutation artifact --json', 'alis release example.app.api.v1 --json']:
+            with self.subTest(command=command):
+                self.assertNotIn("permissionDecision", self.decision(command))
+                self.assertEqual(self.decision(command, "plan").get("permissionDecision"), "deny")
+        for mode in ("auto", "default", "acceptEdits", "bypassPermissions", "dontAsk"):
+            result = self.decision('alis release example.app.api.v1 --confirm-production --json', mode)
+            self.assertEqual(result.get("permissionDecision"), "ask")
+            self.assertIn("--confirm-production", shlex.split(result["updatedInput"]["command"]))
+        self.assertEqual(self.decision('alis release example.app.api.v1 --confirm-production --json', "plan").get("permissionDecision"), "deny")
+
     def test_plan_never_auto_allows_mutations(self):
         self.assertEqual(self.decision("alis build example.app.api.v1 --json", "plan")["permissionDecision"], "deny")
         self.assertEqual(self.decision("alis operations describe operations/a --json", "plan")["permissionDecision"], "allow")

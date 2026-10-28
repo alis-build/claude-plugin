@@ -54,7 +54,7 @@ export async function serviceContext(host: Host, cwd: string): Promise<string | 
   const lines: string[] = []
   if (ws.side === 'build') {
     lines.push('This Claude session is inside an Alis Build service implementation (build) directory.')
-    if (ws.pkg) lines.push(`  Package id:  ${ws.pkg}`)
+    if (ws.pkg) lines.push(`  Package ID:  ${ws.pkg}`)
     if (await host.exists(defineDir)) {
       lines.push('  The protobuf definitions (the API contract — the DBD "Define" step) are available here:', `    ${defineDir}`)
       const protos = await protosOf(host, defineDir)
@@ -64,7 +64,7 @@ export async function serviceContext(host: Host, cwd: string): Promise<string | 
     }
   } else {
     lines.push('This Claude session is inside an Alis Build definitions (define) directory — the protobuf API contract.')
-    if (ws.pkg) lines.push(`  Package id:  ${ws.pkg}`)
+    if (ws.pkg) lines.push(`  Package ID:  ${ws.pkg}`)
     const protos = await protosOf(host, cwd)
     if (protos) lines.push(protos)
     if (await host.exists(buildDir)) {

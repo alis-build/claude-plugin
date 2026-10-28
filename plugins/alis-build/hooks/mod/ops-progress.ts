@@ -331,7 +331,7 @@ export function liveLineOf(view: OpView | undefined, opts: { service?: string; o
   const active = stages.find(s => s.state === 'running') ?? stages.find(s => s.state === 'failed') ?? stages.find(s => s.state === 'waiting')
   const isBuild = (view?.kind ?? (opts.verb === 'deploy' ? 'deploy' : 'build')) === 'build'
   if (!active || (active.state === 'waiting' && !stages.some(s => s.state !== 'waiting'))) {
-    return { label: isBuild ? 'Starting the build' : 'Starting the deploy', note: isBuild ? 'waiting for a build machine' : 'waiting for the environment', fill: null, clock }
+    return { label: isBuild ? 'Starting the build' : 'Starting the deploy', note: isBuild ? 'waiting for a build machine' : 'waiting for the deployment environment', fill: null, clock }
   }
   const builds = stages.filter(s => s.kind === 'build')
   const deploysWaiting = stages.filter(s => s.kind === 'deploy' && s.state === 'waiting').map(s => s.name)

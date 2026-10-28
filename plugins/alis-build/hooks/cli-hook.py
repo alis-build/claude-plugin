@@ -32,7 +32,10 @@ READ_PATHS = {
     ("specialist", "list"), ("specialist", "read"), ("specialist", "describe"),
     ("ideate", "context"), ("ideate", "specs"), ("ideate", "spec"),
     ("ideate", "stream"), ("ideate", "find"),
+    ("ideate", "output-artifact"), ("ideate", "output-artifacts"),
+    ("ideate", "session"), ("ideate", "sessions"),
 }
+READ_NESTED = {("ideate", "artifacts", verb) for verb in ("read", "list", "get")}
 # Structured workflows retain the CLI automation tier and production gates.
 # Arbitrary process runners and messaging verbs do not get a blanket allow.
 WORKFLOW_TOP = {"define", "build", "deploy", "authorise"}
@@ -190,12 +193,12 @@ def decide(payload, tier=None):
         for i, tok in enumerate(options))
     if help_requested: guarded = secrets = False
     handoff_read = command_path(argv, 3) in {("workstation", "handoff", "status"), ("workstation", "handoff", "targets")}
-    read_only = top in READ_TOP or path in READ_PATHS or handoff_read or help_requested
+    read_only = top in READ_TOP or path in READ_PATHS or command_path(argv, 3) in READ_NESTED or handoff_read or help_requested
     if payload.get("permission_mode") == "plan" and (guarded or not read_only):
         result.update(permissionDecision="deny", permissionDecisionReason="This Alis action changes state. Finish the plan and obtain execution approval first.")
         return {"hookSpecificOutput": result}
     if guarded:
-        reason = ("This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment."
+        reason = ("This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment."
                   if secrets else "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.")
         result.update(permissionDecision="ask", permissionDecisionReason=reason)
         # Native confirmation displays this modified command. Execution then

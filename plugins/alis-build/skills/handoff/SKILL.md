@@ -8,7 +8,7 @@ the work; you run one command and reply with one line.
 
 1. Run `alis workstation handoff --session <current session id> --json`, using the
    session ID from hook context. Do not list targets first: with one enrolled
-   workstation in this organisation it is chosen automatically. If the command
+   workstation in this build environment it is chosen automatically. If the command
    answers `HANDOFF_CHOOSE_WORKSTATION`, ask the user which of their existing
    workstations to use and rerun with `--to <alias>`. If it answers
    `HANDOFF_SESSION_NOT_REGISTERED` (usual in a desktop app whose Alis plugin hooks
@@ -19,7 +19,7 @@ the work; you run one command and reply with one line.
    or a plugin reload (`/reload-plugins`, or reopen the app) and a new session. Every
    refusal carries `retry` and `agent`; follow them. `alis workstation handoff check
    --agent claude --session <id> --json` reports readiness without starting anything.
-   Never show state file names, never invent a session id, never create a workstation.
+   Never show state file names, never invent a session ID, never create a workstation.
 2. Reply with one short line, such as "Handing off to <alias>; progress is in the
    popup.", and end your turn. Do not call more tools, poll status, or write a
    recap: the handoff waits for this turn to end, and further tool calls are denied.

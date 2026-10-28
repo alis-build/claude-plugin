@@ -6822,7 +6822,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --json --approve --session-id session-a",
     "timeout": 120000
@@ -6837,7 +6837,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --json --approve --session-id session-a",
     "timeout": 120000
@@ -6852,7 +6852,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --json --approve --session-id session-a",
     "timeout": 120000
@@ -6867,7 +6867,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --json --approve --session-id session-a",
     "timeout": 120000
@@ -6926,7 +6926,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --json --approve --session-id session-a",
     "timeout": 120000
@@ -6941,7 +6941,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --json --approve --session-id session-a",
     "timeout": 120000
@@ -6956,7 +6956,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --json --approve --session-id session-a",
     "timeout": 120000
@@ -6971,7 +6971,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --json --approve --session-id session-a",
     "timeout": 120000
@@ -6986,7 +6986,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis env vars alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7001,7 +7001,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis env vars alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7016,7 +7016,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis env vars alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7031,7 +7031,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis env vars alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7090,7 +7090,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis env vars alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7105,7 +7105,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis env vars alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7120,7 +7120,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis env vars alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7135,7 +7135,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis env vars alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7150,7 +7150,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
     "timeout": 120000
@@ -7165,7 +7165,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
     "timeout": 120000
@@ -7180,7 +7180,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
     "timeout": 120000
@@ -7195,7 +7195,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
     "timeout": 120000
@@ -7254,7 +7254,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
     "timeout": 120000
@@ -7269,7 +7269,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
     "timeout": 120000
@@ -7284,7 +7284,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
     "timeout": 120000
@@ -7299,7 +7299,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment variables alis.os --reveal -e production --json --approve --session-id session-a",
     "timeout": 120000
@@ -7314,7 +7314,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7329,7 +7329,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7344,7 +7344,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7359,7 +7359,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7418,7 +7418,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7433,7 +7433,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7448,7 +7448,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7463,7 +7463,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --approve --session-id session-a",
     "timeout": 120000
@@ -7478,7 +7478,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
     "timeout": 120000
@@ -7493,7 +7493,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
     "timeout": 120000
@@ -7508,7 +7508,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
     "timeout": 120000
@@ -7523,7 +7523,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
     "timeout": 120000
@@ -7582,7 +7582,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
     "timeout": 120000
@@ -7597,7 +7597,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
     "timeout": 120000
@@ -7612,7 +7612,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
     "timeout": 120000
@@ -7627,7 +7627,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --output .env --approve --session-id session-a",
     "timeout": 120000
@@ -7642,7 +7642,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
     "timeout": 120000
@@ -7657,7 +7657,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
     "timeout": 120000
@@ -7672,7 +7672,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
     "timeout": 120000
@@ -7687,7 +7687,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
     "timeout": 120000
@@ -7746,7 +7746,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
     "timeout": 120000
@@ -7761,7 +7761,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
     "timeout": 120000
@@ -7776,7 +7776,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
     "timeout": 120000
@@ -7791,7 +7791,7 @@ export const PARITY: readonly ParityCase[] = [
   "python": {
    "hookEventName": "PreToolUse",
    "permissionDecision": "ask",
-   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.",
+   "permissionDecisionReason": "This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.",
    "updatedInput": {
     "command": "alis environment refresh alis.os --reveal --approve --session-id session-a",
     "timeout": 120000
@@ -9256,6 +9256,1766 @@ export const PARITY: readonly ParityCase[] = [
    "hookEventName": "PreToolUse",
    "permissionDecision": "allow",
    "permissionDecisionReason": "Alis CLI help or version output; nothing executes."
+  }
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts read artifact --project project --path README.md --start-line 2 --end-line 8 --version 3 --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis --cwd /tmp/work --json ideate artifacts read artifact --project project",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts list project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts list project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts list project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts list project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts list project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts list project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts list project --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts get artifact --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts get artifact --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts get artifact --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts get artifact --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts get artifact --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate artifacts get artifact --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts get artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifact artifact --project project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifact artifact --project project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifact artifact --project project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifact artifact --project project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifact artifact --project project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifact artifact --project project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifact artifact --project project --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifacts project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifacts project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifacts project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifacts project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifacts project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate output-artifacts project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate output-artifacts project --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate sessions project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate sessions project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate sessions project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate sessions project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate sessions project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate sessions project --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate sessions project --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate session session --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate session session --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate session session --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate session session --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate session session --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "allow",
+   "permissionDecisionReason": "Alis structured CLI workflow; CLI automation and production gates remain in force.",
+   "updatedInput": {
+    "command": "alis ideate session session --json --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate session session --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts configure artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts regenerate artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts migrate artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis ideate artifacts future-mutation artifact --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse"
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": null
+ },
+ {
+  "command": "alis release example.app.api.v1 --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": null
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.",
+   "updatedInput": {
+    "command": "alis release example.app.api.v1 --confirm-production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "auto",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.",
+   "updatedInput": {
+    "command": "alis release example.app.api.v1 --confirm-production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.",
+   "updatedInput": {
+    "command": "alis release example.app.api.v1 --confirm-production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "auto",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.",
+   "updatedInput": {
+    "command": "alis release example.app.api.v1 --confirm-production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "plan",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "plan",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "deny",
+   "permissionDecisionReason": "This Alis action changes state. Finish the plan and obtain execution approval first."
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.",
+   "updatedInput": {
+    "command": "alis release example.app.api.v1 --confirm-production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "default",
+  "allowed": "",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.",
+   "updatedInput": {
+    "command": "alis release example.app.api.v1 --confirm-production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.",
+   "updatedInput": {
+    "command": "alis release example.app.api.v1 --confirm-production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
+  }
+ },
+ {
+  "command": "alis release example.app.api.v1 --confirm-production --json",
+  "mode": "default",
+  "allowed": "context doctor",
+  "tier": "manual",
+  "python": {
+   "hookEventName": "PreToolUse",
+   "permissionDecision": "ask",
+   "permissionDecisionReason": "Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.",
+   "updatedInput": {
+    "command": "alis release example.app.api.v1 --confirm-production --json --approve --session-id session-a",
+    "timeout": 120000
+   }
   }
  }
 ]

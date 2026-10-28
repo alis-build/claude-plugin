@@ -1,4 +1,7 @@
-# Alis Build Claude Code Plugin
+# Alis Build plugin for Claude Code
+
+This prepared update aligns terminology and artifact reading with the coordinated
+CLI copy pass (proposed CLI 1.174.2). Publish the CLI and plugins together.
 
 <p align="center">
   <img src="plugins/alis-build/assets/connectivity.svg" alt="Claude Code connected to Alis Build" width="760">
@@ -8,13 +11,13 @@
   <strong>Connect Claude Code to Alis Build.</strong>
 </p>
 
-Use this plugin to let Claude Code work with Alis Build organisations, products, neurons, builds, and deploys through the `alis` CLI, with workspace-aware context injected into every session.
+Use this plugin to let Claude Code work with build environments, products, services, builds, and deploys through the `alis` CLI, with workspace-aware context injected into every session.
 
 ## What You Get
 
 - A standing Define → Build → Deploy primer, so Claude knows the workflow, how to route requests, and to run the `alis` CLI — no trigger word required. The full primer loads inside `~/alis.build` workspaces; other directories get a compressed digest when the `alis` CLI is installed, and nothing otherwise (override with `ALIS_PRIMER=full|digest|off`)
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
-- Quiet, local-first discovery and capture skills: `alis:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalog in ~40ms, and loads a registry skill only on a distinctive match; catalog metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
+- Quiet, local-first discovery and capture skills: `alis:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalogue in ~40ms, and loads a registry skill only on a distinctive match; catalogue metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
 - Wake phrases (`alis, …`, `capture this as a skill`) route to `alis:discover` or `alis:capture` from any directory (a `UserPromptSubmit` hook backed by `alis skills suggest --hook`); the CLI's unsolicited per-prompt skill suggestions are dropped, because matching whole prompts suggested unrelated skills too often
 - Structured CLI workflows run with the CLI's automation tier; guarded actions use Claude's native confirmation
 - Function hooks (Claude Code mods): on Claude Code 2.1.287 or later, where Claude Code has the feature switched on, the permission gate, handoff lifecycle and wake-phrase routing run inside Claude Code's plugin engine instead of shell scripts, and `/alis status`, `/alis ops` and `/alis handoff [alias]` are available; elsewhere the shell hooks run exactly as before
@@ -27,7 +30,7 @@ You need:
 - Claude Code v2.1.211 or later, installed and authenticated (v2.1.287 or later, with the feature switched on, for the function hooks)
 - Bash, `jq`, and Python 3.9 or later available on `PATH`
 - The [`alis` CLI](https://alis.build) installed, on your `PATH`, and signed in (`alis login`)
-- An Alis Build account with access to the organisations and products you want to use
+- An Alis Build account with access to the build environments and products you want to use
 
 ## Install
 
@@ -85,15 +88,15 @@ fix it
 ```
 
 ```text
-Use Alis Build to list the organisations I can access.
+Use Alis Build to list the build environments I can access.
 ```
 
 ```text
-Show recent builds for product os in organisation alis.
+Show recent builds for product os in build environment alis.
 ```
 
 ```text
-Review the latest deploy logs for this neuron and suggest the next action.
+Review the latest deploy logs for this service and suggest the next action.
 ```
 
 Claude Code will ask before running tools that require approval.
@@ -129,7 +132,7 @@ With the module active:
   command, `--cwd` not `cd &&`, no pipes or `head`, stderr is progress) when the
   CLI is on PATH, so the model reads them before composing a command rather than
   after a bad one
-- the DBD primer, the service pointer and the skill catalog refresh at session
+- the DBD primer, the service pointer and the skill catalogue refresh at session
   start come from the module too, with the same gating as the shell hooks, so a
   session with the flag on runs no shell hook at all
 - `alis …` Bash commands get the same allow/ask/deny answers and the same
@@ -234,13 +237,13 @@ The handoff command follows Claude's normal permission handling.
 
 ### Discovery and capture
 
-Discovery is skill-native: describe platform-shaped work in your own words and the `alis:discover` skill routes it — local catalog probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis:capture` saves it for your team. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
+Discovery is skill-native: describe platform-shaped work in your own words and the `alis:discover` skill routes it — local catalogue probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis:capture` saves it for your team. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
 
 ## Troubleshooting
 
-If Claude asks you to paste a support ticket or tries to reconstruct private
+If Claude asks you to paste a conversation or tries to reconstruct private
 registry settings, ask it to read `alis docs specialist` and
-`alis packages install --help`. Referenced tickets should be read before changes
+`alis packages install --help`. Referenced conversations should be read before changes
 are proposed; local package setup during Build should use `alis packages install`.
 These rules are included in both the startup primer and the refresher for resumed
 or compacted sessions.
@@ -264,7 +267,7 @@ alone does not install or activate Claude's Alis plugin.
 
 If `alis` commands fail with an auth error, run `alis login` (or `alis authorise <org>.<product>` for git/package credentials) and retry.
 
-`alis doctor --json` reports cached Claude plugin versions, missing hooks, the last observed hook path and the last catalog refresh outcome. These are observations, not verification of the active session. Local observations contain no commands, transcripts or credentials. Skill refresh uses Claude's native async hook lifecycle with its own 20-second deadline.
+`alis doctor --json` reports cached Claude plugin versions, missing hooks, the last observed hook path and the last catalogue refresh outcome. These are observations, not verification of the active session. Local observations contain no commands, transcripts or credentials. Skill refresh uses Claude's native async hook lifecycle with its own 20-second deadline.
 
 If the function-hooks module seems to do nothing, run with `--debug`: the log names
 the module (`hooks module alis loaded`), every event it settled, and any hook the
@@ -314,5 +317,5 @@ Uplift evaluation of the `discover` skill (with-plugin vs without-plugin Δ) liv
 claude plugin eval . --ablation with-without --scaffold --judge-model sonnet --allow-tools "Bash(alis skills *)" -j 4 --no-publish
 ```
 
-It costs real API money (~$19.50 per full run) and needs a neuron fixture on disk;
+It costs real API money (~$19.50 per full run) and needs a service fixture on disk;
 see `plugins/alis-build/evals/README.md` for preconditions and case descriptions.

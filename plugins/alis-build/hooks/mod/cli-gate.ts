@@ -24,8 +24,11 @@ const READ_PATHS = new Set(
     ['specialist', 'list'], ['specialist', 'read'], ['specialist', 'describe'],
     ['ideate', 'context'], ['ideate', 'specs'], ['ideate', 'spec'],
     ['ideate', 'stream'], ['ideate', 'find'],
+    ['ideate', 'output-artifact'], ['ideate', 'output-artifacts'],
+    ['ideate', 'session'], ['ideate', 'sessions'],
   ].map(p => p.join(' ')),
 )
+const READ_NESTED = new Set(['ideate artifacts read', 'ideate artifacts list', 'ideate artifacts get'])
 // Structured workflows retain the CLI automation tier and production gates.
 // Arbitrary process runners and messaging verbs do not get a blanket allow.
 const WORKFLOW_TOP = new Set(['define', 'build', 'deploy', 'authorise'])
@@ -45,7 +48,7 @@ const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/
 export const PLAN_DENY = 'This Alis action changes state. Finish the plan and obtain execution approval first.'
 export const ASK_REASON = 'Confirm this exact Alis action and its target. The plugin never treats a session mode as consent.'
 export const SECRET_REASON =
-  'This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and environment.'
+  'This Alis command prints or writes secret values, which land in the session transcript. Confirm the exact command and deployment environment.'
 export const ALLOW_REASON = 'Alis structured CLI workflow; CLI automation and production gates remain in force.'
 export const BARE_REASON = 'Alis CLI help or version output; nothing executes.'
 export const MANUAL_REASON =
@@ -156,7 +159,7 @@ export function decide(input: GateInput): GateDecision {
   })
   if (helpRequested) guarded = secrets = false
   const handoffRead = HANDOFF_READ.has(commandPath(argv, 3).join(' '))
-  const readOnly = READ_TOP.has(top) || READ_PATHS.has(path.join(' ')) || handoffRead || helpRequested
+  const readOnly = READ_TOP.has(top) || READ_PATHS.has(path.join(' ')) || READ_NESTED.has(commandPath(argv, 3).join(' ')) || handoffRead || helpRequested
 
   const result: GateDecision & { matched: true } = { matched: true }
   if (input.permissionMode === 'plan' && (guarded || !readOnly)) {
