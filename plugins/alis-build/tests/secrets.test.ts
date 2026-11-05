@@ -122,6 +122,12 @@ describe('secrets', () => {
     expect(maskText(`"GITHUB_TOKEN": "${'x'.repeat(20)}"`).text).toBe('"GITHUB_TOKEN": "[REDACTED:assignment]"')
     expect(maskText(FAKE.postgres).text).toBe('postgres://app:[REDACTED:postgres]@db.example.test/app')
     expect(maskText('nothing here').text).toBe('nothing here')
+    // A heading over an indented list is a label, not an assignment: the
+    // value has to share the name's line (a stylesheet's token listing).
+    const heading = 'TOKENS:\n  --lightningcss-light = initial\n  --font-sans = "Nunito Sans"'
+    expect(maskText(heading).text).toBe(heading)
+    expect(secretKindsOf(heading)).toEqual([])
+    expect(maskText(`API_TOKEN:\t${'x'.repeat(20)}`).text).toBe('API_TOKEN:\t[REDACTED:assignment]')
   })
 
   test('a private key is masked through its footer, or to the end when cut', () => {
