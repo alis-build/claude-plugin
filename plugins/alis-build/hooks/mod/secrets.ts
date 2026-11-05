@@ -38,7 +38,9 @@ const PATTERNS: readonly [string, RegExp][] = [
   // listing ({"name": "X_SECRET", "set": true}) have no value after the name;
   // lowercase and camelCase names are code, and *_NAME/_ID/_PATH/_URL/_FILE/
   // _REF name a secret rather than hold one.
-  ['assignment', /\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|API_?KEY)[A-Z0-9_]*)["']?\s*[=:]\s*["']?[A-Za-z0-9_\-./+=]{16,}/g],
+  // The name, the separator and the value share a line: "TOKENS:" heading an
+  // indented list is a label, and the first entry under it is no value.
+  ['assignment', /\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|API_?KEY)[A-Z0-9_]*)["']?[ \t]*[=:][ \t]*["']?[A-Za-z0-9_\-./+=]{16,}/g],
 ]
 const REFERENCE_NAME = /_(?:NAME|ID|PATH|URL|FILE|REF)$/
 

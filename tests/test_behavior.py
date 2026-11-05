@@ -72,6 +72,11 @@ class SecretsTests(unittest.TestCase):
     def test_one_value_matching_two_patterns_counts_once(self):
         self.assertEqual(secrets.secret_kinds_of(f"STRIPE_SECRET_KEY={FAKE['stripe']}"), [("stripe", 1)])
 
+    def test_a_heading_over_an_indented_list_is_a_label_not_an_assignment(self):
+        # A stylesheet's token listing: the value has to share the name's line.
+        self.assertEqual(secrets.secret_kinds_of("TOKENS:\n  --lightningcss-light = initial\n  --font-sans = \"Nunito Sans\""), [])
+        self.assertEqual(secrets.secret_kinds_of("API_TOKEN:\t" + "x" * 20), [("assignment", 1)])
+
     def test_masked_redacted_names_only_and_secret_reference_output_is_clean(self):
         for text in ("", "STRIPE_SECRET_KEY=••••••••", "token [REDACTED:stripe] was here",
                      '{"envs":[{"name":"STRIPE_SECRET_KEY","set":true}],"revealed":false}',
