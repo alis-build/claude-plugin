@@ -6,20 +6,9 @@ import { PARITY } from './fixtures/parity'
 
 tier('user')
 
-// tests/fixtures/parity.ts holds what hooks/cli-hook.py decide() answered for
-// each command × permission mode × ALIS_ALLOWED_SUBCMDS × automation tier; the
-// port must agree
-// on every case. Regenerate it with (from the repo root):
-//
-//   python3 - <<'PY'
-//   import importlib.util, json, os, sys; from pathlib import Path
-//   HOOKS = Path("plugins/alis-build/hooks").resolve(); sys.path.insert(0, str(HOOKS))
-//   spec = importlib.util.spec_from_file_location("cli_hook", HOOKS / "cli-hook.py")
-//   m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-//   ... (same command list, modes auto/plan/default, allowed ""/"context doctor",
-//        tier ""/"manual" passed as decide(payload, tier or None), HOME pointed at
-//        an empty directory so no ~/.alis cache leaks into the answers)
-//   PY
+// Recorded answers from the Python gate at v0.37.2, also checked by the
+// native CLI in internal/pluginhooks/testdata/permission-parity.json. Update
+// both corpora and both implementations when changing the permission policy.
 describe('parity', () => {
   test('decide() agrees with the Python gate on every recorded case', () => {
     const mismatches: string[] = []

@@ -1,5 +1,5 @@
-// Generated from hooks/cli-hook.py decide() by the snippet in tests/parity.test.ts;
-// regenerate when the Python gate changes.
+// Recorded from the Python permission gate at v0.37.2. The native CLI checks
+// the same corpus in internal/pluginhooks/testdata/permission-parity.json.
 export type ParityCase = { command: string; mode: string; allowed: string; tier: string; python: Record<string, unknown> | null }
 export const PARITY: readonly ParityCase[] = [
  {

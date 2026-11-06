@@ -36,10 +36,10 @@ The plugin runs in two modes: shell hooks everywhere, and the in-process
 module where Claude Code's function hooks are on. **A behaviour change to one
 side usually needs the same change on the other.** The permission gate is the
 strictest case: the module's port (`hooks/mod/cli-gate.ts`) must give the
-Python gate's answers (`hooks/cli-hook.py`), and
+native CLI gate's answers (`internal/pluginhooks/permission.go` in cli/v1/tui), and
 `plugins/alis-build/tests/parity.test.ts` checks every recorded case. If you
-change the gate, change both and regenerate `tests/fixtures/parity.ts` with the
-snippet at the top of `parity.test.ts`. The README's "Function hooks" section
+change the gate, update both implementations and both recorded parity corpora.
+The original Python implementation remains in Git history at v0.37.2. The README's "Function hooks" section
 explains how the two sides avoid running a job twice.
 
 ## Checks
@@ -53,7 +53,7 @@ tests/sync-skills-hook-test.sh
 tests/load-primer-hook-test.sh
 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_behavior.py
 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_handoff.py
-PYTHONDONTWRITEBYTECODE=1 python3 tests/test_python_runtime.py
+ALIS_TEST_CLI=/absolute/path/to/alis-dev python3 -B tests/test_native_hooks.py
 tests/routing-eval.sh --dry-run
 ```
 

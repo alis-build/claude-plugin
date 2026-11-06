@@ -38,7 +38,7 @@ jq -e . "$repo/plugins/alis-build/hooks/hooks.json" >/dev/null || {
   fail=1
 }
 
-# Validate every registered hook and Python helper, not only shell syntax.
+# Validate every registered hook and reject runtime Python helpers.
 python3 - "$repo" <<'PY' || fail=1
 import ast, json, os, sys
 from pathlib import Path
@@ -55,8 +55,8 @@ for entries in config["hooks"].values():
             path = root / command[len(prefix):-1]
             if not path.is_file() or not os.access(path, os.X_OK):
                 raise SystemExit(f"FAIL: missing/non-executable hook: {path.name}")
-for path in (root / "hooks").glob("*.py"):
-    ast.parse(path.read_text(), filename=str(path))
+if list((root / "hooks").glob("*.py")) or (root / "hooks/run-python.sh").exists():
+    raise SystemExit("FAIL: Python hook runtime must not be shipped")
 PY
 
 # 4. Function hooks: every module hooks.json names must exist,

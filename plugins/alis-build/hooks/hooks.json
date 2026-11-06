@@ -8,6 +8,16 @@
         "hooks": [
           {
             "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/check-cli.sh\"",
+            "timeout": 5
+          }
+        ],
+        "matcher": "^startup$"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/load-primer.sh\"",
             "timeout": 5
           },
