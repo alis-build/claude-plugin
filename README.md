@@ -32,6 +32,13 @@ You need:
 - The [`alis` CLI](https://alis.build) installed, on your `PATH`, and signed in (`alis login`)
 - An Alis Build account with access to the build environments and products you want to use
 
+The shell hooks look for a working Python 3.9+ using `python3`, `python`, then
+`py -3` (the Windows launcher). Windows Microsoft Store shortcuts do not count
+as an installed interpreter. If none works, the Python hooks quietly skip:
+Claude keeps its normal permission handling, while the shell-based secret
+warnings and skill catalogue refresh are unavailable. Function hooks do not
+need Python.
+
 ## Install
 
 Add the Alis plugin marketplace:
@@ -241,6 +248,19 @@ Discovery is skill-native: describe platform-shaped work in your own words and t
 
 ## Troubleshooting
 
+On Windows, repeated `Python was not found` hook warnings in plugin versions
+up to 0.37.1 can come from the Microsoft Store's `python3` shortcut, even when
+Python is installed under `python` or `py`. Version 0.37.2 checks that the
+interpreter actually runs and tries those alternatives. After updating the
+plugin, run `/reload-plugins` in Claude Code or start a new session. After
+installing Python or changing PATH, close Claude and open a new terminal so
+it picks up the updated environment.
+
+An Alis plugin installed at user scope is available in non-Alis projects too.
+To turn it off temporarily, open `/plugin` in Claude Code, select Alis under
+Installed and choose Disable. Run `/reload-plugins` if prompted. Enable it
+from the same screen when you want to use it again.
+
 If Claude asks you to paste a conversation or tries to reconstruct private
 registry settings, ask it to read `alis docs specialist` and
 `alis packages install --help`. Referenced conversations should be read before changes
@@ -287,6 +307,8 @@ executables; no deployment, uninstall or message is sent.
 Also run `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_handoff.py` for the bash
 lifecycle hook (`hooks/handoff.sh`, stub `alis` on PATH),
 source-claim and permission-routing checks.
+Run `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_python_runtime.py` for Windows
+alias handling, interpreter fallback and silent operation without Python.
 
 For the function-hooks module: Claude Code writes the engine's type declarations
 to `plugins/alis-build/.claude-plugin/types/` (gitignored by its own `.gitignore`)

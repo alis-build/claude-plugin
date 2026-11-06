@@ -14,6 +14,9 @@ HOOKS = ROOT / "plugins/alis-build/hooks"
 sys.path.insert(0, str(HOOKS))
 sys.path.insert(0, str(ROOT / "tests"))
 
+# Run runtime selection regressions through the existing CI entry point too.
+from test_python_runtime import PythonRuntimeTests
+
 def load(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
