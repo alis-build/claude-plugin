@@ -4,6 +4,14 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.37.2](https://github.com/alis-build/claude-plugin/compare/v0.37.1...v0.37.2) (2026-11-06)
+
+### Fixes
+
+#### Handle Windows Python aliases in hooks ([5fc7b8a](https://github.com/alis-build/claude-plugin/commit/5fc7b8a1877ae6efe950c0424ac37acf95456bda))
+
+Windows Python shortcuts no longer cause repeated hook errors when they cannot start an interpreter. The plugin tries python3, python and the Windows py launcher, and quietly skips Python hooks if none provides Python 3.9 or later. Claude keeps its normal permission handling when the permission hook is unavailable.
+
 ## [0.37.1](https://github.com/alis-build/claude-plugin/compare/v0.37.0...v0.37.1) (2026-10-28)
 
 ### Fixes
