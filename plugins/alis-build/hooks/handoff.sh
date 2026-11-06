@@ -5,6 +5,13 @@
 
 payload=$(cat 2>/dev/null)
 
+# New CLIs parse and translate this event natively; retain the old CLI fence
+# while the person upgrades. No Python is used on either path.
+if out=$(printf '%s' "$payload" | alis hooks run --protocol 1 --harness claude --handler handoff 2>/dev/null); then
+  [ -z "$out" ] || printf '%s\n' "$out"
+  exit 0
+fi
+
 # Function-hooks handshake: the module lists the jobs it serves in
 # alis_module; when "handoff" is among them this script has nothing to do.
 alis_module_re='"alis_module"[[:space:]]*:[[:space:]]*"([^"]* )?handoff( [^"]*)?"'

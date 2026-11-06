@@ -28,16 +28,16 @@ Use this plugin to let Claude Code work with build environments, products, servi
 You need:
 
 - Claude Code v2.1.211 or later, installed and authenticated (v2.1.287 or later, with the feature switched on, for the function hooks)
-- Bash, `jq`, and Python 3.9 or later available on `PATH`
+- Bash and `jq` available on `PATH`
 - The [`alis` CLI](https://alis.build) installed, on your `PATH`, and signed in (`alis login`)
 - An Alis Build account with access to the build environments and products you want to use
 
-The shell hooks look for a working Python 3.9+ using `python3`, `python`, then
-`py -3` (the Windows launcher). Windows Microsoft Store shortcuts do not count
-as an installed interpreter. If none works, the Python hooks quietly skip:
-Claude keeps its normal permission handling, while the shell-based secret
-warnings and skill catalogue refresh are unavailable. Function hooks do not
-need Python.
+The plugin uses native hook protocol 1 in the `alis` binary. Upgrade the CLI
+first with `alis upgrade`; `alis hooks capabilities` must report `"protocol":1`.
+Restart the coding agent after updating. Python is not a runtime dependency.
+Older CLIs receive one startup upgrade notice; optional native checks wait for
+the upgrade, and existing handoff claims remain fenced by the compatibility
+adapter. Bash and `jq` are still used by the other plugin hooks.
 
 ## Install
 
@@ -118,7 +118,7 @@ After every tool call the plugin looks for secret-looking values in the result a
 
 On the manual automation tier the CLI refuses every Define/Build/Deploy, `authorise` and package change without `--approve`. The hook reads the tier the CLI itself enforces (the server tier cached in `~/.alis/profile-cache.json`, tightened by `approvals.maxTier` in `~/.alis/settings.json`), and on `manual` asks before those workflows with `--approve` already added, instead of letting the CLI refuse them once. A `define --dry-run`, help and reads still run without asking; a missing cache keeps today's behaviour.
 
-`ALIS_ALLOWED_SUBCMDS` restricts automatic allows (for example `context doctor operations`); it does not disable required confirmation. Missing Python causes the permission hook to fall back to Claude's normal handling.
+`ALIS_ALLOWED_SUBCMDS` restricts automatic allows (for example `context doctor operations`); it does not disable required confirmation. An older CLI leaves permission decisions to Claude until the CLI is upgraded.
 
 ## Function hooks
 
@@ -230,7 +230,7 @@ that turn from reaching its handoff boundary.
 
 This requires the handoff-enabled CLI/workstation image, this plugin on both
 machines, matching Claude Code versions (2.1.269 or later in the 2.1 series),
-Python 3.9+, and independent Claude authentication on the destination. Existing
+and independent Claude authentication on the destination. Existing
 SSH enrolment supplies the connection and host verification. The destination
 may request workspace trust or normal tool permissions in its browser terminal.
 Local commits and non-ignored uncommitted changes travel with the transcript;
@@ -248,13 +248,9 @@ Discovery is skill-native: describe platform-shaped work in your own words and t
 
 ## Troubleshooting
 
-On Windows, repeated `Python was not found` hook warnings in plugin versions
-up to 0.37.1 can come from the Microsoft Store's `python3` shortcut, even when
-Python is installed under `python` or `py`. Version 0.37.2 checks that the
-interpreter actually runs and tries those alternatives. After updating the
-plugin, run `/reload-plugins` in Claude Code or start a new session. After
-installing Python or changing PATH, close Claude and open a new terminal so
-it picks up the updated environment.
+Version 0.38.0 runs the former Python hooks in the CLI binary. There is no
+Python interpreter to install or Windows Store alias to repair. Upgrade the
+CLI first, update the plugin, then start a new session.
 
 An Alis plugin installed at user scope is available in non-Alis projects too.
 To turn it off temporarily, open `/plugin` in Claude Code, select Alis under
@@ -307,8 +303,10 @@ executables; no deployment, uninstall or message is sent.
 Also run `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_handoff.py` for the bash
 lifecycle hook (`hooks/handoff.sh`, stub `alis` on PATH),
 source-claim and permission-routing checks.
-Run `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_python_runtime.py` for Windows
-alias handling, interpreter fallback and silent operation without Python.
+Run `ALIS_TEST_CLI=/absolute/path/to/alis-dev python3 -B tests/test_native_hooks.py`
+for end-to-end tests with no Python on the hook subprocess PATH. Python is
+used only as a development test runner. Native policy and warning behavior
+is tested in the CLI, including 996 recorded permission cases.
 
 For the function-hooks module: Claude Code writes the engine's type declarations
 to `plugins/alis-build/.claude-plugin/types/` (gitignored by its own `.gitignore`)
@@ -316,7 +314,7 @@ each time a session loads the module, so open one session with the plugin after 
 Claude Code update to refresh them. Then run
 `claude plugin validate plugins/alis-build` (lists what the module hooks and calls)
 and `claude plugin test plugins/alis-build` (the `tests/*.test.ts` suite, which
-includes 354 recorded answers of the Python gate the port must match). An
+includes 996 recorded answers of the original gate the port must match). An
 optional typecheck is `npx -p typescript tsc -p plugins/alis-build/tsconfig.json`.
 To try it live, `claude --plugin-dir /absolute/path/to/plugins/alis-build --debug`
 (a relative `--plugin-dir` resolves against the session's folder) and look for

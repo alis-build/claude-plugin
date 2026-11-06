@@ -98,7 +98,7 @@ export const register: Register = on => {
     }
   }).catch(($, e, next) => next(e))
 
-  // The permission gate for `alis …` commands (cli-hook.py's job). A failure
+  // The permission gate for `alis …` commands (the native CLI permission handler's job). A failure
   // answers with the chain beneath; the gate's own throw is logged by the
   // engine.
   on('classic.PreToolUse', { tool: 'Bash' }, ($, e, next) => cliGateClassic(hostOf($), e, next)).catch(($, e, next) => next(e))

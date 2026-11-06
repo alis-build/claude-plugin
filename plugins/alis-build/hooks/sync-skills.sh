@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Claude owns the asynchronous lifecycle; the child has its own deadline.
+# The CLI owns payload parsing, policy and native replies. Older CLIs leave
+# optional decisions to the host; check-cli.sh reports the required upgrade.
 set -eu
-hook_dir=$(dirname "$0")
-exec "$hook_dir/run-python.sh" "$hook_dir/sync-skills.py"
+hook_dir=$(cd "$(dirname "$0")" && pwd)
+alis hooks run --protocol 1 --harness claude --handler sync --plugin-root "$hook_dir/.." 2>/dev/null || true
