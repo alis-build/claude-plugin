@@ -53,6 +53,7 @@ tests/sync-skills-hook-test.sh
 tests/load-primer-hook-test.sh
 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_behavior.py
 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_handoff.py
+PYTHONDONTWRITEBYTECODE=1 python3 tests/test_python_runtime.py
 tests/routing-eval.sh --dry-run
 ```
 
