@@ -1,7 +1,7 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { alisCallOf, operationStateOf, progressEventsOf } from '../hooks/mod/ops'
-import { finishedAmong, finishedOf, liveAmong, liveOf, POLL_EVERY, TICK_MS, watchAlisCall } from '../hooks/mod/ops-live'
+import { finishedOf, liveOf, opsAmong, POLL_EVERY, TICK_MS, watchAlisCall } from '../hooks/mod/ops-live'
 import { fakeHost } from './fixtures/fake-host'
 
 tier('user')
@@ -72,8 +72,8 @@ describe('ops-live', () => {
     expect(host.runs[0]?.argv).toEqual(['alis', 'operations', 'list', '--json'])
     expect(host.spawns[0]?.argv).toEqual(['alis', 'operations', 'wait', 'operations/x', '--json', '--verbose'])
     expect(liveOf('toolu_9')).toMatchObject({ operation: 'operations/x', target: 'acme.sm.hello.v1', names: { env1: 'Development' } })
-    expect(liveAmong([{ tool_use_id: 'other', isRunning: true }, { tool_use_id: 'toolu_9', isRunning: true }])).toBe(liveOf('toolu_9'))
-    expect(liveAmong([{ tool_use_id: 'toolu_9', isRunning: false }])).toBe(undefined)
+    expect(opsAmong([{ tool_use_id: 'other', isRunning: true }, { tool_use_id: 'toolu_9', isRunning: true }])).toEqual([{ id: 'toolu_9', live: liveOf('toolu_9') }])
+    expect(opsAmong([{ tool_use_id: 'toolu_9', isRunning: false }])).toEqual([])
     expect(host.timers).toEqual([expect.objectContaining({ ms: TICK_MS, cancelled: false })])
 
     // A snapshot split across two writes is read once it is whole.
@@ -138,7 +138,7 @@ describe('ops-live', () => {
     // The dispatch is over, so its abort no longer ends the row.
     controller.abort()
     expect(liveOf('toolu_bg')).toMatchObject({ background: true, operation: 'operations/bg' })
-    expect(liveAmong([{ tool_use_id: 'toolu_bg', isRunning: false }])).toBe(liveOf('toolu_bg'))
+    expect(opsAmong([{ tool_use_id: 'toolu_bg', isRunning: false }])).toEqual([{ id: 'toolu_bg', live: liveOf('toolu_bg') }])
 
     const timer = host.timers.at(-1)!
     for (let i = 0; i < POLL_EVERY; i++) timer.fn()
@@ -151,7 +151,47 @@ describe('ops-live', () => {
     expect(liveOf('toolu_bg')).toBe(undefined)
     expect(timer.cancelled).toBe(true)
     expect(finishedOf('toolu_bg')).toMatchObject({ background: true, result: { done: true, version: '2.44.21' } })
-    expect(finishedAmong([{ tool_use_id: 'other' }, { tool_use_id: 'toolu_bg' }])).toBe(finishedOf('toolu_bg'))
+    expect(opsAmong([{ tool_use_id: 'other', isRunning: false }, { tool_use_id: 'toolu_bg', isRunning: false }])).toEqual([{ id: 'toolu_bg', finished: finishedOf('toolu_bg') }])
+  })
+
+  test('parallel background waits in one group each keep a row, live or ended', async () => {
+    // Two operations at once, as when Claude waits on two builds in one message.
+    const done = new Set<string>()
+    const host = fakeHost({
+      answer: run => {
+        const op = run.argv[3] ?? ''
+        if (run.argv[2] !== 'describe') return { exitCode: 1, stdout: '', stderr: '' }
+        return { exitCode: 0, stdout: done.has(op) ? `{"done":true,"version":"${op === 'operations/a' ? '2.50.9' : '1.6.1'}"}` : '{"done":false,"status":"building"}', stderr: '' }
+      },
+    })
+    host.spawnError = new Error('no child in the background')
+    const background = async () => ({ result: { stdout: '', stderr: '', interrupted: false, backgroundTaskId: 'b' } })
+    const wait = (id: string, op: string) => watchAlisCall(host, { tool: 'Bash', tool_use_id: id, command: `alis operations wait ${op} --json`, run_in_background: true }, background, new AbortController().signal)
+    await wait('toolu_a', 'operations/a')
+    await wait('toolu_b', 'operations/b')
+    const group = [
+      { tool_use_id: 'toolu_a', isRunning: false },
+      { tool_use_id: 'toolu_b', isRunning: false },
+    ]
+    expect(opsAmong(group).map(op => [op.id, op.live?.operation])).toEqual([
+      ['toolu_a', 'operations/a'],
+      ['toolu_b', 'operations/b'],
+    ])
+
+    // The first ends: its outcome stays in the group while the second runs on.
+    done.add('operations/a')
+    const [timerA, timerB] = host.timers.slice(-2)
+    for (let i = 0; i < POLL_EVERY; i++) timerA!.fn()
+    await settle()
+    expect(opsAmong(group).map(op => [op.id, op.live ? 'live' : op.finished.result?.version])).toEqual([
+      ['toolu_a', '2.50.9'],
+      ['toolu_b', 'live'],
+    ])
+
+    done.add('operations/b')
+    for (let i = 0; i < POLL_EVERY; i++) timerB!.fn()
+    await settle()
+    expect(opsAmong(group).map(op => op.finished?.result?.version)).toEqual(['2.50.9', '1.6.1'])
   })
 
   test('a deploy keeps its --version; async starts and defines are left alone', async () => {

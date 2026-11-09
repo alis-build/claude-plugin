@@ -170,13 +170,21 @@ export function renderLiveRow(kit: Kit, live: LiveWait, now = Date.now(), surfac
   return liveRow(kit, surface, lineOf(live, now), columns)
 }
 
-/** The engine's own row with one of ours beneath it. */
-export function withRowBelow(kit: Kit, rendered: RenderElement, row: RenderElement): RenderElement {
+/**
+ * The engine's own row with ours stacked beneath it, one per operation.
+ * Each row's own root shares a key with its siblings, so the wrapper keys
+ * them by tool call.
+ */
+export function withRowsBelow(kit: Kit, rendered: RenderElement, rows: ReadonlyArray<{ key: string; row: RenderElement }>): RenderElement {
   const { Box } = kit
   return (
     <Box flexDirection="column">
       {rendered}
-      <Box paddingLeft={INDENT}>{row}</Box>
+      {rows.map(({ key, row }) => (
+        <Box key={key} paddingLeft={INDENT}>
+          {row}
+        </Box>
+      ))}
     </Box>
   )
 }
