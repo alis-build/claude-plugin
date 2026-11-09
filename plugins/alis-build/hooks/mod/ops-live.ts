@@ -64,22 +64,28 @@ export function finishedOf(toolUseId: unknown): LiveWait | undefined {
   return typeof toolUseId === 'string' ? finished.get(toolUseId) : undefined
 }
 
-/** The first live wait among a folded group's calls, for the group's row. */
-export function liveAmong(calls: ReadonlyArray<{ tool_use_id?: string; isRunning: boolean }>): LiveWait | undefined {
-  for (const call of calls) {
-    const wait = liveOf(call.tool_use_id)
-    if (wait && (call.isRunning || wait.background)) return wait
-  }
-  return undefined
-}
+/** One alis call of a folded group: still running, or ended. */
+export type GroupOp = { id: string; live: LiveWait; finished?: never } | { id: string; finished: LiveWait; live?: never }
 
-/** The last ended alis call among a folded group's calls, for the group's folded line. */
-export function finishedAmong(calls: ReadonlyArray<{ tool_use_id?: string }>): LiveWait | undefined {
-  for (let i = calls.length - 1; i >= 0; i--) {
-    const done = finishedOf(calls[i]?.tool_use_id)
-    if (done) return done
+/**
+ * Every alis call among a folded group's calls, in the group's order, so
+ * each gets its own row. Parallel builds fold into one group, and a single
+ * row would hide every operation but one.
+ */
+export function opsAmong(calls: ReadonlyArray<{ tool_use_id?: string; isRunning: boolean }>): GroupOp[] {
+  const ops: GroupOp[] = []
+  for (const call of calls) {
+    const id = call.tool_use_id
+    if (typeof id !== 'string') continue
+    const wait = live.get(id)
+    if (wait && (call.isRunning || wait.background)) {
+      ops.push({ id, live: wait })
+      continue
+    }
+    const done = finished.get(id)
+    if (done) ops.push({ id, finished: done })
   }
-  return undefined
+  return ops
 }
 
 /** A background call runs on after its tool call returns. */

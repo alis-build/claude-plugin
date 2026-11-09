@@ -2,7 +2,7 @@ import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { graphicsFrom, MARK_SVG, setMarkFile } from '../hooks/mod/brand'
 import type { LiveWait } from '../hooks/mod/ops-live'
-import { barCells, foldOf, renderOpsResult, renderOpsRunning } from '../hooks/mod/ops-render'
+import { barCells, foldOf, renderLiveRow, renderOpsResult, renderOpsRunning, withRowsBelow } from '../hooks/mod/ops-render'
 
 tier('user')
 
@@ -218,6 +218,24 @@ describe('ops-render', () => {
     const last: LiveWait = { operation: null, target: 'acme.sm.hello.v1', verb: 'deploy', startedAt: 1_000, endedAt: 2_000, status: 'running', names: {} }
     const stdout = JSON.stringify({ error: { code: 'APPROVAL_REQUIRED', message: 'deploy to production needs approval\nre-run with --approve' } })
     expect(foldOf({ stdout, stderr: '', interrupted: false }, last)).toMatchObject({ tone: 'error', text: 'Deploy failed.', sub: 'deploy to production needs approval' })
+  })
+
+  test('a folded group stacks one row per operation under its own row', async ($, on) => {
+    const engineRow = { type: 'Text', props: {}, children: ['Ran 2 commands'] } as never
+    const meet: LiveWait = { ...building(), operation: 'operations/meet', target: 'acme.sm.meet.v1', view: { ...building().view!, version: '1.6.1' } }
+    const iam: LiveWait = { ...building(), operation: 'operations/iam', view: { ...building().view!, version: '2.50.9' }, endedAt: 200_000, result: { name: 'operations/iam', done: true, version: '2.50.9' } }
+    on('ui.render', { component: 'ToolGroup' }, ($, e) => {
+      const kit = $.ui.resolve(e)
+      return withRowsBelow(kit, engineRow, [
+        { key: 'toolu_a', row: renderOpsResult(kit, undefined, iam, e.surface)! },
+        { key: 'toolu_b', row: renderLiveRow(kit, meet, 78_000, e.surface, 100) },
+      ])
+    })
+    const drawn = JSON.stringify(await $.ui.render({ surface: 'terminal', component: 'ToolGroup', requestId: 'g1', props: { calls: [], isExpanded: false } } as never))
+    expect(drawn).toContain('Ran 2 commands')
+    expect(drawn).toContain('2.50.9 is live on Development')
+    expect(drawn).toContain('1.6.1')
+    expect(drawn.indexOf('2.50.9')).toBeLessThan(drawn.indexOf('1.6.1'))
   })
 
   test('a folded group goes by how the call ended, not by what the watcher last saw', () => {

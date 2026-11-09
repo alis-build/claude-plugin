@@ -11,10 +11,10 @@ import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
 import { renderAlisOutput } from './mod/alis-render'
 import { HANDOFF_PANE_ID, handoffActions, handoffPane, onHandoffPaneClosed, resumeHandoffPane } from './mod/handoff-pane'
 import { renderHandoffPane } from './mod/handoff-pane-view'
-import { finishedAmong, finishedOf, liveAmong, liveOf, namesFor, watchAlisCall } from './mod/ops-live'
+import { finishedOf, liveOf, namesFor, opsAmong, watchAlisCall } from './mod/ops-live'
 import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane, resumeOpsPane, showOpsPane } from './mod/ops-pane'
 import { renderOpsPane } from './mod/ops-pane-view'
-import { renderLiveRow, renderOpsResult, renderOpsRunning, withRowBelow } from './mod/ops-render'
+import { renderLiveRow, renderOpsResult, renderOpsRunning, withRowsBelow } from './mod/ops-render'
 import { productOf } from './mod/ops-progress'
 import { graphicsFrom, MARK_CELL_PNG, setMarkFile } from './mod/brand'
 import { passClassic } from './mod/classic'
@@ -148,14 +148,22 @@ export const register: Register = on => {
     const wait = liveOf(e.props.tool_use_id)
     return wait && e.props.isRunning ? renderOpsRunning($.ui.resolve(e), await next(e), wait, Date.now(), e.surface, e.viewport?.columns) : next(e)
   })
+  // A folded group hides its calls' rows and results, so every alis call in
+  // it gets a row under the group: live while it runs, its outcome once ended.
   on('ui.render', { component: 'ToolGroup' }, async ($, e, next) => {
     if (e.props.isExpanded) return next(e)
-    const wait = liveAmong(e.props.calls)
-    if (wait) return renderOpsRunning($.ui.resolve(e), await next(e), wait, Date.now(), e.surface, e.viewport?.columns)
-    // A folded group hides its results: the last alis call's outcome shows under it.
-    const ended = finishedAmong(e.props.calls)
-    const fold = ended ? renderOpsResult($.ui.resolve(e), undefined, ended, e.surface, opsFollow(hostOf($), ended.operation)) : null
-    return fold ? withRowBelow($.ui.resolve(e), await next(e), fold) : next(e)
+    const ops = opsAmong(e.props.calls)
+    if (ops.length === 0) return next(e)
+    const kit = $.ui.resolve(e)
+    const host = hostOf($)
+    const now = Date.now()
+    const rows = ops.flatMap(op => {
+      const row = op.live
+        ? renderLiveRow(kit, op.live, now, e.surface, e.viewport?.columns)
+        : renderOpsResult(kit, undefined, op.finished, e.surface, opsFollow(host, op.finished.operation))
+      return row ? [{ key: op.id, row }] : []
+    })
+    return rows.length > 0 ? withRowsBelow(kit, await next(e), rows) : next(e)
   })
   // The operations pane (/alis ops): drawn from the module's state while
   // open, refreshed on the clock; a close from anywhere stops the refresh.
