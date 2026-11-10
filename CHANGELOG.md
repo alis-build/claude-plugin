@@ -4,6 +4,22 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.39.1](https://github.com/alis-build/claude-plugin/compare/v0.39.0...v0.39.1) (2026-11-10)
+
+### Fixes
+
+#### One row per operation, drawn in dots and named by service ([121eabe](https://github.com/alis-build/claude-plugin/commit/121eabeb49e5a8b0fb9857fe25209ee1f98a8521))
+
+An --async start and the wait that follows it drew the same operation
+twice in a folded group. The start now belongs to the band alone and
+steps aside once a wait follows its operation: one row, the wait's, and no
+notification for an operation a call is already waiting on.
+
+The progress bar is a row of dots, the working one pulsing, and three
+working dots stand in before there is anything to measure. Rows and
+results name the service: "Deploying activity.v1 1.68.3 to Development",
+"activity.v1 1.68.3 is live on Development".
+
 ## [0.39.0](https://github.com/alis-build/claude-plugin/compare/v0.38.0...v0.39.0) (2026-11-10)
 
 ### Features
