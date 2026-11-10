@@ -386,11 +386,13 @@ export function liveLineOf(view: OpView | undefined, opts: { service?: string; o
   const stages = view?.stages ?? []
   const start = Math.min(opts.startedAt, ...stages.map(s => s.startMs ?? Number.POSITIVE_INFINITY))
   const clock = clockOf(opts.now - start)
-  const subject = view?.version ?? opts.service ?? ''
+  // The service and its version, whichever are known: `activity.v1 1.68.3`.
+  const subject = [opts.service, view?.version].filter(Boolean).join(' ')
   const active = stages.find(s => s.state === 'running') ?? stages.find(s => s.state === 'failed') ?? stages.find(s => s.state === 'waiting')
   const isBuild = (view?.kind ?? (opts.verb === 'deploy' ? 'deploy' : 'build')) === 'build'
   if (!active || (active.state === 'waiting' && !stages.some(s => s.state !== 'waiting'))) {
-    return { label: isBuild ? 'Starting the build' : 'Starting the deploy', note: isBuild ? 'waiting for a build machine' : 'waiting for the deployment environment', fill: null, clock }
+    const what = opts.service ? `${opts.service} ` : ''
+    return { label: isBuild ? `Starting the ${what}build` : `Starting the ${what}deploy`, note: isBuild ? 'waiting for a build machine' : 'waiting for the deployment environment', fill: null, clock }
   }
   const builds = stages.filter(s => s.kind === 'build')
   const deploysWaiting = stages.filter(s => s.kind === 'deploy' && s.state === 'waiting').map(s => s.name)
@@ -411,7 +413,7 @@ export function liveLineOf(view: OpView | undefined, opts: { service?: string; o
   const built = builds.find(s => s.state === 'done' && s.startMs !== undefined && s.endMs !== undefined)
   const doing = active.current ?? (active.total ? `Step ${Math.min(active.total, active.done + 1)} of ${active.total}` : 'Starting')
   return {
-    label: `Deploying to ${active.name}`,
+    label: subject ? `Deploying ${subject} to ${active.name}` : `Deploying to ${active.name}`,
     fill: active.total ? (active.done + (active.state === 'running' ? 0.5 : 0)) / active.total : null,
     sub: warning ?? doing + (built ? ` · built in ${durationOf((built.endMs as number) - (built.startMs as number))}` : ''),
     subTone: warning ? 'warning' : 'dim',
@@ -442,19 +444,23 @@ export function foldLineOf(input: {
   waitedFor?: string
   /** The CLI's own error, for a call that failed before any operation was seen. */
   error?: string
+  /** The service as people say it (`activity.v1`), when the call's target is known. */
+  service?: string
 }): FoldLine {
   const view = input.view
   const reason = view?.error ?? input.error
   const why = reason ? compact(reason.split('\n')[0] ?? '', 300) : undefined
   const stages = view?.stages ?? []
   const version = view?.version ?? input.version
+  // What ended, by name: `activity.v1 1.68.3`, or either alone.
+  const named = [input.service, version].filter(Boolean).join(' ')
   const time = input.elapsedMs !== undefined ? durationOf(input.elapsedMs) : undefined
   const deploys = stages.filter(s => s.kind === 'deploy')
   const isBuild = (view?.kind ?? (input.verb === 'deploy' ? 'deploy' : 'build')) === 'build'
   const building = stages.some(s => s.kind === 'build' && s.state !== 'done')
   if (input.verb === 'define' && !view) {
-    if (input.outcome === 'failed') return { tone: 'error', text: 'Define failed.', time, sub: why }
-    if (input.outcome === 'done') return { tone: 'ok', text: version ? `${version} is defined` : 'The define finished', time }
+    if (input.outcome === 'failed') return { tone: 'error', text: `${input.service ? `${input.service} define` : 'Define'} failed.`, time, sub: why }
+    if (input.outcome === 'done') return { tone: 'ok', text: named ? `${named} is defined` : 'The define finished', time }
     if (input.outcome !== 'running') {
       return { tone: 'neutral', text: 'Still defining on Alis', note: input.outcome === 'interrupted' ? 'you stopped watching, not the define' : `Claude stopped waiting${time ? ` after ${time}` : ''}`, follow: true }
     }
@@ -468,20 +474,20 @@ export function foldLineOf(input: {
   }
   if (input.outcome === 'running') {
     const what = input.verb === 'define' ? 'Define' : isBuild ? 'Build' : 'Deploy'
-    return { tone: 'neutral', text: `${what}${version ? ` ${version}` : ''} started on Alis` }
+    return { tone: 'neutral', text: `${what}${named ? ` ${named}` : ''} started on Alis` }
   }
   if (input.outcome === 'failed') {
     const failed = stages.find(s => s.state === 'failed')
     if (failed?.kind === 'build' || (!failed && isBuild && !deploys.some(d => d.state !== 'waiting'))) {
       const at = failed?.failedAt ? ` at step ${failed.failedAt}` : ''
-      return { tone: 'error', text: `Build failed${at}.${deploys.length ? ' Nothing was deployed.' : ''}`, time, sub: failed?.error ?? why, logsUri: view?.buildLogsUri ?? view?.logsUri }
+      return { tone: 'error', text: `${input.service ? `${input.service} build` : 'Build'} failed${at}.${deploys.length ? ' Nothing was deployed.' : ''}`, time, sub: failed?.error ?? why, logsUri: view?.buildLogsUri ?? view?.logsUri }
     }
     const where = failed?.name ?? joinNames(deploys.map(d => d.name))
-    return { tone: 'error', text: `Deploy${where ? ` to ${where}` : ''} failed.`, time, sub: failed?.error ?? why, logsUri: failed?.logsUri ?? view?.logsUri }
+    return { tone: 'error', text: `${input.service ? `${input.service} deploy` : 'Deploy'}${where ? ` to ${where}` : ''} failed.`, time, sub: failed?.error ?? why, logsUri: failed?.logsUri ?? view?.logsUri }
   }
   const envs = deploys.map(d => d.name)
-  const subject = version ?? (isBuild ? 'The build' : 'The deploy')
+  const subject = named || (isBuild ? 'The build' : 'The deploy')
   if (envs.length) return { tone: 'ok', text: `${subject} is live on ${joinNames(envs)}`, time, logsUri: view?.logsUri }
-  if (isBuild) return { tone: 'ok', text: version ? `${version} is built` : 'The build finished', time, logsUri: view?.buildLogsUri ?? view?.logsUri }
+  if (isBuild) return { tone: 'ok', text: named ? `${named} is built` : 'The build finished', time, logsUri: view?.buildLogsUri ?? view?.logsUri }
   return { tone: 'ok', text: 'The deploy finished', time, logsUri: view?.logsUri }
 }

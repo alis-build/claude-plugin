@@ -20,27 +20,59 @@ export type Kit = Pick<Elements['terminal'], 'Box' | 'Text' | 'Button' | 'Link'>
 
 /** The bar's cells: never under this (or it is left out), never over that. */
 const BAR_MIN = 8
-const BAR_MAX = 64
+const BAR_MAX = 40
 /** The live row's indent under the engine's own row. */
 const INDENT = 2
 
-/** One line of heavy rules (terminal): done cells in the running key, the rest on the track. */
-function bar(kit: Kit, fill: number, cells: number): RenderElement {
+/**
+ * The dot the bars are made of. Progress is drawn as a row of dots, the
+ * brand's own element (the mark is eleven of them), rather than a rule: the
+ * ones done in the running key, the one being worked on pulsing, the rest on
+ * the track. The mark itself is never redrawn; this is the working dots.
+ */
+const DOT = '•'
+/** Dots shown while there is nothing to measure yet: one lit, moving along. */
+const WORKING_DOTS = 3
+
+/** The working dot's beat: it changes once a second, the row's own redraw. */
+export function beatOf(now: number): number {
+  return Math.floor(now / 1000)
+}
+
+/** One line of dots (terminal): done in the running key, the working one pulsing, the rest on the track. */
+function bar(kit: Kit, fill: number, cells: number, beat: number): RenderElement {
   const { Text } = kit
-  const on = Math.max(0, Math.min(cells, Math.round(cells * fill)))
+  const on = Math.max(0, Math.min(cells, Math.floor(cells * fill)))
+  const working = on < cells ? 1 : 0
   return (
     <Text>
-      <Text color={KEY.running}>{'━'.repeat(on)}</Text>
-      <Text color={KEY.track}>{'━'.repeat(cells - on)}</Text>
+      <Text color={KEY.running}>{DOT.repeat(on)}</Text>
+      {working ? <Text color={beat % 2 === 0 ? KEY.running : KEY.quiet}>{DOT}</Text> : null}
+      <Text color={KEY.track}>{DOT.repeat(cells - on - working)}</Text>
+    </Text>
+  )
+}
+
+/** The working dots (terminal), for a wait with no measure yet: three, the lit one moving along. */
+function workingDots(kit: Kit, beat: number): RenderElement {
+  const { Text } = kit
+  const lit = ((beat % WORKING_DOTS) + WORKING_DOTS) % WORKING_DOTS
+  return (
+    <Text>
+      {Array.from({ length: WORKING_DOTS }, (_, i) => (
+        <Text color={i === lit ? KEY.running : KEY.track}>{DOT}</Text>
+      ))}
     </Text>
   )
 }
 
 /**
- * The desktop's bar: a thin rounded track as SVG at a set width, so it never
- * wraps the way a run of rule characters does in the desktop's own font, and
- * its cyan does not hang on how the desktop maps a theme key. The cyan is
- * Claude Code's light-theme running colour, which holds on both grounds.
+ * The desktop's bar: the same row of dots as SVG at a set width, so it never
+ * wraps the way a run of characters does in the desktop's own font, and its
+ * cyan does not hang on how the desktop maps a theme key. The cyan is Claude
+ * Code's light-theme running colour, which holds on both grounds. The working
+ * dot pulses on the brand's dots loop (1.2s); an image runs no script, and a
+ * viewer that holds animations still sees it lit.
  */
 export const BAR_FILL = '#009999'
 const BAR_TRACK = '#8a8a8a'
@@ -48,16 +80,35 @@ const BAR_PX_MIN = 96
 const BAR_PX_MAX = 320
 /** CSS pixels the desktop gives a cell, conservatively, for the bar's width. */
 const DESKTOP_CELL_PX = 6
+/** A dot's pitch and radius in the SVG bar, in CSS pixels. */
+const DOT_PITCH = 8
+const DOT_R = 2.5
+const LOOP_DOTS = '1.2s'
+
+const pulse = `<animate attributeName="opacity" values="1;0.3;1" dur="${LOOP_DOTS}" repeatCount="indefinite"/>`
 
 export function barSvg(fill: number, width: number): string {
   const w = Math.round(width)
-  const on = Math.max(0, Math.min(w, Math.round(w * fill)))
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="6" viewBox="0 0 ${w} 6">` +
-    `<rect x="0" y="2" width="${w}" height="2" rx="1" fill="${BAR_TRACK}" fill-opacity="0.35"/>` +
-    (on > 0 ? `<rect x="0" y="1.5" width="${on}" height="3" rx="1.5" fill="${BAR_FILL}"/>` : '') +
-    '</svg>'
-  )
+  const count = Math.max(1, Math.floor(w / DOT_PITCH))
+  const on = Math.max(0, Math.min(count, Math.floor(count * fill)))
+  let dots = ''
+  for (let i = 0; i < count; i++) {
+    const at = `cx="${i * DOT_PITCH + DOT_PITCH / 2}" cy="3" r="${DOT_R}"`
+    if (i < on) dots += `<circle ${at} fill="${BAR_FILL}"/>`
+    else if (i === on) dots += `<circle ${at} fill="${BAR_FILL}">${pulse}</circle>`
+    else dots += `<circle ${at} fill="${BAR_TRACK}" fill-opacity="0.35"/>`
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="6" viewBox="0 0 ${w} 6">${dots}</svg>`
+}
+
+/** The desktop's working dots: three, pulsing one after another. */
+export function workingDotsSvg(): string {
+  let dots = ''
+  for (let i = 0; i < WORKING_DOTS; i++) {
+    dots += `<circle cx="${i * DOT_PITCH + DOT_PITCH / 2}" cy="3" r="${DOT_R}" fill="${BAR_FILL}"><animate attributeName="opacity" values="1;0.25;1" dur="${LOOP_DOTS}" begin="${(i * 0.4).toFixed(1)}s" repeatCount="indefinite"/></circle>`
+  }
+  const w = WORKING_DOTS * DOT_PITCH
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="6" viewBox="0 0 ${w} 6">${dots}</svg>`
 }
 
 /** The bar's width: what the line has left after the mark, label and clock (in cells). */
@@ -73,9 +124,17 @@ function slotCells(surface: RenderSurface): number {
 }
 
 /** The progress bar for the surface, or null when there is no room or no measure. */
-function progress(kit: Kit, surface: RenderSurface, fill: number | null, cells: number): RenderElement | null {
-  if (fill === null || cells <= 0) return null
+function progress(kit: Kit, surface: RenderSurface, fill: number | null, cells: number, beat: number): RenderElement | null {
   const { Box, Svg } = kit
+  if (fill === null) {
+    // Nothing to measure yet: the working dots, right after the label.
+    return (
+      <Box marginLeft={2} flexShrink={0}>
+        {surface !== 'terminal' && Svg ? <Svg source={workingDotsSvg()} alt="working" width={WORKING_DOTS * DOT_PITCH} height={6} /> : workingDots(kit, beat)}
+      </Box>
+    )
+  }
+  if (cells <= 0) return null
   if (surface !== 'terminal' && Svg) {
     const width = Math.max(BAR_PX_MIN, Math.min(BAR_PX_MAX, cells * DESKTOP_CELL_PX))
     return (
@@ -86,7 +145,7 @@ function progress(kit: Kit, surface: RenderSurface, fill: number | null, cells: 
   }
   return (
     <Box marginLeft={2} marginRight={2} flexShrink={0}>
-      {bar(kit, fill, cells)}
+      {bar(kit, fill, cells, beat)}
     </Box>
   )
 }
@@ -107,7 +166,7 @@ function under(kit: Kit, surface: RenderSurface, text: string, color: string): R
 }
 
 /** The live row's own tree: the mark, label, bar and clock on one line; the step under the label. */
-export function liveRow(kit: Kit, surface: RenderSurface, line: LiveLine, columns: number): RenderElement {
+export function liveRow(kit: Kit, surface: RenderSurface, line: LiveLine, columns: number, beat = 0): RenderElement {
   const { Box, Text } = kit
   const cells = line.fill === null ? 0 : barCells(columns, surface, line.label, line.clock)
   const detail = surface === 'desktop' ? line.detail : undefined
@@ -125,7 +184,7 @@ export function liveRow(kit: Kit, surface: RenderSurface, line: LiveLine, column
             <Text color={KEY.quiet} wrap="truncate-end">{` · ${line.note}`}</Text>
           </Box>
         ) : null}
-        {progress(kit, surface, line.fill, cells)}
+        {progress(kit, surface, line.fill, cells, beat)}
         <Box flexGrow={1} />
         <Box flexShrink={0}>
           <Text color={KEY.quiet}>{line.clock}</Text>
@@ -165,14 +224,14 @@ export function renderOpsRunning(kit: Kit, rendered: RenderElement, live: LiveWa
   return (
     <Box flexDirection="column">
       {rendered}
-      <Box paddingLeft={INDENT}>{liveRow(kit, surface, lineOf(live, now), columns)}</Box>
+      <Box paddingLeft={INDENT}>{liveRow(kit, surface, lineOf(live, now), columns, beatOf(now))}</Box>
     </Box>
   )
 }
 
 /** The live row alone, where the engine draws a background call's result. */
 export function renderLiveRow(kit: Kit, live: LiveWait, now = Date.now(), surface: RenderSurface = 'terminal', columns = 80): RenderElement {
-  return liveRow(kit, surface, lineOf(live, now), columns)
+  return liveRow(kit, surface, lineOf(live, now), columns, beatOf(now))
 }
 
 /**
@@ -205,7 +264,7 @@ export function renderOpsBand(kit: Kit, ops: readonly LiveWait[], now = Date.now
   return (
     <Box flexDirection="column">
       {shown.map((op, i) => (
-        <Box key={op.operation ?? `starting-${i}`}>{liveRow(kit, surface, lineOf(op, now), columns + INDENT)}</Box>
+        <Box key={op.operation ?? `starting-${i}`}>{liveRow(kit, surface, lineOf(op, now), columns + INDENT, beatOf(now))}</Box>
       ))}
       {rest > 0 ? <Text color={KEY.quiet}>{`${rest} more running · /alis ops lists them`}</Text> : null}
     </Box>
@@ -317,7 +376,7 @@ export function foldOf(output: unknown, last: LiveWait | undefined, names: Recor
   const failed = !!state?.error || !!view?.error || !!view?.stages.some(s => s.state === 'failed')
   const outcome = interrupted ? 'interrupted' : failed ? 'failed' : warning ? 'detached' : state?.done === false ? 'running' : 'done'
   const elapsed = elapsedMs(events.at(-1)?.elapsed) ?? spanOf(view) ?? (last?.endedAt !== undefined ? last.endedAt - last.startedAt : undefined)
-  return foldLineOf({ view, outcome, elapsedMs: elapsed, version: last?.version ?? state?.version, verb: state?.kind ?? last?.kind ?? last?.verb, ...(state?.error ? { error: state.error } : {}) })
+  return foldLineOf({ view, outcome, elapsedMs: elapsed, version: last?.version ?? state?.version, verb: state?.kind ?? last?.kind ?? last?.verb, ...(serviceOf(last?.target) ? { service: serviceOf(last?.target) } : {}), ...(state?.error ? { error: state.error } : {}) })
 }
 
 export function renderOpsResult(kit: Kit, output: unknown, last?: LiveWait, surface: RenderSurface = 'terminal', actions?: FoldActions, names?: Record<string, string>): RenderElement | null {

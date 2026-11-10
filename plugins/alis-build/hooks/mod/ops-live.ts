@@ -14,7 +14,7 @@ import type { SavedOp } from '../../types'
 import type { Host } from './host'
 import { acceptsClientCall } from './health'
 import { alisCallOf, type BashOutput, operationStateOf, type OperationState, progressEventsOf, watchEventsOf } from './ops'
-import { defineOf, type DefineView, foldLineOf, isDefine, type OpView, productOf, viewOf } from './ops-progress'
+import { defineOf, type DefineView, foldLineOf, isDefine, type OpView, productOf, serviceOf, viewOf } from './ops-progress'
 
 /** How often the row is redrawn (the clock), in milliseconds. */
 export const TICK_MS = 1_000
@@ -141,13 +141,28 @@ export function opsAmong(calls: ReadonlyArray<{ tool_use_id?: string; isRunning:
     if (typeof id !== 'string') continue
     const wait = live.get(id)
     if (wait && (call.isRunning || wait.background)) {
-      ops.push({ id, live: wait })
+      // An --async start belongs to the band, never to a row: the wait that
+      // follows it in the same group would draw the operation twice.
+      if (!wait.detached) ops.push({ id, live: wait })
       continue
     }
     const done = finished.get(id)
-    if (done) ops.push({ id, finished: done })
+    if (done && !followedElsewhere(done)) ops.push({ id, finished: done })
   }
   return ops
+}
+
+/**
+ * Whether an --async start's operation was (or is) also followed by a call
+ * of its own, an `operations wait`: that call's row says how it ended, and
+ * the start keeps its plain "started" line.
+ */
+export function followedElsewhere(wait: LiveWait | undefined): boolean {
+  if (!wait?.detached || !wait.operation) return false
+  for (const other of [...live.values(), ...finished.values()]) {
+    if (other !== wait && !other.detached && other.operation === wait.operation) return true
+  }
+  return false
 }
 
 /**
@@ -179,6 +194,7 @@ export function endedTextOf(wait: LiveWait): string {
     outcome: failed ? 'failed' : 'done',
     ...(wait.version ? { version: wait.version } : {}),
     verb: wait.kind ?? wait.verb,
+    ...(serviceOf(wait.target) ? { service: serviceOf(wait.target) } : {}),
     ...(wait.result?.error ? { error: wait.result.error } : {}),
   })
   return fold.sub ? `${fold.text} ${fold.sub}` : fold.text
@@ -495,7 +511,8 @@ function watcherOf(host: Host, tool_use_id: string, state: LiveWait): { start: (
     host.invalidate()
     if (state.background) {
       // Nobody is waiting on a background operation: say that it ended.
-      host.notify(endedTextOf(state), 'Alis')
+      // One a call is waiting on is that call's to report.
+      if (!followedElsewhere(state)) host.notify(endedTextOf(state), 'Alis')
       stop()
     }
   }

@@ -11,7 +11,7 @@ import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
 import { renderAlisOutput } from './mod/alis-render'
 import { HANDOFF_PANE_ID, handoffActions, handoffPane, onHandoffPaneClosed, resumeHandoffPane } from './mod/handoff-pane'
 import { renderHandoffPane } from './mod/handoff-pane-view'
-import { backgroundOps, finishedOf, liveOf, namesFor, opsAmong, resumeOps, watchAlisCall } from './mod/ops-live'
+import { backgroundOps, finishedOf, followedElsewhere, liveOf, namesFor, opsAmong, resumeOps, watchAlisCall } from './mod/ops-live'
 import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane, resumeOpsPane, showOpsPane } from './mod/ops-pane'
 import { renderOpsPane } from './mod/ops-pane-view'
 import { renderLiveRow, renderOpsBand, renderOpsResult, renderOpsRunning, withRowsBelow } from './mod/ops-render'
@@ -212,7 +212,9 @@ export const register: Register = on => {
     // A background call's result row carries its live row until the operation ends.
     const running = liveOf(e.props.tool_use_id)
     if (running?.background && !running.detached) return renderLiveRow($.ui.resolve(e), running, Date.now(), e.surface, e.viewport?.columns)
-    const last = finishedOf(e.props.tool_use_id)
+    // An --async start whose operation a wait went on to follow keeps its own "started" line.
+    const ended = finishedOf(e.props.tool_use_id)
+    const last = followedElsewhere(ended) ? undefined : ended
     let names = last?.names ?? {}
     if (Object.keys(names).length === 0) {
       // A row drawn without a watcher (after a resume): the result's own deployments name the product.

@@ -1,7 +1,7 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { alisCallOf, operationStateOf, progressEventsOf, watchEventsOf } from '../hooks/mod/ops'
-import { backgroundOps, endedTextOf, finishedOf, liveOf, opsAmong, POLL_EVERY, TICK_MS, watchAlisCall } from '../hooks/mod/ops-live'
+import { backgroundOps, endedTextOf, finishedOf, followedElsewhere, forgetOps, liveOf, opsAmong, POLL_EVERY, TICK_MS, watchAlisCall } from '../hooks/mod/ops-live'
 import { fakeHost } from './fixtures/fake-host'
 
 tier('user')
@@ -283,7 +283,7 @@ describe('ops-live', () => {
     host.spawns[0]?.exit(0)
     await settle()
     expect(liveOf('toolu_def')).toMatchObject({ define: { done: 2, total: 2 }, result: { done: true, version: '3.1.0' } })
-    expect(endedTextOf(liveOf('toolu_def')!)).toBe('3.1.0 is defined')
+    expect(endedTextOf(liveOf('toolu_def')!)).toBe('hello.v1 3.1.0 is defined')
   })
 
   test('watchEventsOf keeps whole events and skips the rest', () => {
@@ -392,9 +392,39 @@ describe('ops-live', () => {
     await settle()
     expect(liveOf('toolu_async')).toBe(undefined)
     expect(finishedOf('toolu_async')).toMatchObject({ detached: true, result: { done: true, error: 'quota exceeded' } })
-    expect(host.notifications).toHaveLength(1)
-    expect(host.notifications[0]?.text).toContain('failed')
-    expect(host.notifications[0]?.text).toContain('quota exceeded')
+    // The wait is still on it: how it ended is that call's to say, not a notification's.
+    expect(host.notifications).toEqual([])
+    expect(followedElsewhere(finishedOf('toolu_async'))).toBe(true)
+  })
+
+  test('an --async start nothing waits on is announced when it ends, and a group draws it once', async () => {
+    forgetOps()
+    const started = '{"schemaVersion":1,"name":"operations/async2","done":false,"status":"running","version":"2.44.31","metadata":{}}'
+    const host = fakeHost({
+      answer: run => (run.argv[2] === 'describe' ? { exitCode: 0, stdout: '{"done":true,"status":"failed","error":"quota exceeded"}', stderr: '' } : { exitCode: 1, stdout: '', stderr: '' }),
+    })
+    host.spawnError = new Error('no child')
+    await watchAlisCall(host, { tool: 'Bash', tool_use_id: 'toolu_start', command: 'alis build acme.sm.hello.v1 --async --json' }, async () => ({ result: { stdout: started, stderr: '', interrupted: false } }), new AbortController().signal)
+    await settle()
+    // The start and the wait that follows it in one folded group: one row, the wait's.
+    void watchAlisCall(host, { tool: 'Bash', tool_use_id: 'toolu_w', command: 'alis operations wait operations/async2 --json' }, () => new Promise(() => {}), new AbortController().signal)
+    const group = [{ tool_use_id: 'toolu_start', isRunning: false }, { tool_use_id: 'toolu_w', isRunning: true }]
+    expect(opsAmong(group).map(op => op.id)).toEqual(['toolu_w'])
+
+    // With no wait on it, the start is the band's, and its end is announced.
+    forgetOps()
+    const alone = fakeHost({ answer: host.answer })
+    alone.spawnError = new Error('no child')
+    await watchAlisCall(alone, { tool: 'Bash', tool_use_id: 'toolu_start', command: 'alis build acme.sm.hello.v1 --async --json' }, async () => ({ result: { stdout: started, stderr: '', interrupted: false } }), new AbortController().signal)
+    await settle()
+    expect(opsAmong([{ tool_use_id: 'toolu_start', isRunning: false }])).toEqual([])
+    expect(backgroundOps().map(op => op.operation)).toEqual(['operations/async2'])
+    for (let i = 0; i < POLL_EVERY; i++) alone.timers[0]!.fn()
+    await settle()
+    expect(alone.notifications).toHaveLength(1)
+    expect(alone.notifications[0]?.text).toBe('hello.v1 build failed. quota exceeded')
+    // Ended with nothing else on it: its own row says how.
+    expect(opsAmong([{ tool_use_id: 'toolu_start', isRunning: false }]).map(op => op.id)).toEqual(['toolu_start'])
   })
 
   test('an --async start that did not start, or already ended, is not followed', async () => {
@@ -411,7 +441,7 @@ describe('ops-live', () => {
   test('endedTextOf says how a followed operation ended', () => {
     const base = { operation: 'operations/x', target: 'acme.sm.hello.v1', verb: 'deploy', startedAt: 0, status: 'done', names: {} }
     expect(endedTextOf({ ...base, version: '1.2.3', result: { done: true } })).toBe('The deploy finished')
-    expect(endedTextOf({ ...base, result: { done: true, error: 'apply failed: quota' } })).toBe('Deploy failed. apply failed: quota')
+    expect(endedTextOf({ ...base, result: { done: true, error: 'apply failed: quota' } })).toBe('hello.v1 deploy failed. apply failed: quota')
   })
 
 })

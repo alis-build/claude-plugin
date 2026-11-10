@@ -41,14 +41,14 @@ describe('ops-render', () => {
       on('ui.render', { component: 'ToolUse' }, ($, e) => renderOpsRunning($.ui.resolve(e), engineRow, building(), 78_000, e.surface, 100))
       const drawn = JSON.stringify(await $.ui.render(toolUse(surface)))
       expect(drawn).toContain('engine row')
-      expect(drawn).toContain('Building 2.44.19')
+      expect(drawn).toContain('Building console.v2 2.44.19')
       expect(drawn).toContain('1:17')
       expect(drawn).toContain('Step 15 of 18 · deploys to Development next')
       // The mark has a fixed slot, and the step line keeps it empty, so the step sits under the label.
       expect(drawn.match(/"width":(3|5),"flexShrink":0/g)?.length).toBe(2)
       expect(drawn).toContain('"alignItems":"center"')
       if (surface === 'terminal') {
-        expect(drawn).toContain('━')
+        expect(drawn).toContain('•')
         expect(drawn).toContain('"color":"background"')
         expect(drawn).toContain('"Alis"')
         expect(drawn).not.toContain('Svg')
@@ -56,7 +56,7 @@ describe('ops-render', () => {
       } else {
         expect(drawn).toContain('"type":"Svg"')
         // The bar is a set-width SVG: it cannot wrap in the desktop's font.
-        expect(drawn).not.toContain('━')
+        expect(drawn).not.toContain('•')
         expect(drawn).toContain('#009999')
         expect(drawn).toContain('"alt":"78% done"')
         expect(drawn).toContain('viewBox=\\"0 0 53 91\\"')
@@ -85,14 +85,14 @@ describe('ops-render', () => {
       expect(drawn).toContain('"file":"/p/assets/alis-mark-cell.png"')
       expect(drawn).toContain('"columns":1')
       expect(drawn).not.toContain('"Alis"')
-      expect(drawn).toContain('Building 2.44.19')
+      expect(drawn).toContain('Building console.v2 2.44.19')
     } finally {
       setMarkFile(null)
     }
   })
 
   test('the bar takes the spare width and is left out when there is none', () => {
-    expect(barCells(100, 'terminal', 'Building 2.44.19', '1:17')).toBe(64)
+    expect(barCells(100, 'terminal', 'Building 2.44.19', '1:17')).toBe(40)
     expect(barCells(60, 'terminal', 'Building 2.44.19', '1:17')).toBe(27)
     expect(barCells(36, 'terminal', 'Building 2.44.19', '1:17')).toBe(0)
   })
@@ -176,7 +176,7 @@ describe('ops-render', () => {
       { kind: 'build', name: '.', state: 'done', done: 18, total: 18, cached: 3, startMs: 0, endMs: 161_000 },
       { kind: 'deploy', name: 'Development', state: 'done', done: 6, total: 6, cached: 0, startMs: 165_000, endMs: 249_000 },
     ] }
-    expect(foldOf({ stdout: '', stderr: '', interrupted: false, backgroundTaskId: 'b1' } as never, ended)).toMatchObject({ tone: 'ok', text: '2.44.21 is live on Development', time: '4m 09s' })
+    expect(foldOf({ stdout: '', stderr: '', interrupted: false, backgroundTaskId: 'b1' } as never, ended)).toMatchObject({ tone: 'ok', text: 'console.v2 2.44.21 is live on Development', time: '4m 09s' })
   })
 
   test('an async start that was followed to its end folds on that end, not on "started"', () => {
@@ -186,7 +186,7 @@ describe('ops-render', () => {
       { kind: 'build', name: '.', state: 'done', done: 18, total: 18, cached: 3, startMs: 0, endMs: 161_000 },
       { kind: 'deploy', name: 'Development', state: 'done', done: 6, total: 6, cached: 0, startMs: 165_000, endMs: 249_000 },
     ] }
-    expect(foldOf({ stdout: JSON.stringify(started), stderr: '' }, ended)).toMatchObject({ tone: 'ok', text: '2.44.21 is live on Development' })
+    expect(foldOf({ stdout: JSON.stringify(started), stderr: '' }, ended)).toMatchObject({ tone: 'ok', text: 'console.v2 2.44.21 is live on Development' })
     const failed = { ...ended, result: { done: true, error: 'apply failed' } }
     expect(foldOf({ stdout: JSON.stringify(started), stderr: '' }, failed)).toMatchObject({ tone: 'error' })
     // Still running: the start's own line stands.
@@ -199,11 +199,11 @@ describe('ops-render', () => {
       on('ui.render', { component: 'AbovePrompt' }, ($, e) => renderOpsBand($.ui.resolve(e), ops.slice(0, e.props.maxRows), 78_000, e.surface, e.props.bodyColumns))
       const band = (count: number) => ({ surface, component: 'AbovePrompt' as const, props: { hasSurvey: false, isCollapsed: false, isWorking: false, maxRows: count, bodyColumns: 100, scroll: { offset: 0, bodyRows: 10, contentRows: 0 }, view: {} } })
       const one = JSON.stringify(await $.ui.render(band(1) as never))
-      expect(one).toContain('Building 2.44.19')
+      expect(one).toContain('Building console.v2 2.44.19')
       expect(one).toContain('1:17')
       expect(one).not.toContain('more running')
       const many = JSON.stringify(await $.ui.render(band(5) as never))
-      expect(many.match(/Building 2\.44\.19/g)?.length).toBe(BAND_ROWS)
+      expect(many.match(/Building console\.v2 2\.44\.19/g)?.length).toBe(BAND_ROWS)
       expect(many).toContain('2 more running · /alis ops lists them')
     })
   }
@@ -212,7 +212,7 @@ describe('ops-render', () => {
     const last = { ...building(), endedAt: 300_000 }
     last.view!.stages[0] = { ...last.view!.stages[0]!, state: 'done', done: 18, endMs: 162_000 }
     const pruned = { done: true, status: 'succeeded', version: '2.44.19', images: [{ path: '.' }], deployments: [{ name: DEV, progress: { endTime: '2026-10-08T21:27:00Z' } }] }
-    expect(foldOf({ stdout: JSON.stringify(pruned), stderr: LEAN }, last)).toMatchObject({ tone: 'ok', text: '2.44.19 is live on Development' })
+    expect(foldOf({ stdout: JSON.stringify(pruned), stderr: LEAN }, last)).toMatchObject({ tone: 'ok', text: 'console.v2 2.44.19 is live on Development' })
   })
 
   for (const surface of ['terminal', 'desktop'] as const) {
@@ -246,7 +246,7 @@ describe('ops-render', () => {
     // The CLI rejected the deploy, so the watcher never saw an operation.
     const last: LiveWait = { operation: null, target: 'acme.sm.hello.v1', verb: 'deploy', startedAt: 1_000, endedAt: 2_000, status: 'running', names: {} }
     const stdout = JSON.stringify({ error: { code: 'APPROVAL_REQUIRED', message: 'deploy to production needs approval\nre-run with --approve' } })
-    expect(foldOf({ stdout, stderr: '', interrupted: false }, last)).toMatchObject({ tone: 'error', text: 'Deploy failed.', sub: 'deploy to production needs approval' })
+    expect(foldOf({ stdout, stderr: '', interrupted: false }, last)).toMatchObject({ tone: 'error', text: 'hello.v1 deploy failed.', sub: 'deploy to production needs approval' })
   })
 
   test('a folded group stacks one row per operation under its own row', async ($, on) => {

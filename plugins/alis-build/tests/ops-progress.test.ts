@@ -36,7 +36,7 @@ describe('ops-progress', () => {
   test('the live line names the stage at work, its step and what comes next', () => {
     const at = (raw: unknown) => liveLineOf(viewOf(raw, { env1: 'Development' }) ?? undefined, { service: 'console.v2', operation: 'operations/x', startedAt: 0, now: 77_000 })
 
-    expect(at({ version: '2.44.19', images: [], deployments: [{ name: DEV }] })).toMatchObject({ label: 'Starting the build', note: 'waiting for a build machine', fill: null, clock: '1:17' })
+    expect(at({ version: '2.44.19', images: [], deployments: [{ name: DEV }] })).toMatchObject({ label: 'Starting the console.v2 build', note: 'waiting for a build machine', fill: null, clock: '1:17' })
 
     const building = at({ version: '2.44.19', images: [{ path: '.', progress: { startTime: '1970-01-01T00:00:00Z', buildSteps: [
       { name: '[internal] load', status: 'DONE', internal: true },
@@ -45,7 +45,7 @@ describe('ops-progress', () => {
       { name: '[3/4] RUN pnpm run build', status: 'RUNNING', stepNumber: 3 },
       { name: '[4/4] RUN prune', status: 'PENDING', stepNumber: 4 },
     ] } }], deployments: [{ name: DEV }] })
-    expect(building).toMatchObject({ label: 'Building 2.44.19', fill: 0.5, sub: 'Step 3 of 4 · deploys to Development next', subTone: 'dim' })
+    expect(building).toMatchObject({ label: 'Building console.v2 2.44.19', fill: 0.5, sub: 'Step 3 of 4 · deploys to Development next', subTone: 'dim' })
     expect(building.detail).toEqual({ title: 'Build · step 3 of 4, 1 from cache', step: '[3/4] RUN pnpm run build', operation: 'operations/x' })
 
     const deploying = at({ version: '2.44.19', images: [{ path: '.', progress: { startTime: '1970-01-01T00:00:00Z', endTime: '1970-01-01T00:02:41Z' } }], deployments: [{ name: DEV, progress: {
@@ -53,10 +53,10 @@ describe('ops-progress', () => {
       steps: [{ label: 'terraform plan', status: 'DONE' }, { label: 'terraform apply', status: 'RUNNING' }],
       resources: [{ address: 'google_cloud_run_v2_service.console', action: 'update', status: 'APPLYING' }],
     } }] })
-    expect(deploying).toMatchObject({ label: 'Deploying to Development', fill: 0.75, sub: 'Updating the Cloud Run service · built in 2m 41s' })
+    expect(deploying).toMatchObject({ label: 'Deploying console.v2 2.44.19 to Development', fill: 0.75, sub: 'Updating the Cloud Run service · built in 2m 41s' })
 
     const throttled = at({ deployments: [{ name: DEV, progress: { startTime: '1970-01-01T00:00:00Z', steps: [{ label: 'protos → Spanner', status: 'RUNNING' }], protoSyncs: [{ target: 'spanner', status: 'RUNNING', percent: 40, throttled: true }] } }] })
-    expect(throttled).toMatchObject({ label: 'Deploying to Development', sub: 'Spanner is throttling the update. It carries on by itself.', subTone: 'warning' })
+    expect(throttled).toMatchObject({ label: 'Deploying console.v2 to Development', sub: 'Spanner is throttling the update. It carries on by itself.', subTone: 'warning' })
   })
 
   test('anything that is not an operation reads as nothing', () => {
