@@ -33,7 +33,7 @@ export async function clientPluginOf(host: Host): Promise<string | undefined> {
  * it beside the operation a command starts, and answers
  * `alis operations list --call <id>`; older CLIs reject the unknown flag.
  */
-export const CLIENT_CALL_SINCE: readonly [number, number, number] = [1, 188, 0]
+export const CLIENT_CALL_SINCE: readonly [number, number, number] = [1, 187, 9]
 
 /** Whether the installed CLI takes --client-call (the same cache clientPluginOf reads). */
 export function acceptsClientCall(host: Host): Promise<boolean> {
