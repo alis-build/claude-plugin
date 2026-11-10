@@ -84,6 +84,7 @@ export type FakeHost = Host & {
   files: Record<string, string>
   statuses: (string | undefined)[]
   toasts: string[]
+  notifications: { text: string; title: string }[]
   invalidations: number
   saves: number
   panes: { opened: PaneOpenArgs[]; closed: string[] }
@@ -117,6 +118,7 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     files: {},
     statuses: [],
     toasts: [],
+    notifications: [],
     invalidations: 0,
     saves: 0,
     panes: { opened: [], closed: [] },
@@ -163,6 +165,9 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     },
     toast: text => {
       host.toasts.push(text)
+    },
+    notify: (text, title) => {
+      host.notifications.push({ text, title })
     },
     invalidate: () => {
       host.invalidations += 1

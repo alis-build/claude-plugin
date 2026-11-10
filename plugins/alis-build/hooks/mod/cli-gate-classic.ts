@@ -10,7 +10,7 @@ import { decide } from './cli-gate'
 import { classicState } from './classic'
 import { mergeClassic, toPreToolUseResult } from './classic-result'
 import { approvedCalls } from './deploy-dialog'
-import { clientPluginOf, observe } from './health'
+import { acceptsClientCall, clientPluginOf, observe } from './health'
 import type { Host } from './host'
 import { automationTierOf } from './tier'
 
@@ -30,6 +30,7 @@ export async function cliGateClassic<E extends object>(
     sessionId: await host.sessionId().catch(() => undefined),
     allowedSubcmds: await host.allowedSubcmds(),
     clientPlugin: await clientPluginOf(host),
+    ...(typeof tool_use_id === 'string' && (await acceptsClientCall(host)) ? { clientCall: tool_use_id } : {}),
     automationTier: await automationTierOf(host),
   })
   // The person already confirmed this exact call in the alis dialog (a

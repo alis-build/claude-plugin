@@ -25,15 +25,31 @@ export const CLIENT_PLUGIN_SINCE: readonly [number, number, number] = [1, 165, 6
  * CLI still attributes the plugin from the health record observe() writes.
  */
 export async function clientPluginOf(host: Host): Promise<string | undefined> {
+  return (await cliSince(host, CLIENT_PLUGIN_SINCE)) ? `claude/${PLUGIN_VERSION}` : undefined
+}
+
+/**
+ * The CLI accepts `--client-call <tool call id>` from this version, records
+ * it beside the operation a command starts, and answers
+ * `alis operations list --call <id>`; older CLIs reject the unknown flag.
+ */
+export const CLIENT_CALL_SINCE: readonly [number, number, number] = [1, 188, 0]
+
+/** Whether the installed CLI takes --client-call (the same cache clientPluginOf reads). */
+export function acceptsClientCall(host: Host): Promise<boolean> {
+  return cliSince(host, CLIENT_CALL_SINCE)
+}
+
+/** Whether the CLI's own detection cache names an installed CLI at or past `since`; false when it cannot be read. */
+async function cliSince(host: Host, since: readonly [number, number, number]): Promise<boolean> {
   try {
     const home = await host.home()
-    if (!home) return undefined
+    if (!home) return false
     const cache = JSON.parse(await host.readFile(`${home}/.alis/versions-cache.json`)) as { cliVersion?: unknown }
     const installed = parseVersion(cache.cliVersion)
-    if (!installed || compareVersions(installed, CLIENT_PLUGIN_SINCE) < 0) return undefined
-    return `claude/${PLUGIN_VERSION}`
+    return !!installed && compareVersions(installed, since) >= 0
   } catch {
-    return undefined
+    return false
   }
 }
 

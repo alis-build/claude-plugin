@@ -18,9 +18,32 @@ export type ProgressEvent = {
 /** What an `alis …` Bash command is about, when it streams an operation. */
 export type AlisCall =
   | { kind: 'wait'; operation: string }
-  | { kind: 'start'; verb: string; target: string | null; async: boolean; version?: string }
+  | { kind: 'start'; verb: string; target: string | null; async: boolean; version?: string; dryRun?: boolean }
 
 const STREAMING_VERBS = new Set(['define', 'build', 'deploy'])
+
+/**
+ * The flags of `define`, `build` and `deploy` (and the global ones) that take
+ * a value, so the word after one is never read as the target. Every other
+ * flag of theirs is a boolean.
+ */
+const VALUE_FLAGS = new Set([
+  '--cwd', '--session-id', '--client-plugin', '--client-call',
+  '-e', '--environment', '--version', '--commit', '--branch', '--build-path', '--retag-path',
+  '--definition-version', '--install-language', '--poll-interval', '--timeout',
+])
+
+/** The words of a command that are not flags or a flag's value, the verb first. */
+function positionalsOf(argv: readonly string[]): string[] {
+  const words: string[] = []
+  for (let i = 1; i < argv.length; i++) {
+    const token = argv[i] as string
+    if (token === '--') break
+    if (!token.startsWith('-')) words.push(token)
+    else if (!token.includes('=') && VALUE_FLAGS.has(token)) i++
+  }
+  return words
+}
 
 /** Reads a literal `alis …` command line; null when it streams no operation. */
 export function alisCallOf(command: unknown): AlisCall | null {
@@ -36,10 +59,13 @@ export function alisCallOf(command: unknown): AlisCall | null {
   }
   const verb = words[0]
   if (verb && STREAMING_VERBS.has(verb)) {
-    const call: AlisCall = { kind: 'start', verb, target: words[1] ?? null, async: argv.includes('--async') }
+    // The target may follow the flags (`alis deploy -e dev <target>`), where
+    // commandPath stops reading; with no target the CLI takes the folder's.
+    const call: AlisCall = { kind: 'start', verb, target: positionalsOf(argv)[1] ?? null, async: argv.includes('--async') }
     const flag = argv.findIndex(word => word === '--version' || word.startsWith('--version='))
     const version = flag === -1 ? undefined : argv[flag]?.includes('=') ? argv[flag]?.slice('--version='.length) : argv[flag + 1]
     if (version) call.version = version
+    if (argv.includes('--dry-run')) call.dryRun = true
     return call
   }
   return null
@@ -75,6 +101,8 @@ export type OperationState = {
   status?: string
   version?: string
   error?: string
+  /** define | build | deploy | setup | block, from a CLI that says it. */
+  kind?: string
 }
 
 export function operationStateOf(stdout: unknown): OperationState | null {
@@ -85,7 +113,7 @@ export function operationStateOf(stdout: unknown): OperationState | null {
     const raw = JSON.parse(text)
     if (!raw || typeof raw !== 'object') return null
     const state: OperationState = {}
-    for (const key of ['name', 'status', 'version', 'error'] as const) {
+    for (const key of ['name', 'status', 'version', 'error', 'kind'] as const) {
       if (typeof raw[key] === 'string' && raw[key]) state[key] = raw[key]
     }
     if (typeof raw.done === 'boolean') state.done = raw.done
@@ -94,6 +122,44 @@ export function operationStateOf(stdout: unknown): OperationState | null {
   } catch {
     return null
   }
+}
+
+/**
+ * One line of `alis operations watch <op>`: the operation as it stands, each
+ * time it changes. `snapshot` is its full response (the shape ops-progress.ts
+ * reads), with sensitive Terraform outputs already blanked by the CLI.
+ */
+export type WatchEvent = {
+  operation: string
+  /** define | build | deploy | setup | block, when the CLI knows it. */
+  kind?: string
+  done: boolean
+  status?: string
+  version?: string
+  error?: string
+  snapshot: unknown
+}
+
+/** The watch events in a stdout text, in order; lines that are not one are skipped. */
+export function watchEventsOf(stdout: unknown): WatchEvent[] {
+  if (typeof stdout !== 'string') return []
+  const events: WatchEvent[] = []
+  for (const line of stdout.split('\n')) {
+    const text = line.trim()
+    if (!text.startsWith('{')) continue
+    try {
+      const raw = JSON.parse(text)
+      if (!raw || typeof raw !== 'object' || typeof raw.operation !== 'string' || typeof raw.done !== 'boolean' || !raw.snapshot || typeof raw.snapshot !== 'object') continue
+      const event: WatchEvent = { operation: raw.operation, done: raw.done, snapshot: raw.snapshot }
+      for (const key of ['kind', 'status', 'version', 'error'] as const) {
+        if (typeof raw[key] === 'string' && raw[key]) event[key] = raw[key]
+      }
+      events.push(event)
+    } catch {
+      // Not JSON: a partial line, or something else the CLI printed.
+    }
+  }
+  return events
 }
 
 /** A Bash tool result as the engine records it. */

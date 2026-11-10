@@ -14,7 +14,7 @@ import type { Elements, RenderElement, RenderSurface } from 'claude-code'
 import { KEY, mark, type MarkKit, markCells } from './brand'
 import { type LiveWait, snapshotsOf } from './ops-live'
 import { type BashOutput, operationStateOf, progressEventsOf } from './ops'
-import { elapsedMs, foldLineOf, type FoldLine, type LiveLine, liveLineOf, mergeView, type OpView, serviceOf, viewOf } from './ops-progress'
+import { defineLineOf, elapsedMs, foldLineOf, type FoldLine, type LiveLine, liveLineOf, mergeView, type OpView, serviceOf, viewOf } from './ops-progress'
 
 export type Kit = Pick<Elements['terminal'], 'Box' | 'Text' | 'Button' | 'Link'> & Pick<MarkKit, 'Svg' | 'Image'>
 
@@ -145,6 +145,11 @@ export function liveRow(kit: Kit, surface: RenderSurface, line: LiveLine, column
 
 /** The live line for a call, from what its watcher holds. */
 export function lineOf(live: LiveWait, now: number): LiveLine {
+  if ((live.kind ?? live.verb) === 'define') {
+    const line = defineLineOf(live.define, { service: serviceOf(live.target), operation: live.operation ?? undefined, startedAt: live.startedAt, now })
+    if (!live.define && live.progress && line.note) line.note = live.progress
+    return line
+  }
   const line = liveLineOf(live.view, { service: serviceOf(live.target), operation: live.operation ?? undefined, startedAt: live.startedAt, now, verb: live.verb })
   // A CLI that streams only lean lines: its latest line stands in for the note.
   if (!live.view && live.progress && line.note) line.note = live.progress
@@ -185,6 +190,24 @@ export function withRowsBelow(kit: Kit, rendered: RenderElement, rows: ReadonlyA
           {row}
         </Box>
       ))}
+    </Box>
+  )
+}
+
+/** Rows the band shows before it counts the rest. */
+export const BAND_ROWS = 3
+
+/** The band above the prompt: a live row per operation nothing is waiting on. */
+export function renderOpsBand(kit: Kit, ops: readonly LiveWait[], now = Date.now(), surface: RenderSurface = 'terminal', columns = 80): RenderElement {
+  const { Box, Text } = kit
+  const shown = ops.slice(0, BAND_ROWS)
+  const rest = ops.length - shown.length
+  return (
+    <Box flexDirection="column">
+      {shown.map((op, i) => (
+        <Box key={op.operation ?? `starting-${i}`}>{liveRow(kit, surface, lineOf(op, now), columns + INDENT)}</Box>
+      ))}
+      {rest > 0 ? <Text color={KEY.quiet}>{`${rest} more running · /alis ops lists them`}</Text> : null}
     </Box>
   )
 }
@@ -259,7 +282,9 @@ function startedOf(result: unknown): FoldLine | null {
   if (!o || o['done'] !== false || !('metadata' in o) || typeof o['name'] !== 'string' || !o['name'].startsWith('operations/')) return null
   const meta = o['metadata'] && typeof o['metadata'] === 'object' ? (o['metadata'] as Record<string, unknown>) : {}
   const type = typeof meta['@type'] === 'string' ? meta['@type'] : ''
-  const verb = /Deploy/.test(type) && !/Build/.test(type) ? 'deploy' : /Define/.test(type) ? 'define' : 'build'
+  // The CLI names the kind; an older one leaves the metadata's type to say it.
+  const kind = typeof o['kind'] === 'string' ? o['kind'] : ''
+  const verb = kind === 'deploy' || kind === 'define' || kind === 'build' ? kind : /Deploy/.test(type) && !/Build/.test(type) ? 'deploy' : /Define/.test(type) ? 'define' : 'build'
   const version = typeof o['version'] === 'string' ? o['version'] : undefined
   return foldLineOf({ outcome: 'running', verb, version })
 }
@@ -276,7 +301,11 @@ export function foldOf(output: unknown, last: LiveWait | undefined, names: Recor
   const streamed = snapshotsOf(stderr).at(-1)
   const result = parsed(stdout)
   if (events.length === 0 && streamed === undefined && !last) return startedOf(result)
-  const state = operationStateOf(stdout) ?? last?.result ?? null
+  // An --async start's own output says "running" for good: once the
+  // operation was followed to its end, that end is how the call folds.
+  const own = operationStateOf(stdout)
+  const ended = last?.result && (last.result.done || last.result.error) ? last.result : undefined
+  const state = (own?.done || own?.error ? own : (ended ?? own)) ?? last?.result ?? null
   const all = { ...last?.names, ...names }
   const finalView = result !== undefined ? (viewOf(result, all) ?? undefined) : undefined
   const seen: OpView | undefined = last?.view ?? (streamed !== undefined ? (viewOf(streamed, all) ?? undefined) : undefined)
@@ -288,7 +317,7 @@ export function foldOf(output: unknown, last: LiveWait | undefined, names: Recor
   const failed = !!state?.error || !!view?.error || !!view?.stages.some(s => s.state === 'failed')
   const outcome = interrupted ? 'interrupted' : failed ? 'failed' : warning ? 'detached' : state?.done === false ? 'running' : 'done'
   const elapsed = elapsedMs(events.at(-1)?.elapsed) ?? spanOf(view) ?? (last?.endedAt !== undefined ? last.endedAt - last.startedAt : undefined)
-  return foldLineOf({ view, outcome, elapsedMs: elapsed, version: last?.version ?? state?.version, verb: last?.verb, ...(state?.error ? { error: state.error } : {}) })
+  return foldLineOf({ view, outcome, elapsedMs: elapsed, version: last?.version ?? state?.version, verb: state?.kind ?? last?.kind ?? last?.verb, ...(state?.error ? { error: state.error } : {}) })
 }
 
 export function renderOpsResult(kit: Kit, output: unknown, last?: LiveWait, surface: RenderSurface = 'terminal', actions?: FoldActions, names?: Record<string, string>): RenderElement | null {

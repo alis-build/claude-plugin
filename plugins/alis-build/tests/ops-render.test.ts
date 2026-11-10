@@ -2,7 +2,7 @@ import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { graphicsFrom, MARK_SVG, setMarkFile } from '../hooks/mod/brand'
 import type { LiveWait } from '../hooks/mod/ops-live'
-import { barCells, foldOf, renderLiveRow, renderOpsResult, renderOpsRunning, withRowsBelow } from '../hooks/mod/ops-render'
+import { BAND_ROWS, barCells, foldOf, renderLiveRow, renderOpsBand, renderOpsResult, renderOpsRunning, withRowsBelow } from '../hooks/mod/ops-render'
 
 tier('user')
 
@@ -178,6 +178,35 @@ describe('ops-render', () => {
     ] }
     expect(foldOf({ stdout: '', stderr: '', interrupted: false, backgroundTaskId: 'b1' } as never, ended)).toMatchObject({ tone: 'ok', text: '2.44.21 is live on Development', time: '4m 09s' })
   })
+
+  test('an async start that was followed to its end folds on that end, not on "started"', () => {
+    const started = { done: false, metadata: { '@type': 'type.googleapis.com/alis.os.dbd.v1.RunBuildMetadata' }, name: 'operations/133500a8', schemaVersion: 1, status: 'running', version: '2.44.21' }
+    const ended = { ...building(), background: true, detached: true, endedAt: 300_000, result: { done: true, version: '2.44.21' } }
+    ended.view = { ...ended.view!, version: '2.44.21', done: true, stages: [
+      { kind: 'build', name: '.', state: 'done', done: 18, total: 18, cached: 3, startMs: 0, endMs: 161_000 },
+      { kind: 'deploy', name: 'Development', state: 'done', done: 6, total: 6, cached: 0, startMs: 165_000, endMs: 249_000 },
+    ] }
+    expect(foldOf({ stdout: JSON.stringify(started), stderr: '' }, ended)).toMatchObject({ tone: 'ok', text: '2.44.21 is live on Development' })
+    const failed = { ...ended, result: { done: true, error: 'apply failed' } }
+    expect(foldOf({ stdout: JSON.stringify(started), stderr: '' }, failed)).toMatchObject({ tone: 'error' })
+    // Still running: the start's own line stands.
+    expect(foldOf({ stdout: JSON.stringify(started), stderr: '' }, { ...building(), background: true, detached: true })).toMatchObject({ tone: 'neutral' })
+  })
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    test(`the band above the prompt draws a live row per background operation on the ${surface}`, async ($, on) => {
+      const ops = [1, 2, 3, 4, 5].map(n => ({ ...building(), operation: `operations/op${n}`, background: true }))
+      on('ui.render', { component: 'AbovePrompt' }, ($, e) => renderOpsBand($.ui.resolve(e), ops.slice(0, e.props.maxRows), 78_000, e.surface, e.props.bodyColumns))
+      const band = (count: number) => ({ surface, component: 'AbovePrompt' as const, props: { hasSurvey: false, isCollapsed: false, isWorking: false, maxRows: count, bodyColumns: 100, scroll: { offset: 0, bodyRows: 10, contentRows: 0 }, view: {} } })
+      const one = JSON.stringify(await $.ui.render(band(1) as never))
+      expect(one).toContain('Building 2.44.19')
+      expect(one).toContain('1:17')
+      expect(one).not.toContain('more running')
+      const many = JSON.stringify(await $.ui.render(band(5) as never))
+      expect(many.match(/Building 2\.44\.19/g)?.length).toBe(BAND_ROWS)
+      expect(many).toContain('2 more running · /alis ops lists them')
+    })
+  }
 
   test('a finished fold keeps the names and counts the running row saw', () => {
     const last = { ...building(), endedAt: 300_000 }

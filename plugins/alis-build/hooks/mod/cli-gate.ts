@@ -10,14 +10,14 @@ export const GUIDANCE =
   'Keep stderr progress separate; no head/tail, pipes, redirects or sleep loops. ' +
   'A Claude background-task ID is not an Alis operation ID.'
 
-const GLOBALS = new Set(['--cwd', '--session-id', '--client-plugin'])
+const GLOBALS = new Set(['--cwd', '--session-id', '--client-plugin', '--client-call'])
 const BOOLS = new Set(['--json', '--verbose', '--approve', '--confirm-production', '--yes', '--reveal', '--help', '-h'])
 const READ_TOP = new Set(['docs', 'doctor', 'whoami', 'version', 'ask'])
 const READ_PATHS = new Set(
   [
     ['context', 'view'], ['accounts', 'list'], ['org', 'list'], ['org', 'view'],
     ['product', 'view'], ['environment', 'list'],
-    ['operations', 'list'], ['operations', 'describe'], ['operations', 'wait'],
+    ['operations', 'list'], ['operations', 'describe'], ['operations', 'wait'], ['operations', 'watch'],
     ['logs', 'build'], ['logs', 'deploy'], ['logs', 'runtime'],
     ['skills', 'suggest'], ['skills', 'search'], ['skills', 'list'], ['skills', 'load'],
     ['blocks', 'list'], ['blocks', 'versions'],
@@ -69,6 +69,13 @@ export type GateInput = {
    */
   clientPlugin?: string
   /**
+   * This call's own id (the tool_use_id) for the CLI's --client-call flag,
+   * only when the installed CLI accepts it (health.clientCallOf). The CLI
+   * records it beside the operation the command starts, so ops-live.ts finds
+   * that operation by the call that started it.
+   */
+  clientCall?: string
+  /**
    * The CLI's effective automation tier (tier.ts automationTierOf); absent
    * when unknown. On `manual` a structured workflow asks up front with
    * --approve added, rather than letting the CLI refuse it once.
@@ -90,6 +97,15 @@ export type GateDecision =
       updatedInput?: Record<string, unknown>
       additionalContext?: string
     }
+
+/** A tool call id as one shell word (the CLI's own check is the same). */
+const CALL_ID = /^[A-Za-z0-9_-]{1,128}$/
+
+/** The commands that record an operation start in the CLI's local spool. */
+function startsOperation(path: readonly string[]): boolean {
+  const top = path[0]
+  return top === 'define' || top === 'build' || top === 'deploy' || top === 'release' || path.join(' ') === 'product new'
+}
 
 /** The first `depth` command words after `alis`, global flags skipped, aliases resolved. */
 export function commandPath(argv: readonly string[], depth = 2): string[] {
@@ -198,6 +214,11 @@ export function decide(input: GateInput): GateDecision {
   // The plugin names itself so the CLI's outcome facts carry its version.
   if (input.clientPlugin && !flags.has('--client-plugin')) {
     argv = insertFlagsBeforeSeparator(argv, ['--client-plugin', input.clientPlugin])
+  }
+  // A command that starts an operation names its call. It identifies the
+  // call and grants nothing.
+  if (input.clientCall && CALL_ID.test(input.clientCall) && startsOperation(path) && !flags.has('--client-call')) {
+    argv = insertFlagsBeforeSeparator(argv, ['--client-call', input.clientCall])
   }
   const updated = { ...toolInput, command: shellJoin(argv) }
   if (updated['command'] !== command) result.updatedInput = updated

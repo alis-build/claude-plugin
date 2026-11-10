@@ -11,10 +11,10 @@ import { COMMAND_SPEC, runAlisCommand } from './mod/alis-command'
 import { renderAlisOutput } from './mod/alis-render'
 import { HANDOFF_PANE_ID, handoffActions, handoffPane, onHandoffPaneClosed, resumeHandoffPane } from './mod/handoff-pane'
 import { renderHandoffPane } from './mod/handoff-pane-view'
-import { finishedOf, liveOf, namesFor, opsAmong, watchAlisCall } from './mod/ops-live'
+import { backgroundOps, finishedOf, liveOf, namesFor, opsAmong, resumeOps, watchAlisCall } from './mod/ops-live'
 import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane, resumeOpsPane, showOpsPane } from './mod/ops-pane'
 import { renderOpsPane } from './mod/ops-pane-view'
-import { renderLiveRow, renderOpsResult, renderOpsRunning, withRowsBelow } from './mod/ops-render'
+import { renderLiveRow, renderOpsBand, renderOpsResult, renderOpsRunning, withRowsBelow } from './mod/ops-render'
 import { productOf } from './mod/ops-progress'
 import { graphicsFrom, MARK_CELL_PNG, setMarkFile } from './mod/brand'
 import { passClassic } from './mod/classic'
@@ -58,6 +58,9 @@ export function hostOf($: HostNouns): Host {
     stat: path => $.fs.stat(path),
     status: text => $.ui.status(text),
     toast: text => $.ui.toast(text),
+    notify: (text, title) => {
+      $.ui.notify(text, { title }).catch(error => $.ui.log(`alis: could not notify: ${String(error)}`, { to: 'debug' }))
+    },
     invalidate: () => {
       $.ui.invalidate('ui.render')
       save()
@@ -127,6 +130,7 @@ export const register: Register = on => {
     try {
       restore((await $.state.get(SAVED)).value)
       await resumeOpsPane(host)
+      resumeOps(host)
       await resumeHandoffPane(host)
     } catch (error) {
       host.debug(`could not restore state: ${String(error)}`)
@@ -165,6 +169,15 @@ export const register: Register = on => {
     })
     return rows.length > 0 ? withRowsBelow(kit, await next(e), rows) : next(e)
   })
+  // The band above the prompt: the operations no tool call is waiting on (a
+  // call sent to the background, an --async start), so they stay in view
+  // whatever the transcript shows. It yields to a survey and to whatever
+  // else draws there when there is nothing to follow.
+  on('ui.render', { component: 'AbovePrompt' }, ($, e, next) => {
+    const ops = backgroundOps()
+    if (e.props.hasSurvey || ops.length === 0) return next(e)
+    return renderOpsBand($.ui.resolve(e), ops, Date.now(), e.surface, e.props.bodyColumns)
+  })
   // The operations pane (/alis ops): drawn from the module's state while
   // open, refreshed on the clock; a close from anywhere stops the refresh.
   on('ui.render', { component: 'Pane', requestId: OPS_PANE_ID }, ($, e) => renderOpsPane($.ui.resolve(e), opsPane, opsActions(hostOf($)), e.props.bodyColumns, Date.now(), e.surface))
@@ -198,7 +211,7 @@ export const register: Register = on => {
     const host = hostOf($)
     // A background call's result row carries its live row until the operation ends.
     const running = liveOf(e.props.tool_use_id)
-    if (running?.background) return renderLiveRow($.ui.resolve(e), running, Date.now(), e.surface, e.viewport?.columns)
+    if (running?.background && !running.detached) return renderLiveRow($.ui.resolve(e), running, Date.now(), e.surface, e.viewport?.columns)
     const last = finishedOf(e.props.tool_use_id)
     let names = last?.names ?? {}
     if (Object.keys(names).length === 0) {

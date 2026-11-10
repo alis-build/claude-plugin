@@ -234,11 +234,15 @@ function deployStage(deployment: Json, names: Record<string, string>): Stage {
  * The person's view of an operation's JSON, or null when the value is not
  * one. `names` maps environment ids to display names (`alis environment list`).
  */
-export function viewOf(raw: unknown, names: Record<string, string> = {}): OpView | null {
+export function viewOf(raw: unknown, names: Record<string, string> = {}, kind?: string): OpView | null {
   const o = obj(raw)
   if (!o) return null
-  const isBuild = 'images' in o || 'buildLogsUri' in o || 'version' in o
-  if (!isBuild && !('deployments' in o) && !('deployProgress' in o)) return null
+  // The CLI says what the operation is (`kind`, on the result or beside a
+  // watch snapshot); an older one leaves it to the fields the response carries.
+  const said = kind ?? str(o['kind'])
+  if ((said && said !== 'build' && said !== 'deploy') || (!said && isDefine(o))) return null
+  const isBuild = said ? said === 'build' : 'images' in o || 'buildLogsUri' in o || 'version' in o
+  if (!said && !isBuild && !('deployments' in o) && !('deployProgress' in o)) return null
   const stages = [...arr(o['images']).map(buildStage), ...arr(o['deployments']).map(d => deployStage(d, names))]
   const view: OpView = { kind: isBuild ? 'build' : 'deploy', done: o['done'] === true, stages }
   const name = str(o['name'])
@@ -252,6 +256,61 @@ export function viewOf(raw: unknown, names: Record<string, string> = {}): OpView
   const buildLogs = str(o['buildLogsUri'])
   if (buildLogs) view.buildLogsUri = buildLogs
   return view
+}
+
+/** A define as its artifacts stand: one generated package per language registry. */
+export type DefineView = {
+  version?: string
+  done: number
+  total: number
+  /** The artifact being generated now, as people say it (`go`, `npm`). */
+  generating?: string
+  /** The artifact that failed, the same way. */
+  failed?: string
+}
+
+/** `packages/x/versions/1.0.0/artifacts/golang_artifact_registry` → `golang`. */
+function artifactWords(name: string): string {
+  const id = name.split('/').at(-1) ?? name
+  return id.split('_')[0] || id
+}
+
+/** Whether a response is a define's: it lists artifacts, and nothing a build or deploy does. */
+export function isDefine(raw: unknown): boolean {
+  const o = obj(raw)
+  return !!o && Array.isArray(o['artifacts']) && !('images' in o) && !('deployments' in o) && !('deployProgress' in o)
+}
+
+/** A define operation's JSON as its row draws it; null when the value is not an object. */
+export function defineOf(raw: unknown): DefineView | null {
+  const o = obj(raw)
+  if (!o) return null
+  const artifacts = arr(o['artifacts'])
+  const state = (a: Json) => str(a['state'])?.toUpperCase() ?? ''
+  const view: DefineView = { done: artifacts.filter(a => state(a) === 'GENERATED').length, total: artifacts.length }
+  const version = str(o['version'])
+  if (version) view.version = version
+  const generating = artifacts.find(a => state(a) === 'GENERATING')
+  if (generating) view.generating = artifactWords(str(generating['name']) ?? '')
+  const failed = artifacts.find(a => state(a) === 'FAILED')
+  if (failed) view.failed = artifactWords(str(failed['name']) ?? '')
+  return view
+}
+
+/** The live row of a running define. */
+export function defineLineOf(view: DefineView | undefined, opts: { service?: string; operation?: string; startedAt: number; now: number }): LiveLine {
+  const clock = clockOf(opts.now - opts.startedAt)
+  const label = `Defining ${view?.version ?? opts.service ?? ''}`.trim()
+  if (!view || view.total === 0) return { label, note: 'compiling the definition', fill: null, clock }
+  const at = `${Math.min(view.total, view.done + 1)} of ${view.total}`
+  return {
+    label,
+    fill: view.done / view.total,
+    sub: view.done === view.total ? 'Packages generated' : view.generating ? `Generating the ${view.generating} package · ${at}` : `Generating packages · ${at}`,
+    subTone: 'dim',
+    clock,
+    detail: { title: `Define · package ${at}`, operation: opts.operation },
+  }
 }
 
 /** Fills what a later, sparser view (a pruned result) lacks from an earlier, fuller one. */
@@ -393,6 +452,13 @@ export function foldLineOf(input: {
   const deploys = stages.filter(s => s.kind === 'deploy')
   const isBuild = (view?.kind ?? (input.verb === 'deploy' ? 'deploy' : 'build')) === 'build'
   const building = stages.some(s => s.kind === 'build' && s.state !== 'done')
+  if (input.verb === 'define' && !view) {
+    if (input.outcome === 'failed') return { tone: 'error', text: 'Define failed.', time, sub: why }
+    if (input.outcome === 'done') return { tone: 'ok', text: version ? `${version} is defined` : 'The define finished', time }
+    if (input.outcome !== 'running') {
+      return { tone: 'neutral', text: 'Still defining on Alis', note: input.outcome === 'interrupted' ? 'you stopped watching, not the define' : `Claude stopped waiting${time ? ` after ${time}` : ''}`, follow: true }
+    }
+  }
   const still = building || (isBuild && deploys.length === 0) ? 'Still building on Alis' : 'Still deploying on Alis'
   if (input.outcome === 'interrupted') {
     return { tone: 'neutral', text: still, note: 'you stopped watching, not the build', follow: true, cancel: building }

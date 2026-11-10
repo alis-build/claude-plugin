@@ -40,6 +40,8 @@ export type Host = {
   status: (text: string | undefined) => void
   /** Shows a line on the notification bar for a few seconds. */
   toast: (text: string) => void
+  /** Raises a native notification through the person's own channel; never rejects. */
+  notify: (text: string, title: string) => void
   /** Asks the engine to draw this plugin's render hooks again, and saves what they draw from (see saved.ts). */
   invalidate: () => void
   /** Saves the module's session state, so a reload of its code picks it up (see saved.ts). */

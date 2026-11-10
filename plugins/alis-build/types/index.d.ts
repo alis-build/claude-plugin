@@ -45,11 +45,20 @@ export type HandoffPaneState = {
 /** Hashes of reported values (never the values), and Bash calls left unmasked. */
 export type SecretsMemo = { seen: string[]; masked: string[]; unmasked: string[] }
 
+/**
+ * One followed alis call: its tool call's id, and what its row draws from
+ * (hooks/mod/ops-live.ts LiveWait, less the raw snapshot). Plain JSON here;
+ * the module checks the fields it needs when it reads one back.
+ */
+export type SavedOp = { id: string; wait: { [field: string]: unknown } }
+
 export type SavedState = {
   secrets: SecretsMemo
   opsPane: OpsPaneState
   handoffPane: HandoffPaneState
   handoffStatusShown: boolean
+  /** The calls being followed and the last ones that ended; absent in a snapshot an older version saved. */
+  ops?: { live: SavedOp[]; finished: SavedOp[] }
 }
 
 declare module 'claude-code' {

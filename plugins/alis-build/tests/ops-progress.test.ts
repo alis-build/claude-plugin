@@ -1,6 +1,6 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
-import { actionWords, durationOf, environmentIdOf, liveLineOf, productOf, resourceWords, serviceOf, viewOf } from '../hooks/mod/ops-progress'
+import { actionWords, defineLineOf, defineOf, durationOf, environmentIdOf, foldLineOf, isDefine, liveLineOf, productOf, resourceWords, serviceOf, viewOf } from '../hooks/mod/ops-progress'
 import { BUILD_DEPLOY_DONE } from './fixtures/operation-build-deploy-done'
 
 tier('user')
@@ -64,4 +64,32 @@ describe('ops-progress', () => {
     expect(viewOf({ hello: 1 })).toBe(null)
     expect(viewOf([1])).toBe(null)
   })
+
+  test('the CLI\'s kind decides what a response is; without it a define is told by its artifacts', () => {
+    // A define result carries a version, which used to read as a build.
+    const define = { done: true, version: '3.1.0', artifacts: [{ name: 'packages/x/versions/3.1.0/artifacts/golang_artifact_registry', state: 'GENERATED' }] }
+    expect(viewOf(define)).toBe(null)
+    expect(viewOf({ ...define, kind: 'define' })).toBe(null)
+    expect(viewOf({ done: false }, {}, 'define')).toBe(null)
+    expect(viewOf({ done: false }, {}, 'deploy')).toMatchObject({ kind: 'deploy', stages: [] })
+    expect(viewOf({ done: false, version: '1.2.3' }, {}, 'deploy')?.kind).toBe('deploy')
+    expect(viewOf({ done: false, kind: 'build' })?.kind).toBe('build')
+    expect(viewOf({ done: false, version: '1.2.3' })?.kind).toBe('build')
+    expect(isDefine(define)).toBe(true)
+    expect(isDefine({ artifacts: [], images: [] })).toBe(false)
+  })
+
+  test('a define draws its packages, and folds in its own words', () => {
+    const raw = { version: '3.1.0', artifacts: [{ name: 'packages/x/versions/3.1.0/artifacts/golang_artifact_registry', state: 'GENERATED' }, { name: 'packages/x/versions/3.1.0/artifacts/ecmascript_npm', state: 'GENERATING' }, { name: 'packages/x/versions/3.1.0/artifacts/python_pypi', state: 'QUEUED' }] }
+    expect(defineOf(raw)).toEqual({ version: '3.1.0', done: 1, total: 3, generating: 'ecmascript' })
+    expect(defineOf({ artifacts: [{ name: 'a/python_pypi', state: 'FAILED' }] })).toEqual({ done: 0, total: 1, failed: 'python' })
+    expect(defineOf('nope')).toBe(null)
+    expect(defineLineOf(defineOf(raw)!, { service: 'hello.v1', startedAt: 0, now: 65_000 })).toMatchObject({ label: 'Defining 3.1.0', fill: 1 / 3, sub: 'Generating the ecmascript package · 2 of 3', clock: '1:05' })
+    expect(defineLineOf(undefined, { service: 'hello.v1', startedAt: 0, now: 5_000 })).toEqual({ label: 'Defining hello.v1', note: 'compiling the definition', fill: null, clock: '0:05' })
+    expect(foldLineOf({ outcome: 'done', verb: 'define', version: '3.1.0', elapsedMs: 58_000 })).toEqual({ tone: 'ok', text: '3.1.0 is defined', time: '58s' })
+    expect(foldLineOf({ outcome: 'failed', verb: 'define', error: 'hello.proto:12: unknown type' })).toMatchObject({ tone: 'error', text: 'Define failed.', sub: 'hello.proto:12: unknown type' })
+    expect(foldLineOf({ outcome: 'interrupted', verb: 'define' })).toMatchObject({ text: 'Still defining on Alis' })
+    expect(foldLineOf({ outcome: 'running', verb: 'define', version: '3.1.0' })).toEqual({ tone: 'neutral', text: 'Define 3.1.0 started on Alis' })
+  })
+
 })
