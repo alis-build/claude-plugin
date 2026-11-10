@@ -4,6 +4,49 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.39.0](https://github.com/alis-build/claude-plugin/compare/v0.38.0...v0.39.0) (2026-11-10)
+
+### Features
+
+#### Follow alis operations by call, in a band above the prompt ([debf48e](https://github.com/alis-build/claude-plugin/commit/debf48ee1fcca0564882b89198b8b74395db019a))
+
+- The gate passes the tool call's id (--client-call) on commands that start
+  an operation, and the live row finds its operation by it. The match by
+  target and start time stays as the fallback for an older CLI.
+- The target is read wherever it stands among the flags
+  (`alis deploy -e dev <pkg>`), and a no-target start is no longer guessed.
+- Background and --async operations draw a live row in the band above the
+  prompt, and a native notification says when one ends.
+- Followed operations are saved in $.state and followed again after a reload.
+- `alis define` has a live row (packages generated) and its own folded
+  result; it no longer folds as a build.
+- A CLI with `alis operations watch` is followed through that stream, and
+  the `kind` on operation results replaces sniffing the response's fields.
+
+The CLI side ships in alis.os.cli.v1; CLIENT_CALL_SINCE in
+hooks/mod/health.ts names the first CLI version that carries it.
+
+#### Operations in a band above the prompt, found by the call that started them ([319c8d4](https://github.com/alis-build/claude-plugin/commit/319c8d4601ababc727deb11083301711a2d4d242))
+
+Background and --async alis operations stay in view in a band above the
+prompt, with a native notification when one ends. A live row finds its
+operation by the tool call that started it, so a start with flags ahead of
+the target, or with no target, no longer sits on "Starting the build".
+`alis define` gets a live row and its own folded result, and followed
+operations survive a reload of the plugin.
+
+The call lookup and the `alis operations watch` stream need CLI 1.187.9 or
+later; an older CLI keeps the previous behaviour.
+
+### Fixes
+
+#### Stack a progress row per alis call in a folded group ([8d76d1d](https://github.com/alis-build/claude-plugin/commit/8d76d1d6857555f54cfe77221cd08ed384231576))
+
+Parallel builds or deploys in one message fold into one ToolGroup, which
+drew only the first running operation and, once all ended, only the last
+call's outcome. Each alis call in the group now gets its own row, live
+while it runs and its outcome once ended, in the group's order.
+
 ## [0.37.2](https://github.com/alis-build/claude-plugin/compare/v0.37.1...v0.37.2) (2026-11-06)
 
 ### Fixes
