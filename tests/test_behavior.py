@@ -36,7 +36,7 @@ class RoutingTests(unittest.TestCase):
 class SuggestHookTests(unittest.TestCase):
     """suggest-skills.sh passes wake-word hints through and drops ambient suggestions."""
 
-    def run_with(self, context, prompt, project="/tmp/plain"):
+    def run_with(self, context, prompt, project="/tmp/plain", mode=None):
         with tempfile.TemporaryDirectory() as home:
             fake = Path(home, "alis")
             out = json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": context}})
@@ -44,7 +44,7 @@ class SuggestHookTests(unittest.TestCase):
             fake.chmod(0o700)
             env = dict(os.environ, HOME=home, PATH=home + os.pathsep + os.environ["PATH"], CLAUDE_PROJECT_DIR=project)
             env.pop("ALIS_SUGGEST_ALWAYS", None)
-            p = subprocess.run(["bash", str(HOOKS / "suggest-skills.sh")], input=json.dumps({"prompt": prompt}), text=True, capture_output=True, env=env)
+            p = subprocess.run(["bash", str(HOOKS / "suggest-skills.sh")], input=json.dumps({"prompt": prompt, **({"permission_mode": mode} if mode else {})}), text=True, capture_output=True, env=env)
             self.assertEqual(p.returncode, 0, p.stderr)
             return p.stdout, Path(home, "called").exists()
 
@@ -63,6 +63,18 @@ class SuggestHookTests(unittest.TestCase):
     def test_prompt_without_wake_word_skips_the_cli_even_in_a_workspace(self):
         out, called = self.run_with("anything", "add an endpoint", "/x/alis.build/acme/build/sm/hello/v1")
         self.assertFalse(called)
+        self.assertEqual(out, "")
+
+    def test_plan_mode_prompt_reaches_the_cli_and_a_skill_store_match_passes_through(self):
+        note = "Skill store match for this request — Alis skill: block-forgejocodereviewer — Adds an AI reviewer.\nLoad with `alis skills load <id>` if relevant; otherwise ignore this note."
+        out, called = self.run_with(note, "put an AI reviewer on our pull requests", mode="plan")
+        self.assertTrue(called)
+        self.assertIn("block-forgejocodereviewer", out)
+
+    def test_plan_mode_still_drops_a_local_guess(self):
+        note = "Possibly relevant Alis skill: build-your-first-ios-app — Guide builders.\nLoad with `alis skills load <id>` if relevant; otherwise ignore this note."
+        out, called = self.run_with(note, "put an AI reviewer on our pull requests", mode="plan")
+        self.assertTrue(called)
         self.assertEqual(out, "")
 
 if __name__ == "__main__": unittest.main()

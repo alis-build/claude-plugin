@@ -4,6 +4,9 @@
 // hook attaches it as context the model reads beside the prompt. The CLI's
 // ambient "Possibly relevant Alis skill" notes are dropped: lexical matching
 // on whole prompts suggested unrelated skills too often to be worth showing.
+// In plan mode the CLI asks the Skill store to rank the request instead, and
+// words that answer apart ("Skill store match for this request"); that note
+// is attached like a wake hint.
 // Every failure path leaves the prompt untouched: routing must never break a
 // prompt.
 import type { PromptSubmitInput, PromptSubmitResult } from 'claude-code'
@@ -22,10 +25,13 @@ export async function suggestSkills(
   next: (e: PromptSubmitInput) => Promise<PromptSubmitResult>,
 ): Promise<PromptSubmitResult> {
   try {
-    // Only explicit addresses matter, so this cheap prefilter skips the CLI
-    // call for prompts that cannot contain one; the CLI's strict regexes make
-    // the actual decision. ALIS_SUGGEST_ALWAYS=1 disables the prefilter.
-    if ((await host.suggestAlways()) !== '1' && !WAKE_WORDS.test(e.text)) return next(e)
+    // Outside plan mode only explicit addresses matter, so this cheap
+    // prefilter skips the CLI call for prompts that cannot contain one; the
+    // CLI's strict regexes make the actual decision. A plan-mode prompt always
+    // reaches the CLI, which is where it asks the Skill store.
+    // ALIS_SUGGEST_ALWAYS=1 disables the prefilter.
+    const planning = classicState.permissionMode === 'plan'
+    if ((await host.suggestAlways()) !== '1' && !planning && !WAKE_WORDS.test(e.text)) return next(e)
     const root = await host.root().catch(() => '')
     const payload = {
       hook_event_name: 'UserPromptSubmit',

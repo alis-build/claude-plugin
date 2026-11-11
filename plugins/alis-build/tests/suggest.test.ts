@@ -15,6 +15,7 @@ const WAKE_HINT = 'The user addressed alis by name. Invoke the alis:discover ski
 
 describe('suggest', () => {
   test('only wake words reach the CLI, in a workspace or not', async () => {
+    classicState.permissionMode = undefined
     for (const dir of ['/plain/project', '/Users/me/alis.build/acme/build/sm/hello/v1']) {
       const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: envelope(WAKE_HINT), stderr: '' }) })
       host.dir = dir
@@ -59,6 +60,30 @@ describe('suggest', () => {
       expect(await suggestSkills(host, prompt(text), passthrough)).toEqual({ text, context: undefined })
       expect(host.runs).toHaveLength(1)
       expect(host.toasts).toEqual([])
+    }
+  })
+
+  test('in plan mode every prompt reaches the CLI and a Skill store match is attached', async () => {
+    const ranked =
+      'Skill store match for this request — Alis skill: block-forgejocodereviewer — Adds an AI reviewer to pull requests.\nLoad with `alis skills load <id>` if relevant; otherwise ignore this note.'
+    const guessed = 'Possibly relevant Alis skill: build-your-first-ios-app — Guide builders.\nLoad with `alis skills load <id>` if relevant; otherwise ignore this note.'
+    const text = 'put an AI reviewer on our pull requests'
+    const before = classicState.permissionMode
+    try {
+      classicState.permissionMode = 'plan'
+      let host = fakeHost({ answer: () => ({ exitCode: 0, stdout: envelope(ranked), stderr: '' }) })
+      expect(await suggestSkills(host, prompt(text), passthrough)).toEqual({ text, context: [ranked] })
+      expect(host.runs).toHaveLength(1)
+      // A local guess is still dropped, in plan mode too.
+      host = fakeHost({ answer: () => ({ exitCode: 0, stdout: envelope(guessed), stderr: '' }) })
+      expect(await suggestSkills(host, prompt(text), passthrough)).toEqual({ text, context: undefined })
+      // Outside plan mode the same prompt never reaches the CLI.
+      classicState.permissionMode = 'default'
+      host = fakeHost({ answer: () => ({ exitCode: 0, stdout: envelope(ranked), stderr: '' }) })
+      expect(await suggestSkills(host, prompt(text), passthrough)).toEqual({ text, context: undefined })
+      expect(host.runs).toHaveLength(0)
+    } finally {
+      classicState.permissionMode = before
     }
   })
 

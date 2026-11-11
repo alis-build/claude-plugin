@@ -19,6 +19,7 @@ Use this plugin to let Claude Code work with build environments, products, servi
 - When a session opens inside a `~/alis.build/<org>/build|define/…` service folder, the package id and a pointer to its definitions ⇄ implementation counterpart are injected automatically
 - Quiet, local-first discovery and capture skills: `alis:discover` fires on platform-shaped work (never on generic coding just because you are inside a workspace), probes the local catalogue in ~40ms, and loads a registry skill only on a distinctive match; catalogue metadata is refreshed quietly at session start and the plugin never installs or prunes native user skills
 - Wake phrases (`alis, …`, `capture this as a skill`) route to `alis:discover` or `alis:capture` from any directory (a `UserPromptSubmit` hook backed by `alis skills suggest --hook`); the CLI's unsolicited per-prompt skill suggestions are dropped, because matching whole prompts suggested unrelated skills too often
+- In plan mode, a skill the Skill store ranks as a match for the request is noted beside the prompt (the same hook; needs `alis` 1.187.15 or later), so the plan can use it
 - Structured CLI workflows run with the CLI's automation tier; guarded actions use Claude's native confirmation
 - Function hooks (Claude Code mods): on Claude Code 2.1.287 or later, where Claude Code has the feature switched on, the permission gate, handoff lifecycle and wake-phrase routing run inside Claude Code's plugin engine instead of shell scripts, and `/alis status`, `/alis ops` and `/alis handoff [alias]` are available; elsewhere the shell hooks run exactly as before
 - A live row under every build and deploy Claude runs or waits on (in the foreground or the background): what is happening, a progress bar, the step and what comes next, folding to one outcome line ("✓ 2.44.19 is live on Development · 4m 09s · Logs") when it ends. Each row starts with the Alis mark: the brand SVG on desktop, a one-cell picture in Ghostty and kitty, the name elsewhere
@@ -148,7 +149,8 @@ With the module active:
   with a status line while a handoff claims the session
 - wake-phrase routing comes from the same `alis skills suggest --hook` call,
   attached as context beside the prompt; like the shell hook, it drops the CLI's
-  unsolicited skill suggestions and shows no suggestion band
+  unsolicited skill suggestions, attaches a Skill store match in plan mode, and
+  shows no suggestion band
 - `/alis status` shows the CLI version, workspace, what the module serves and the
   handoff claim without spending a model turn; `/alis handoff [alias]` runs
   `alis workstation handoff --session <this session> --json` for you (the
