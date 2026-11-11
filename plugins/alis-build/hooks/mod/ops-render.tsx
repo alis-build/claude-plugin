@@ -185,8 +185,7 @@ export function liveRow(kit: Kit, surface: RenderSurface, line: LiveLine, column
           </Box>
         ) : null}
         {progress(kit, surface, line.fill, cells, beat)}
-        <Box flexGrow={1} />
-        <Box flexShrink={0}>
+        <Box flexShrink={0} marginLeft={line.fill !== null && cells > 0 ? 0 : 2}>
           <Text color={KEY.quiet}>{line.clock}</Text>
         </Box>
       </Box>
@@ -292,7 +291,6 @@ export function foldRow(kit: Kit, surface: RenderSurface, fold: FoldLine, action
             <Text color={KEY.quiet} wrap="truncate-end">{` · ${fold.note}`}</Text>
           </Box>
         ) : null}
-        <Box flexGrow={1} />
         {fold.time ? (
           <Box flexShrink={0} marginLeft={2}>
             <Text color={KEY.quiet}>{fold.time}</Text>

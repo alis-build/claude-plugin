@@ -185,7 +185,9 @@ describe('ops-live', () => {
     // The dispatch is over, so its abort no longer ends the row.
     controller.abort()
     expect(liveOf('toolu_bg')).toMatchObject({ background: true, operation: 'operations/bg' })
-    expect(opsAmong([{ tool_use_id: 'toolu_bg', isRunning: false }])).toEqual([{ id: 'toolu_bg', live: liveOf('toolu_bg') }])
+    // The band draws it while it runs, so the transcript gives it no row of its own.
+    expect(opsAmong([{ tool_use_id: 'toolu_bg', isRunning: false }])).toEqual([])
+    expect(backgroundOps().map(op => op.operation)).toEqual(['operations/bg'])
 
     const timer = host.timers.at(-1)!
     for (let i = 0; i < POLL_EVERY; i++) timer.fn()
@@ -203,7 +205,7 @@ describe('ops-live', () => {
     expect(opsAmong([{ tool_use_id: 'other', isRunning: false }, { tool_use_id: 'toolu_bg', isRunning: false }])).toEqual([{ id: 'toolu_bg', finished: finishedOf('toolu_bg') }])
   })
 
-  test('parallel background waits in one group each keep a row, live or ended', async () => {
+  test('parallel background waits run in the band, and each keeps its outcome in the group', async () => {
     // Two operations at once, as when Claude waits on two builds in one message.
     const done = new Set<string>()
     const host = fakeHost({
@@ -222,20 +224,17 @@ describe('ops-live', () => {
       { tool_use_id: 'toolu_a', isRunning: false },
       { tool_use_id: 'toolu_b', isRunning: false },
     ]
-    expect(opsAmong(group).map(op => [op.id, op.live?.operation])).toEqual([
-      ['toolu_a', 'operations/a'],
-      ['toolu_b', 'operations/b'],
-    ])
+    // Both run in the band; the group draws neither until one ends.
+    expect(opsAmong(group)).toEqual([])
+    expect(backgroundOps().map(op => op.operation)).toEqual(['operations/a', 'operations/b'])
 
     // The first ends: its outcome stays in the group while the second runs on.
     done.add('operations/a')
     const [timerA, timerB] = host.timers.slice(-2)
     for (let i = 0; i < POLL_EVERY; i++) timerA!.fn()
     await settle()
-    expect(opsAmong(group).map(op => [op.id, op.live ? 'live' : op.finished.result?.version])).toEqual([
-      ['toolu_a', '2.50.9'],
-      ['toolu_b', 'live'],
-    ])
+    expect(opsAmong(group).map(op => [op.id, op.finished?.result?.version])).toEqual([['toolu_a', '2.50.9']])
+    expect(backgroundOps().map(op => op.operation)).toEqual(['operations/b'])
 
     done.add('operations/b')
     for (let i = 0; i < POLL_EVERY; i++) timerB!.fn()

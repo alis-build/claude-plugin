@@ -209,9 +209,9 @@ export const register: Register = on => {
   // The folded result of a call that streamed an alis operation.
   on('ui.render', { component: 'ToolResult', props: { tool: 'Bash' } }, async ($, e, next) => {
     const host = hostOf($)
-    // A background call's result row carries its live row until the operation ends.
-    const running = liveOf(e.props.tool_use_id)
-    if (running?.background && !running.detached) return renderLiveRow($.ui.resolve(e), running, Date.now(), e.surface, e.viewport?.columns)
+    // A background call keeps the engine's own line while it runs: the band
+    // above the prompt draws its operation, and a row here would repeat it.
+    if (liveOf(e.props.tool_use_id)?.background) return next(e)
     // An --async start whose operation a wait went on to follow keeps its own "started" line.
     const ended = finishedOf(e.props.tool_use_id)
     const last = followedElsewhere(ended) ? undefined : ended

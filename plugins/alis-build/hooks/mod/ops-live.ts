@@ -141,9 +141,9 @@ export function opsAmong(calls: ReadonlyArray<{ tool_use_id?: string; isRunning:
     if (typeof id !== 'string') continue
     const wait = live.get(id)
     if (wait && (call.isRunning || wait.background)) {
-      // An --async start belongs to the band, never to a row: the wait that
-      // follows it in the same group would draw the operation twice.
-      if (!wait.detached) ops.push({ id, live: wait })
+      // A background operation belongs to the band above the prompt, never
+      // to a row as well: the two would draw it twice, the row's clock frozen.
+      if (!wait.background) ops.push({ id, live: wait })
       continue
     }
     const done = finished.get(id)
