@@ -4,6 +4,19 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.41.0](https://github.com/alis-build/claude-plugin/compare/v0.40.0...v0.41.0) (2026-11-11)
+
+### Features
+
+#### A Skill store match is noted beside any prompt, not only in plan mode ([4235da2](https://github.com/alis-build/claude-plugin/commit/4235da2b3f75f38aab4167dad99b3b7d9b74549a))
+
+Every prompt now goes to `alis skills suggest --hook`, which (alis 1.187.18
+or later) asks the Skill store to rank it once it passes the CLI's gates. On
+80 labelled prompts the Skill store put the right skill first for 46 of 55
+and named nothing for all 25 that no skill fits. One match is noted, up to
+three in plan mode; guesses from the CLI's local word matcher are still
+dropped. ALIS_SUGGEST_ALWAYS=0 keeps it to wake phrases and plan mode.
+
 ## [0.40.0](https://github.com/alis-build/claude-plugin/compare/v0.39.2...v0.40.0) (2026-11-11)
 
 ### Features
