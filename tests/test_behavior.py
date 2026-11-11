@@ -34,9 +34,9 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual(len(routing_eval.score_events(json.dumps(event)+"\n"+json.dumps(final))[1]), 2)
 
 class SuggestHookTests(unittest.TestCase):
-    """suggest-skills.sh passes wake-word hints through and drops ambient suggestions."""
+    """suggest-skills.sh passes wake-word hints and Skill store matches through and drops local guesses."""
 
-    def run_with(self, context, prompt, project="/tmp/plain", mode=None):
+    def run_with(self, context, prompt, project="/tmp/plain", mode=None, always=None):
         with tempfile.TemporaryDirectory() as home:
             fake = Path(home, "alis")
             out = json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": context}})
@@ -44,6 +44,7 @@ class SuggestHookTests(unittest.TestCase):
             fake.chmod(0o700)
             env = dict(os.environ, HOME=home, PATH=home + os.pathsep + os.environ["PATH"], CLAUDE_PROJECT_DIR=project)
             env.pop("ALIS_SUGGEST_ALWAYS", None)
+            if always is not None: env["ALIS_SUGGEST_ALWAYS"] = always
             p = subprocess.run(["bash", str(HOOKS / "suggest-skills.sh")], input=json.dumps({"prompt": prompt, **({"permission_mode": mode} if mode else {})}), text=True, capture_output=True, env=env)
             self.assertEqual(p.returncode, 0, p.stderr)
             return p.stdout, Path(home, "called").exists()
@@ -60,10 +61,20 @@ class SuggestHookTests(unittest.TestCase):
         self.assertTrue(called)
         self.assertEqual(out, "")
 
-    def test_prompt_without_wake_word_skips_the_cli_even_in_a_workspace(self):
-        out, called = self.run_with("anything", "add an endpoint", "/x/alis.build/acme/build/sm/hello/v1")
+    def test_any_prompt_reaches_the_cli_and_a_skill_store_match_passes_through(self):
+        note = "Skill store match for this request — Alis skill: block-forgejocodereviewer — Adds an AI reviewer.\nLoad with `alis skills load block-forgejocodereviewer --via hook_hint` if relevant; otherwise ignore this note."
+        out, called = self.run_with(note, "put an AI reviewer on our pull requests")
+        self.assertTrue(called)
+        self.assertIn("block-forgejocodereviewer", out)
+
+    def test_switched_off_a_prompt_without_wake_word_skips_the_cli_even_in_a_workspace(self):
+        out, called = self.run_with("anything", "add an endpoint", "/x/alis.build/acme/build/sm/hello/v1", always="0")
         self.assertFalse(called)
         self.assertEqual(out, "")
+        out, called = self.run_with("The user addressed alis by name.", "alis, add an endpoint", always="0")
+        self.assertTrue(called)
+        out, called = self.run_with("anything", "add an endpoint", mode="plan", always="0")
+        self.assertTrue(called)
 
     def test_plan_mode_prompt_reaches_the_cli_and_a_skill_store_match_passes_through(self):
         note = "Skill store match for this request — Alis skill: block-forgejocodereviewer — Adds an AI reviewer.\nLoad with `alis skills load <id>` if relevant; otherwise ignore this note."

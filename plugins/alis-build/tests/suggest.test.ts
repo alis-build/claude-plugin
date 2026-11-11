@@ -14,18 +14,21 @@ const passthrough = async (e: { text: string; context?: readonly string[] }) => 
 const WAKE_HINT = 'The user addressed alis by name. Invoke the alis:discover skill now.'
 
 describe('suggest', () => {
-  test('only wake words reach the CLI, in a workspace or not', async () => {
+  test('every prompt reaches the CLI, in a workspace or not, unless ALIS_SUGGEST_ALWAYS=0', async () => {
     classicState.permissionMode = undefined
     for (const dir of ['/plain/project', '/Users/me/alis.build/acme/build/sm/hello/v1']) {
       const host = fakeHost({ answer: () => ({ exitCode: 0, stdout: envelope(WAKE_HINT), stderr: '' }) })
       host.dir = dir
-      expect(await suggestSkills(host, prompt('add an endpoint'), passthrough)).toEqual({ text: 'add an endpoint', context: undefined })
-      expect(host.runs).toHaveLength(0)
-      expect(await suggestSkills(host, prompt('alis, add an endpoint'), passthrough)).toEqual({ text: 'alis, add an endpoint', context: [WAKE_HINT] })
-      expect(host.runs).toHaveLength(1)
-      host.env['ALIS_SUGGEST_ALWAYS'] = '1'
       await suggestSkills(host, prompt('add an endpoint'), passthrough)
+      expect(host.runs).toHaveLength(1)
+      expect(await suggestSkills(host, prompt('alis, add an endpoint'), passthrough)).toEqual({ text: 'alis, add an endpoint', context: [WAKE_HINT] })
       expect(host.runs).toHaveLength(2)
+      // Switched off, only a prompt that could hold an explicit address is asked about.
+      host.env['ALIS_SUGGEST_ALWAYS'] = '0'
+      expect(await suggestSkills(host, prompt('add an endpoint'), passthrough)).toEqual({ text: 'add an endpoint', context: undefined })
+      expect(host.runs).toHaveLength(2)
+      await suggestSkills(host, prompt('alis, add an endpoint'), passthrough)
+      expect(host.runs).toHaveLength(3)
     }
   })
 
@@ -63,7 +66,7 @@ describe('suggest', () => {
     }
   })
 
-  test('in plan mode every prompt reaches the CLI and a Skill store match is attached', async () => {
+  test('a Skill store match is attached, in plan mode or not, and a local guess never is', async () => {
     const ranked =
       'Skill store match for this request — Alis skill: block-forgejocodereviewer — Adds an AI reviewer to pull requests.\nLoad with `alis skills load <id>` if relevant; otherwise ignore this note.'
     const guessed = 'Possibly relevant Alis skill: build-your-first-ios-app — Guide builders.\nLoad with `alis skills load <id>` if relevant; otherwise ignore this note.'
@@ -77,11 +80,18 @@ describe('suggest', () => {
       // A local guess is still dropped, in plan mode too.
       host = fakeHost({ answer: () => ({ exitCode: 0, stdout: envelope(guessed), stderr: '' }) })
       expect(await suggestSkills(host, prompt(text), passthrough)).toEqual({ text, context: undefined })
-      // Outside plan mode the same prompt never reaches the CLI.
+      // Outside plan mode the same prompt is asked about too.
       classicState.permissionMode = 'default'
       host = fakeHost({ answer: () => ({ exitCode: 0, stdout: envelope(ranked), stderr: '' }) })
+      expect(await suggestSkills(host, prompt(text), passthrough)).toEqual({ text, context: [ranked] })
+      expect(host.runs).toHaveLength(1)
+      // Switched off, it never reaches the CLI there, and still does in plan mode.
+      host = fakeHost({ answer: () => ({ exitCode: 0, stdout: envelope(ranked), stderr: '' }) })
+      host.env['ALIS_SUGGEST_ALWAYS'] = '0'
       expect(await suggestSkills(host, prompt(text), passthrough)).toEqual({ text, context: undefined })
       expect(host.runs).toHaveLength(0)
+      classicState.permissionMode = 'plan'
+      expect(await suggestSkills(host, prompt(text), passthrough)).toEqual({ text, context: [ranked] })
     } finally {
       classicState.permissionMode = before
     }

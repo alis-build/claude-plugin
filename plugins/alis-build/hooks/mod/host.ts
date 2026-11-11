@@ -22,7 +22,7 @@ export type Host = {
   surface: () => Promise<RenderSurface | null>
   /** Asks the person in the engine's own dialog; resolves to the label chosen, rejects when dismissed or with no one to ask. */
   ask: (question: string, options: AskOptions) => Promise<string>
-  /** ALIS_SUGGEST_ALWAYS, or undefined. */
+  /** ALIS_SUGGEST_ALWAYS ("0" keeps suggestions to wake words and plan mode), or undefined. */
   suggestAlways: () => Promise<string | undefined>
   /** The terminal's own variables, for whether it draws pictures. */
   terminalEnv: () => Promise<{ termProgram?: string; term?: string; kittyWindow?: string; tmux?: string }>

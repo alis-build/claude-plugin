@@ -1,12 +1,15 @@
-// Per-prompt wake-word routing (suggest-skills.sh's job): when the person
-// addresses alis ("alis, …") or asks to capture work as a skill, the alis CLI
-// answers with a hook envelope naming the router skill to invoke, and this
-// hook attaches it as context the model reads beside the prompt. The CLI's
-// ambient "Possibly relevant Alis skill" notes are dropped: lexical matching
-// on whole prompts suggested unrelated skills too often to be worth showing.
-// In plan mode the CLI asks the Skill store to rank the request instead, and
-// words that answer apart ("Skill store match for this request"); that note
-// is attached like a wake hint.
+// Per-prompt skill routing (suggest-skills.sh's job). Every prompt goes to the
+// alis CLI, which answers with a hook envelope or nothing, and this hook
+// attaches the answer as context the model reads beside the prompt:
+//   - when the person addresses alis ("alis, …") or asks to capture work as a
+//     skill, the router skill to invoke;
+//   - otherwise, a skill the Skill store ranks as a match for the request
+//     ("Skill store match for this request"), which the CLI asks for once the
+//     prompt passes its gates (alis 1.187.18 or later; before that, in plan
+//     mode only).
+// The CLI's "Possibly relevant Alis skill" notes are dropped: they come from
+// its local word-overlap matcher, which suggested unrelated skills too often
+// to be worth showing.
 // Every failure path leaves the prompt untouched: routing must never break a
 // prompt.
 import type { PromptSubmitInput, PromptSubmitResult } from 'claude-code'
@@ -25,13 +28,10 @@ export async function suggestSkills(
   next: (e: PromptSubmitInput) => Promise<PromptSubmitResult>,
 ): Promise<PromptSubmitResult> {
   try {
-    // Outside plan mode only explicit addresses matter, so this cheap
-    // prefilter skips the CLI call for prompts that cannot contain one; the
-    // CLI's strict regexes make the actual decision. A plan-mode prompt always
-    // reaches the CLI, which is where it asks the Skill store.
-    // ALIS_SUGGEST_ALWAYS=1 disables the prefilter.
+    // ALIS_SUGGEST_ALWAYS=0 goes back to asking only where it used to: for
+    // prompts that could hold an explicit address, and in plan mode.
     const planning = classicState.permissionMode === 'plan'
-    if ((await host.suggestAlways()) !== '1' && !planning && !WAKE_WORDS.test(e.text)) return next(e)
+    if ((await host.suggestAlways()) === '0' && !planning && !WAKE_WORDS.test(e.text)) return next(e)
     const root = await host.root().catch(() => '')
     const payload = {
       hook_event_name: 'UserPromptSubmit',
