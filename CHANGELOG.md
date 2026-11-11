@@ -4,6 +4,17 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.39.2](https://github.com/alis-build/claude-plugin/compare/v0.39.1...v0.39.2) (2026-11-11)
+
+### Fixes
+
+#### Background operations drawn once, rows kept together on wide screens ([60cb66e](https://github.com/alis-build/claude-plugin/commit/60cb66e054eae1803a0f2bb9f1191c14c5e5bde9))
+
+A background operation is drawn only in the band above the prompt while
+it runs; the transcript keeps the engine's line and gets the result row
+when it ends. The time, Logs link and clock sit beside the text instead
+of at the far edge.
+
 ## [0.39.1](https://github.com/alis-build/claude-plugin/compare/v0.39.0...v0.39.1) (2026-11-10)
 
 ### Fixes
