@@ -4,6 +4,21 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.40.0](https://github.com/alis-build/claude-plugin/compare/v0.39.2...v0.40.0) (2026-11-11)
+
+### Features
+
+#### A Skill store match is noted beside a plan-mode prompt ([160cc0b](https://github.com/alis-build/claude-plugin/commit/160cc0be2592f01d3a8ff7c65fff34c0cc04daee))
+
+In plan mode the alis CLI asks the Skill store to rank the request, and
+since alis 1.187.15 it words that answer apart from its local word-overlap
+guesses. A plan-mode prompt now always reaches the CLI, and a note that
+opens "Skill store match for this request" is attached beside the prompt,
+so the plan can use a skill the team already has.
+
+Local guesses ("Possibly relevant Alis skill") are still dropped, in every
+mode, and outside plan mode only wake phrases reach the CLI, as before.
+
 ## [0.39.2](https://github.com/alis-build/claude-plugin/compare/v0.39.1...v0.39.2) (2026-11-11)
 
 ### Fixes
