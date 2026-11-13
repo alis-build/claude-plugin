@@ -22,7 +22,7 @@ Use this plugin to let Claude Code work with build environments, products, servi
 - A skill the Skill store ranks as a match for your request is noted beside the prompt, so Claude can load it: one skill at most, and up to three in plan mode (the same hook; needs `alis` 1.187.18 or later, and with an older `alis` only plan mode is covered). It costs each prompt most of a second and sends the prompt text to the Skill store; `ALIS_SUGGEST_ALWAYS=0` keeps it to wake phrases and plan mode. Guesses from the CLI's local word matcher are still dropped, because they named unrelated skills too often
 - Structured CLI workflows run with the CLI's automation tier; guarded actions use Claude's native confirmation
 - Function hooks (Claude Code mods): on Claude Code 2.1.287 or later, where Claude Code has the feature switched on, the permission gate, handoff lifecycle and wake-phrase routing run inside Claude Code's plugin engine instead of shell scripts, and `/alis status`, `/alis ops`, `/alis feedback`, `/alis share` and `/alis handoff [alias]` are available; elsewhere the shell hooks run exactly as before
-- A skill from the Skill store shows when it is in use: the call that loaded it reads "Skill Block Audit · from the AlisX Skill store", and the status line names it for the rest of the session. Once that turn ends, the row offers **Helped**, **Didn't help** and **Say more**: one press sends your rating to the skill's owner (`alis skills feedback <id> --rating up|down`), and `/alis feedback [skill] <message>` sends your words, then asks whether this session goes with them. A skill you rated is not asked about again until it changes
+- A skill from the Skill store shows when it is in use: the call that loaded it reads "Skill Block Audit · from the AlisX Skill store", and a dim label in the prompt footer names it for the rest of the session. Once that turn ends, the row (under the folded group, when Claude Code folds the call) offers **Helped**, **Didn't help** and **Say more**: one press sends your rating to the skill's owner (`alis skills feedback <id> --rating up|down`), and `/alis feedback [skill] <message>` sends your words, then asks whether this session goes with them. A skill you rated is not asked about again until it changes
 - `/alis share [note]` sends this session to the AlisX build team. It first shows what would leave your machine (size, lines kept, credentials masked) and sends only on your answer. A build or deploy that failed on the platform's side offers the same from its row
 - A live row under every build and deploy Claude runs or waits on (in the foreground or the background): what is happening, a progress bar, the step and what comes next, folding to one outcome line ("✓ 2.44.19 is live on Development · 4m 09s · Logs") when it ends. Each row starts with the Alis mark: the brand SVG on desktop, a one-cell picture in Ghostty and kitty, the name elsewhere
 
@@ -175,7 +175,8 @@ With the module active:
   CLI. A handoff Claude starts through the `alis:handoff` skill keeps the CLI's
   own popup
 - a Skill store skill in use is drawn on the row of the call that loaded it
-  (the Skill tool, or `alis skills load <id>`) and named on the status line;
+  (the Skill tool, or `alis skills load <id>`), or under the group that folds
+  it, and named in the prompt footer;
   after the turn, the row's buttons send a rating with one press, and
   `/alis feedback [skill] <message>` sends your words to the skill's owner.
   Only skills in the CLI's catalogue (`~/.alis/cache/skills-catalog.json`) are

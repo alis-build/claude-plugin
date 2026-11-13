@@ -1,10 +1,10 @@
 // The plugin's one line in the status area. Claude Code gives a plugin a
-// single line, and more than one part of the module has something to say on
-// it (a handoff claim, the skill in use), so each sets its own segment here
-// and the line is the segments that are set, in a fixed order.
+// single line and draws it as a notice, so it is kept for what the person
+// must not miss (a handoff claim). Each part of the module sets its own
+// segment here and the line is the segments that are set, in a fixed order.
 import type { Host } from './host'
 
-const ORDER = ['handoff', 'skill', 'presence', 'credits'] as const
+const ORDER = ['handoff', 'presence'] as const
 export type StatusSegment = (typeof ORDER)[number]
 
 const segments = new Map<StatusSegment, string>()

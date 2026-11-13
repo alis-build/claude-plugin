@@ -1,7 +1,7 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { runAlisCommand } from '../hooks/mod/alis-command'
-import { noteSkill, RATED_KEY, rateSkill, resetSkills, restoreSkills, SEND_SESSION, sendSkillFeedback, skillActions, skillForCall, skillLoadOf, skillStatusOf, skillsTurnDone, usedSkills } from '../hooks/mod/skills-used'
+import { noteSkill, RATED_KEY, rateSkill, resetSkills, restoreSkills, SEND_SESSION, sendSkillFeedback, skillActions, skillForCall, skillLoadOf, skillModeOf, skillsAmong, skillsTurnDone, usedSkills } from '../hooks/mod/skills-used'
 import { renderSkillRow, skillSubOf } from '../hooks/mod/skills-used-view'
 import { resetStatus } from '../hooks/mod/status'
 import { fakeHost, type FakeHost, type Run } from './fixtures/fake-host'
@@ -36,7 +36,7 @@ describe('skills-used', () => {
     expect(skillLoadOf(undefined)).toBe(null)
   })
 
-  test('a Skill store skill is noted once, with its calls, and named on the status line', async () => {
+  test('a Skill store skill is noted once, with its calls, and named in the prompt footer', async () => {
     const host = start()
     await noteSkill(host, 'block-audit', 'toolu_1', 1000)
     await noteSkill(host, 'block-audit', 'toolu_2', 2000)
@@ -44,10 +44,15 @@ describe('skills-used', () => {
     expect(usedSkills()).toEqual([{ id: 'block-audit', name: 'Block Audit', at: 1000, turnDone: false, calls: ['toolu_1', 'toolu_2'], canRate: true }])
     expect(skillForCall('toolu_2')?.id).toBe('block-audit')
     expect(skillForCall('toolu_9')).toBe(undefined)
-    expect(host.statuses.at(-1)).toBe('skill: Block Audit')
-    await noteSkill(host, 'dbd-add-protos')
-    expect(host.statuses.at(-1)).toBe('skills: Add Protos +1')
-    expect(skillStatusOf([])).toBe(undefined)
+    expect(skillModeOf()).toBe('skill Block Audit')
+    await noteSkill(host, 'dbd-add-protos', 'toolu_3')
+    expect(skillModeOf()).toBe('skill Add Protos +1')
+    // The status line is drawn as a warning: a skill in use never goes there.
+    expect(host.statuses).toEqual([])
+    // A folded group's calls give its skills, each once.
+    expect(skillsAmong([{ tool_use_id: 'toolu_1' }, { tool_use_id: 'toolu_2' }, { tool_use_id: 'toolu_3' }, {}]).map(s => s.id)).toEqual(['block-audit', 'dbd-add-protos'])
+    resetSkills()
+    expect(skillModeOf()).toBe(undefined)
   })
 
   test('a skill the catalogue does not hold, or no catalogue at all, is left alone', async () => {

@@ -2,8 +2,9 @@
 // each. A skill counts once the engine expands it (`/name`, the Skill tool)
 // or Claude loads it with `alis skills load <id>`; only ids in the CLI's own
 // catalogue (~/.alis/cache/skills-catalog.json) count, so another plugin's
-// skills are left alone. Its row says so, the status line names it for the
-// rest of the session, and once the turn that used it ends the row offers a
+// skills are left alone. Its row says so, the prompt footer names it for the
+// rest of the session (a dim label; the status line is drawn as a warning,
+// which a skill in use is not), and once the turn that used it ends the row offers a
 // rating: one press sends `alis skills feedback <id> --rating up|down`, the
 // press being the consent, and nothing but the rating leaves the machine.
 // A rating is asked for once per skill until the skill changes ($.store).
@@ -12,7 +13,6 @@ import { commandPath } from './cli-gate'
 import { failureOf, jsonOf, withIdentity } from './cli'
 import type { Host } from './host'
 import { literalArgv } from './shell'
-import { setStatus } from './status'
 
 export type { UsedSkill }
 
@@ -83,16 +83,21 @@ async function ratedOf(host: Host): Promise<Rated> {
   return raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Rated) : {}
 }
 
-/** The status line's words for the skills in use. */
-export function skillStatusOf(skills: readonly UsedSkill[]): string | undefined {
+/** The prompt footer's label for the skills in use: the latest by name, and how many more. */
+export function skillModeOf(skills: readonly UsedSkill[] = usedSkills()): string | undefined {
   const last = skills.at(-1)
   if (!last) return undefined
-  return skills.length === 1 ? `skill: ${last.name}` : `skills: ${last.name} +${skills.length - 1}`
+  return skills.length === 1 ? `skill ${last.name}` : `skill ${last.name} +${skills.length - 1}`
 }
 
-/** Shows the skills in use on the status line (again, after a reload). */
-export function showSkillStatus(host: Host): void {
-  if (used.size > 0) setStatus(host, 'skill', skillStatusOf(usedSkills()))
+/** The skills loaded by the calls of a folded group, each once, in order. */
+export function skillsAmong(calls: ReadonlyArray<{ tool_use_id?: string }>): UsedSkill[] {
+  const found: UsedSkill[] = []
+  for (const call of calls) {
+    const skill = skillForCall(call.tool_use_id)
+    if (skill && !found.includes(skill)) found.push(skill)
+  }
+  return found
 }
 
 /**
@@ -113,7 +118,6 @@ export async function noteSkill(host: Host, id: unknown, toolUseId?: string, now
       used.set(id, skill)
     }
     if (toolUseId && !skill.calls.includes(toolUseId)) skill.calls.push(toolUseId)
-    setStatus(host, 'skill', skillStatusOf(usedSkills()))
     host.invalidate()
   } catch (error) {
     host.debug(`skills: could not note ${String(id)}: ${String(error)}`)

@@ -24,7 +24,7 @@ import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
 import { maskedToastOf, maskRow, noteBashCall } from './mod/secrets'
 import { shareFromRow } from './mod/share'
-import { noteSkill, showSkillStatus, skillActions, skillForCall, skillLoadOf, skillsTurnDone } from './mod/skills-used'
+import { noteSkill, skillActions, skillForCall, skillLoadOf, skillModeOf, skillsAmong, skillsTurnDone } from './mod/skills-used'
 import { renderSkillRow } from './mod/skills-used-view'
 import { suggestSkills } from './mod/suggest'
 import { restore, snapshot } from './mod/saved'
@@ -141,7 +141,6 @@ export const register: Register = on => {
       await resumeOpsPane(host)
       resumeOps(host)
       await resumeHandoffPane(host)
-      showSkillStatus(host)
     } catch (error) {
       host.debug(`could not restore state: ${String(error)}`)
     }
@@ -179,6 +178,11 @@ export const register: Register = on => {
     const skill = skillForCall(e.props.tool_use_id)
     return skill ? renderSkillRow($.ui.resolve(e), e.surface, skill, skillActions(hostOf($), skill.id)) : next(e)
   })
+  // The skill in use, as a dim label in the prompt footer.
+  on('ui.render', { component: 'SessionMode' }, ($, e, next) => {
+    const label = skillModeOf()
+    return next(label ? { ...e, props: { ...e.props, modes: [...e.props.modes, label] } } : e)
+  })
   on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
     const wait = liveOf(e.props.tool_use_id)
     return wait && e.props.isRunning ? renderOpsRunning($.ui.resolve(e), await next(e), wait, Date.now(), e.surface, e.viewport?.columns) : next(e)
@@ -188,16 +192,19 @@ export const register: Register = on => {
   on('ui.render', { component: 'ToolGroup' }, async ($, e, next) => {
     if (e.props.isExpanded) return next(e)
     const ops = opsAmong(e.props.calls)
-    if (ops.length === 0) return next(e)
+    const skills = skillsAmong(e.props.calls)
+    if (ops.length === 0 && skills.length === 0) return next(e)
     const kit = $.ui.resolve(e)
     const host = hostOf($)
     const now = Date.now()
-    const rows = ops.flatMap(op => {
+    const skillRows = skills.map(skill => ({ key: `skill:${skill.id}`, row: renderSkillRow(kit, e.surface, skill, skillActions(host, skill.id)) }))
+    const opRows = ops.flatMap(op => {
       const row = op.live
         ? renderLiveRow(kit, op.live, now, e.surface, e.viewport?.columns)
         : renderOpsResult(kit, undefined, op.finished, e.surface, opsFollow(host, op.finished.operation))
       return row ? [{ key: op.id, row }] : []
     })
+    const rows = [...skillRows, ...opRows]
     return rows.length > 0 ? withRowsBelow(kit, await next(e), rows) : next(e)
   })
   // The band above the prompt: the operations no tool call is waiting on (a
