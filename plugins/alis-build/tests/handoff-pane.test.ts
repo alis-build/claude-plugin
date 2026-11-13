@@ -107,7 +107,7 @@ describe('handoff-pane', () => {
     expect(drawn).toContain('https://ws.example/x')
     expect(drawn).toContain('"label":"Reclaim"')
     expect(drawn).toContain('"label":"Cancel handoff"')
-    expect(drawn).toContain('"AlisX"')
+    expect(drawn).toContain('"\u28FC\u2807"')
 
     const failedDrawn = JSON.stringify(await $.ui.render({
       surface: 'terminal', component: 'Pane', requestId: 'test-failed',

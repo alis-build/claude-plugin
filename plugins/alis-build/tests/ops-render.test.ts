@@ -45,12 +45,12 @@ describe('ops-render', () => {
       expect(drawn).toContain('1:17')
       expect(drawn).toContain('Step 15 of 18 · deploys to Development next')
       // The mark has a fixed slot, and the step line keeps it empty, so the step sits under the label.
-      expect(drawn.match(/"width":(3|6),"flexShrink":0/g)?.length).toBe(2)
+      expect(drawn.match(/"width":3,"flexShrink":0/g)?.length).toBe(2)
       expect(drawn).toContain('"alignItems":"center"')
       if (surface === 'terminal') {
         expect(drawn).toContain('•')
         expect(drawn).toContain('"color":"#F02222"')
-        expect(drawn).toContain('"AlisX"')
+        expect(drawn).toContain('"\u28FC\u2807"')
         expect(drawn).not.toContain('Svg')
         expect(drawn).not.toContain('operations/040fff29')
       } else {
@@ -67,7 +67,7 @@ describe('ops-render', () => {
     })
   }
 
-  test('Ghostty and kitty get the mark as a one-cell picture; tmux and other terminals the name', async ($, on) => {
+  test('Ghostty and kitty get the mark as a one-cell picture; tmux and other terminals its dots', async ($, on) => {
     expect(graphicsFrom({ termProgram: 'ghostty', term: 'xterm-ghostty' })).toBe(true)
     expect(graphicsFrom({ term: 'xterm-kitty', kittyWindow: '1' })).toBe(true)
     expect(graphicsFrom({ termProgram: 'ghostty', tmux: '/tmp/tmux-501/default,1,0' })).toBe(false)
@@ -84,7 +84,7 @@ describe('ops-render', () => {
       expect(drawn).toContain('"type":"Image"')
       expect(drawn).toContain('"file":"/p/assets/alis-mark-cell.png"')
       expect(drawn).toContain('"columns":1')
-      expect(drawn).not.toContain('"AlisX"')
+      expect(drawn).not.toContain('"\u28FC\u2807"')
       expect(drawn).toContain('Building console.v2 2.44.19')
     } finally {
       setMarkFile(null)
@@ -93,7 +93,7 @@ describe('ops-render', () => {
 
   test('the bar takes the spare width and is left out when there is none', () => {
     expect(barCells(100, 'terminal', 'Building 2.44.19', '1:17')).toBe(40)
-    expect(barCells(60, 'terminal', 'Building 2.44.19', '1:17')).toBe(26)
+    expect(barCells(60, 'terminal', 'Building 2.44.19', '1:17')).toBe(29)
     expect(barCells(36, 'terminal', 'Building 2.44.19', '1:17')).toBe(0)
   })
 

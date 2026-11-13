@@ -4,9 +4,9 @@
 // the Alis mark, always the brand asset itself (assets/alis-mark.svg, a
 // byte-for-byte copy of design.v1's Brand/alis.svg): its markup on remote
 // surfaces, and in a terminal that draws pictures (Ghostty, kitty) the
-// PNG rendered from it (assets/alis-mark-cell.png, one cell). Elsewhere the
-// bold name, AlisX: the brand rules forbid boxing, redrawing or approximating
-// the mark. State is coloured with Claude Code's theme keys, so a row reads
+// PNG rendered from it (assets/alis-mark-cell.png, one cell). A terminal that
+// draws no pictures gets the mark's dots as two braille characters in Alis
+// red (MARK_DOTS): the name in its place read as a label, not a logo. State is coloured with Claude Code's theme keys, so a row reads
 // right in every theme; Alis red is the mark's and the progress dots', the
 // brand's own element.
 import type { Elements, ImageProps, RenderElement, RenderSurface, SvgProps } from 'claude-code'
@@ -14,8 +14,21 @@ import type { Elements, ImageProps, RenderElement, RenderSurface, SvgProps } fro
 /** Alis red: the mark and the progress dots. */
 export const ALIS_RED = '#F02222'
 
-/** The name, where the mark cannot be drawn and wherever a line of ours is titled. */
+/** The name, wherever a line of ours is titled (a dialog's header, a notification). */
 export const NAME = 'AlisX'
+
+/**
+ * The mark for a terminal that draws no pictures: its dots in braille, two
+ * cells. The asset is three columns of dots by five rows (the right two
+ * columns from the top, the left two to the bottom); braille has four rows,
+ * so the stem is a row shorter at each end.
+ *
+ *   . x x
+ *   . x x
+ *   x x x
+ *   x x .
+ */
+export const MARK_DOTS = '\u28FC\u2807'
 
 /** Claude Code theme keys for state. `background` is the theme's cyan, the nearest key to brand cyan. */
 export const KEY = {
@@ -61,18 +74,18 @@ export type MarkKit = Pick<Elements['terminal'], 'Text'> & { Svg?: (props: SvgPr
 
 /** Cells the mark takes on a line, for layout sums. */
 export function markCells(surface: RenderSurface): number {
-  return surface !== 'terminal' ? 2 : markFile ? 1 : NAME.length
+  return surface !== 'terminal' ? 2 : markFile ? 1 : MARK_DOTS.length
 }
 
 /**
  * The Alis mark at the head of a line: the asset as SVG on remote surfaces,
- * a one-cell picture in a terminal that draws them, else the bold name.
+ * a one-cell picture in a terminal that draws them, else its dots in red.
  */
 export function mark(kit: MarkKit, surface: RenderSurface): RenderElement {
   const { Text, Svg, Image } = kit
   if (surface !== 'terminal' && Svg) return <Svg source={MARK_SVG} alt={NAME} width={MARK_W} height={MARK_H} />
   if (surface === 'terminal' && markFile && Image) return <Image source={{ file: markFile, format: 'png' }} columns={1} rows={1} alt="A" />
-  return <Text bold>{NAME}</Text>
+  return <Text color={ALIS_RED}>{MARK_DOTS}</Text>
 }
 
 /** Older name for the mark, kept for the panes. */
