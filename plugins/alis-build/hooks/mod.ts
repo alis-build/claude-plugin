@@ -24,8 +24,8 @@ import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
 import { maskedToastOf, maskRow, noteBashCall } from './mod/secrets'
 import { shareFromRow } from './mod/share'
-import { noteSkill, skillActions, skillForCall, skillLoadOf, skillModeOf, skillsAmong, skillsTurnDone } from './mod/skills-used'
-import { renderSkillRow } from './mod/skills-used-view'
+import { noteSkill, skillActions, skillForCall, skillLoadOf, skillModeOf, skillsAmong, skillsTurnDone, skillToRate } from './mod/skills-used'
+import { renderSkillAsk, renderSkillRow } from './mod/skills-used-view'
 import { suggestSkills } from './mod/suggest'
 import { restore, snapshot } from './mod/saved'
 
@@ -176,7 +176,7 @@ export const register: Register = on => {
   }).catch(($, e, next) => next(e))
   on('ui.render', { component: 'ToolResult', props: { tool: 'Skill' } }, ($, e, next) => {
     const skill = skillForCall(e.props.tool_use_id)
-    return skill ? renderSkillRow($.ui.resolve(e), e.surface, skill, skillActions(hostOf($), skill.id)) : next(e)
+    return skill ? renderSkillRow($.ui.resolve(e), e.surface, skill) : next(e)
   })
   // The skill in use, as a dim label in the prompt footer.
   on('ui.render', { component: 'SessionMode' }, ($, e, next) => {
@@ -197,7 +197,7 @@ export const register: Register = on => {
     const kit = $.ui.resolve(e)
     const host = hostOf($)
     const now = Date.now()
-    const skillRows = skills.map(skill => ({ key: `skill:${skill.id}`, row: renderSkillRow(kit, e.surface, skill, skillActions(host, skill.id)) }))
+    const skillRows = skills.map(skill => ({ key: `skill:${skill.id}`, row: renderSkillRow(kit, e.surface, skill) }))
     const opRows = ops.flatMap(op => {
       const row = op.live
         ? renderLiveRow(kit, op.live, now, e.surface, e.viewport?.columns)
@@ -213,8 +213,15 @@ export const register: Register = on => {
   // else draws there when there is nothing to follow.
   on('ui.render', { component: 'AbovePrompt' }, ($, e, next) => {
     const ops = backgroundOps()
-    if (e.props.hasSurvey || ops.length === 0) return next(e)
-    return renderOpsBand($.ui.resolve(e), ops, Date.now(), e.surface, e.props.bodyColumns)
+    // Once the turn that used a skill has ended, the band also asks how it
+    // went: by then the skill's own row is in the scrollback.
+    const asked = e.props.isWorking ? undefined : skillToRate()
+    if (e.props.hasSurvey || (ops.length === 0 && !asked)) return next(e)
+    const kit = $.ui.resolve(e)
+    const band = ops.length > 0 ? renderOpsBand(kit, ops, Date.now(), e.surface, e.props.bodyColumns) : null
+    if (!asked) return band as NonNullable<typeof band>
+    const ask = renderSkillAsk(kit, e.surface, asked, skillActions(hostOf($), asked.id))
+    return band ? withRowsBelow(kit, band, [{ key: 'alis-skill-ask', row: ask }]) : ask
   })
   // The operations pane (/alis ops): drawn from the module's state while
   // open, refreshed on the clock; a close from anywhere stops the refresh.
@@ -249,7 +256,7 @@ export const register: Register = on => {
     const host = hostOf($)
     // `alis skills load <id>`: the skill's row in place of its text.
     const skill = skillForCall(e.props.tool_use_id)
-    if (skill) return renderSkillRow($.ui.resolve(e), e.surface, skill, skillActions(host, skill.id))
+    if (skill) return renderSkillRow($.ui.resolve(e), e.surface, skill)
     // A background call keeps the engine's own line while it runs: the band
     // above the prompt draws its operation, and a row here would repeat it.
     if (liveOf(e.props.tool_use_id)?.background) return next(e)

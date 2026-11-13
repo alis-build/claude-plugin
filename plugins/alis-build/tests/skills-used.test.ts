@@ -1,8 +1,8 @@
 import { describe, expect, test, tier } from 'claude-code/testing'
 
 import { runAlisCommand } from '../hooks/mod/alis-command'
-import { noteSkill, RATED_KEY, rateSkill, resetSkills, restoreSkills, SEND_SESSION, sendSkillFeedback, skillActions, skillForCall, skillLoadOf, skillModeOf, skillsAmong, skillsTurnDone, usedSkills } from '../hooks/mod/skills-used'
-import { renderSkillRow, skillSubOf } from '../hooks/mod/skills-used-view'
+import { dismissRating, noteSkill, RATED_KEY, rateSkill, resetSkills, restoreSkills, SEND_SESSION, sendSkillFeedback, skillActions, skillForCall, skillLoadOf, skillModeOf, skillsAmong, skillsTurnDone, skillToRate, usedSkills } from '../hooks/mod/skills-used'
+import { renderSkillAsk, renderSkillRow, skillSubOf } from '../hooks/mod/skills-used-view'
 import { resetStatus } from '../hooks/mod/status'
 import { fakeHost, type FakeHost, type Run } from './fixtures/fake-host'
 
@@ -134,26 +134,48 @@ describe('skills-used', () => {
   })
 
   for (const surface of ['terminal', 'desktop'] as const) {
-    test(`the row names the skill and offers a rating once the turn has ended, on the ${surface}`, async ($, on) => {
+    test(`the row names the skill, and a line above the prompt asks once the turn has ended, on the ${surface}`, async ($, on) => {
       const host = start(() => ok())
       await noteSkill(host, 'block-audit', 'toolu_1')
-      on('ui.render', { component: 'ToolResult' }, ($, e) => renderSkillRow($.ui.resolve(e), e.surface, skillForCall('toolu_1')!, skillActions(host, 'block-audit')))
-      const draw = async () => JSON.stringify(await $.ui.render({ surface, component: 'ToolResult', requestId: 'toolu_1', props: { tool_use_id: 'toolu_1', tool: 'Skill', output: {}, isErrored: false } }))
-      const running = await draw()
-      expect(running).toContain('Skill Block Audit')
-      expect(running).toContain('from the AlisX Skill store')
-      expect(running).not.toContain('"label":"Helped"')
+      on('ui.render', { component: 'ToolResult' }, ($, e) => renderSkillRow($.ui.resolve(e), e.surface, skillForCall('toolu_1')!))
+      on('ui.render', { component: 'AbovePrompt' }, ($, e, next) => {
+        const asked = skillToRate()
+        return asked ? renderSkillAsk($.ui.resolve(e), e.surface, asked, skillActions(host, asked.id)) : next(e)
+      })
+      const row = async () => JSON.stringify(await $.ui.render({ surface, component: 'ToolResult', requestId: 'toolu_1', props: { tool_use_id: 'toolu_1', tool: 'Skill', output: {}, isErrored: false } }))
+      const band = async () => JSON.stringify(await $.ui.render({ surface, component: 'AbovePrompt', props: { hasSurvey: false, isWorking: false, maxRows: 6, bodyColumns: 100, scroll: 0, view: 'main' } } as never))
+      expect(await row()).toContain('Skill Block Audit')
+      expect(await row()).toContain('from the AlisX Skill store')
+      // The row never carries buttons: it is in the scrollback by the time they matter.
+      expect(await row()).not.toContain('"label"')
+      expect(skillToRate()).toBe(undefined)
+      expect(await band()).not.toContain('How was the skill')
       skillsTurnDone(host)
-      const done = await draw()
-      expect(done).toContain('"label":"Helped"')
-      expect(done).toContain('"label":"Didn\'t help"')
-      expect(done).toContain('"label":"Say more"')
+      const asking = await band()
+      expect(asking).toContain('How was the skill Block Audit?')
+      for (const label of ['Helped', "Didn't help", 'Say more', 'Not now']) expect(asking).toContain(`"label":"${label}"`)
       await rateSkill(host, 'block-audit', 'up')
-      const rated = await draw()
-      expect(rated).not.toContain('"label":"Helped"')
-      expect(rated).toContain('Your rating went to the skill')
+      expect(skillToRate()).toBe(undefined)
+      expect(await band()).not.toContain('How was the skill')
+      expect(await row()).toContain('Your rating went to the skill')
     })
   }
+
+  test('"Not now" stops the question for this session without remembering a rating', async () => {
+    const host = start()
+    await noteSkill(host, 'block-audit')
+    skillsTurnDone(host)
+    expect(skillToRate()?.id).toBe('block-audit')
+    dismissRating(host, 'block-audit')
+    expect(skillToRate()).toBe(undefined)
+    expect(host.store[RATED_KEY]).toBe(undefined)
+    // A failed send keeps asking, so it can be tried again.
+    const failing = start(() => new Error('ENOENT'))
+    await noteSkill(failing, 'block-audit')
+    skillsTurnDone(failing)
+    await rateSkill(failing, 'block-audit', 'up')
+    expect(skillToRate()?.failed).toBe(true)
+  })
 
   test('a reload keeps the skills and drops a send in flight', async () => {
     const host = start()

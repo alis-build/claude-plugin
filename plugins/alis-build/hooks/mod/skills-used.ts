@@ -4,8 +4,9 @@
 // catalogue (~/.alis/cache/skills-catalog.json) count, so another plugin's
 // skills are left alone. Its row says so, the prompt footer names it for the
 // rest of the session (a dim label; the status line is drawn as a warning,
-// which a skill in use is not), and once the turn that used it ends the row offers a
-// rating: one press sends `alis skills feedback <id> --rating up|down`, the
+// which a skill in use is not), and once the turn that used it ends a line
+// above the prompt asks for a rating (the skill's own row has scrolled into
+// the terminal's scrollback by then, where nothing is redrawn): one press sends `alis skills feedback <id> --rating up|down`, the
 // press being the consent, and nothing but the rating leaves the machine.
 // A rating is asked for once per skill until the skill changes ($.store).
 import type { UsedSkill } from '../../types'
@@ -148,6 +149,8 @@ export async function rateSkill(host: Host, id: string, rating: 'up' | 'down'): 
     skill.rating = rating
     const rated = await ratedOf(host)
     await host.storeSet(RATED_KEY, { ...rated, [id]: { rating, at: new Date().toISOString() } }).catch(error => host.debug(`skills: could not remember the rating: ${String(error)}`))
+    // The question leaves the band with the answer, so the thanks is a toast.
+    host.toast(rating === 'up' ? 'Thanks. Your rating went to the skill\'s owner.' : 'Thanks. Say what went wrong and it reaches the skill\'s owner.')
     if (rating === 'down') await sayMore(host, id)
   } catch (error) {
     skill.failed = true
@@ -163,10 +166,23 @@ export async function sayMore(host: Host, id: string): Promise<void> {
   await host.fillPrompt(`/alis feedback ${id} `).catch(error => host.debug(`skills: could not fill the prompt: ${String(error)}`))
 }
 
-export type SkillActions = { rate: (rating: 'up' | 'down') => void; sayMore: () => void }
+/** The skill the line above the prompt asks about: the latest whose turn has ended and that is still to be rated. */
+export function skillToRate(): UsedSkill | undefined {
+  return usedSkills().findLast(skill => skill.turnDone && skill.canRate && (!skill.rating || skill.sending || skill.failed))
+}
+
+/** "Not now": the question is not asked again in this session; the next session may ask. */
+export function dismissRating(host: Host, id: string): void {
+  const skill = used.get(id)
+  if (!skill) return
+  skill.canRate = false
+  host.invalidate()
+}
+
+export type SkillActions = { rate: (rating: 'up' | 'down') => void; sayMore: () => void; dismiss: () => void }
 
 export function skillActions(host: Host, id: string): SkillActions {
-  return { rate: rating => void rateSkill(host, id, rating), sayMore: () => void sayMore(host, id) }
+  return { rate: rating => void rateSkill(host, id, rating), sayMore: () => void sayMore(host, id), dismiss: () => dismissRating(host, id) }
 }
 
 const FEEDBACK_USAGE = 'feedback: nothing sent\nusage: /alis feedback <skill id> <what happened>'
