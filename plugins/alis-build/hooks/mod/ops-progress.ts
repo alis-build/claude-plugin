@@ -435,6 +435,8 @@ export type FoldLine = {
   /** Offer to follow (and cancel) the operation that keeps running. */
   follow?: boolean
   cancel?: boolean
+  /** A platform-side failure: offer to send the session to the build team. */
+  share?: boolean
 }
 
 export function foldLineOf(input: {
@@ -448,6 +450,8 @@ export function foldLineOf(input: {
   error?: string
   /** The service as people say it (`activity.v1`), when the call's target is known. */
   service?: string
+  /** The failure is the platform's (the CLI's envelope says so). */
+  share?: boolean
 }): FoldLine {
   const view = input.view
   const reason = view?.error ?? input.error
@@ -482,10 +486,10 @@ export function foldLineOf(input: {
     const failed = stages.find(s => s.state === 'failed')
     if (failed?.kind === 'build' || (!failed && isBuild && !deploys.some(d => d.state !== 'waiting'))) {
       const at = failed?.failedAt ? ` at step ${failed.failedAt}` : ''
-      return { tone: 'error', text: `${input.service ? `${input.service} build` : 'Build'} failed${at}.${deploys.length ? ' Nothing was deployed.' : ''}`, time, sub: failed?.error ?? why, logsUri: view?.buildLogsUri ?? view?.logsUri }
+      return { tone: 'error', text: `${input.service ? `${input.service} build` : 'Build'} failed${at}.${deploys.length ? ' Nothing was deployed.' : ''}`, time, sub: failed?.error ?? why, logsUri: view?.buildLogsUri ?? view?.logsUri, ...(input.share ? { share: true } : {}) }
     }
     const where = failed?.name ?? joinNames(deploys.map(d => d.name))
-    return { tone: 'error', text: `${input.service ? `${input.service} deploy` : 'Deploy'}${where ? ` to ${where}` : ''} failed.`, time, sub: failed?.error ?? why, logsUri: failed?.logsUri ?? view?.logsUri }
+    return { tone: 'error', text: `${input.service ? `${input.service} deploy` : 'Deploy'}${where ? ` to ${where}` : ''} failed.`, time, sub: failed?.error ?? why, logsUri: failed?.logsUri ?? view?.logsUri, ...(input.share ? { share: true } : {}) }
   }
   const envs = deploys.map(d => d.name)
   const subject = named || (isBuild ? 'The build' : 'The deploy')

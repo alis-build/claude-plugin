@@ -89,6 +89,10 @@ export type FakeHost = Host & {
   saves: number
   panes: { opened: PaneOpenArgs[]; closed: string[] }
   prompts: string[]
+  /** Texts `fillPrompt` left in the box. */
+  fills: string[]
+  /** What `storeGet` answers and `storeSet` writes. */
+  store: Record<string, unknown>
   /** Timers `every` registered, with their cancel state; call `fn` to tick. */
   timers: { ms: number; fn: () => void; cancelled: boolean }[]
   runs: Run[]
@@ -123,6 +127,8 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     saves: 0,
     panes: { opened: [], closed: [] },
     prompts: [],
+    fills: [],
+    store: {},
     timers: [],
     runs: [],
     writes: [],
@@ -183,6 +189,13 @@ export function fakeHost(overrides: Partial<Pick<FakeHost, 'env' | 'session' | '
     },
     submitPrompt: async text => {
       host.prompts.push(text)
+    },
+    fillPrompt: async text => {
+      host.fills.push(text)
+    },
+    storeGet: async key => host.store[key],
+    storeSet: async (key, value) => {
+      host.store[key] = value
     },
     every: (ms, fn) => {
       const timer = { ms, fn, cancelled: false }

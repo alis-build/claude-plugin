@@ -7,6 +7,7 @@ import type { PreToolUseResult } from 'claude-code'
 
 import { type ClassicAnswer, parseHookEnvelope } from './classic-result'
 import type { Host } from './host'
+import { setStatus } from './status'
 
 export const HANDOFF_EVENTS = new Set([
   'SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse',
@@ -87,10 +88,10 @@ async function isClaimed(host: Host, sid: string): Promise<boolean> {
 function showStatus(host: Host, claimed: boolean, cliOk: boolean): void {
   if (claimed) {
     if (!statusShown) host.toast('a handoff has claimed this session')
-    host.status(cliOk ? 'handoff: session claimed' : 'handoff: session claimed, coordinator unavailable')
+    setStatus(host, 'handoff', cliOk ? 'handoff: session claimed' : 'handoff: session claimed, coordinator unavailable')
     statusShown = true
   } else if (statusShown) {
-    host.status(undefined)
+    setStatus(host, 'handoff', undefined)
     statusShown = false
   }
 }

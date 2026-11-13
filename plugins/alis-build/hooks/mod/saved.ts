@@ -13,6 +13,7 @@ import { handoffPane } from './handoff-pane'
 import { opsSnapshot, restoreOps } from './ops-live'
 import { opsPane } from './ops-pane'
 import { restoreSecrets, secretsMemo } from './secrets'
+import { restoreSkills, usedSkills } from './skills-used'
 
 export function snapshot(): SavedState {
   return {
@@ -21,6 +22,8 @@ export function snapshot(): SavedState {
     handoffPane: { ...handoffPane },
     handoffStatusShown: handoffStatusShown(),
     ops: opsSnapshot(),
+    // A send in flight does not outlast the code that started it.
+    skills: usedSkills().map(skill => ({ ...skill, sending: false })),
   }
 }
 
@@ -33,4 +36,5 @@ export function restore(saved: SavedState | undefined): void {
   restoreHandoffStatus(saved.handoffStatusShown)
   // Absent in a snapshot an older version of this code saved.
   restoreOps(saved.ops)
+  restoreSkills(saved.skills)
 }

@@ -23,10 +23,13 @@ import { confirmGuarded } from './mod/guard-dialog'
 import { cliGateClassic } from './mod/cli-gate-classic'
 import type { Host } from './mod/host'
 import { maskedToastOf, maskRow, noteBashCall } from './mod/secrets'
+import { shareFromRow } from './mod/share'
+import { noteSkill, showSkillStatus, skillActions, skillForCall, skillLoadOf, skillsTurnDone } from './mod/skills-used'
+import { renderSkillRow } from './mod/skills-used-view'
 import { suggestSkills } from './mod/suggest'
 import { restore, snapshot } from './mod/saved'
 
-type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session' | 'clock' | 'prompt' | 'plugin' | 'state'>
+type HostNouns = Pick<EngineInterface, 'env' | 'fs' | 'process' | 'ui' | 'session' | 'clock' | 'prompt' | 'plugin' | 'state' | 'store'>
 
 /** The module's session state in $.state (see mod/saved.ts). */
 const SAVED = { plugin: 'alis', key: 'session' } as const
@@ -71,6 +74,11 @@ export function hostOf($: HostNouns): Host {
     },
     closePane: id => $.ui.close({ id }),
     submitPrompt: text => $.prompt.submit({ text }),
+    fillPrompt: async text => {
+      await $.prompt.fill({ text })
+    },
+    storeGet: key => $.store.get(key),
+    storeSet: (key, value) => $.store.set(key, value),
     every: (ms, fn) => $.clock.every(ms, fn).cancel,
     writeFile: (path, text) => $.fs.write(path, text),
     run: (argv, init) => $.process.run(argv, init),
@@ -83,6 +91,7 @@ export function hostOf($: HostNouns): Host {
 function opsFollow(host: Host, operation: string | null | undefined) {
   return {
     follow: () => void showOpsPane(host),
+    share: () => void shareFromRow(host),
     cancel: () => void host.submitPrompt(operation ? `Cancel ${operation} with: alis operations cancel ${operation} --json` : 'Cancel the running alis build with alis operations cancel.'),
   }
 }
@@ -132,6 +141,7 @@ export const register: Register = on => {
       await resumeOpsPane(host)
       resumeOps(host)
       await resumeHandoffPane(host)
+      showSkillStatus(host)
     } catch (error) {
       host.debug(`could not restore state: ${String(error)}`)
     }
@@ -146,8 +156,29 @@ export const register: Register = on => {
     const host = hostOf($)
     noteBashCall(e)
     host.save()
+    const loaded = skillLoadOf((e as { command?: unknown }).command)
+    if (loaded) void noteSkill(host, loaded, e.tool_use_id)
     return confirmGuarded(host, e, e2 => watchAlisCall(host, e2, next, next.signal))
   }).catch(($, e, next) => next(e))
+  // A Skill store skill in use: noted when the engine expands it (`/name`,
+  // the Skill tool) or Claude loads it with `alis skills load`; its row names
+  // it, and once the turn has ended the row offers a rating (skills-used.ts).
+  on('skill.prompt', ($, e, next) => {
+    void noteSkill(hostOf($), e.skill)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+  on('tool.call', { tool: 'Skill' }, ($, e, next) => {
+    void noteSkill(hostOf($), e.skill, e.tool_use_id)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+  on('turn.complete', ($, e, next) => {
+    if (!e.agentId) skillsTurnDone(hostOf($))
+    return next(e)
+  }).catch(($, e, next) => next(e))
+  on('ui.render', { component: 'ToolResult', props: { tool: 'Skill' } }, ($, e, next) => {
+    const skill = skillForCall(e.props.tool_use_id)
+    return skill ? renderSkillRow($.ui.resolve(e), e.surface, skill, skillActions(hostOf($), skill.id)) : next(e)
+  })
   on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
     const wait = liveOf(e.props.tool_use_id)
     return wait && e.props.isRunning ? renderOpsRunning($.ui.resolve(e), await next(e), wait, Date.now(), e.surface, e.viewport?.columns) : next(e)
@@ -209,6 +240,9 @@ export const register: Register = on => {
   // The folded result of a call that streamed an alis operation.
   on('ui.render', { component: 'ToolResult', props: { tool: 'Bash' } }, async ($, e, next) => {
     const host = hostOf($)
+    // `alis skills load <id>`: the skill's row in place of its text.
+    const skill = skillForCall(e.props.tool_use_id)
+    if (skill) return renderSkillRow($.ui.resolve(e), e.surface, skill, skillActions(host, skill.id))
     // A background call keeps the engine's own line while it runs: the band
     // above the prompt draws its operation, and a row here would repeat it.
     if (liveOf(e.props.tool_use_id)?.background) return next(e)

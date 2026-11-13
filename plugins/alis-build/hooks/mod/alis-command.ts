@@ -7,15 +7,24 @@ import type { Host } from './host'
 import { handoffStateOf, openHandoffPane } from './handoff-pane'
 import { toggleOpsPane } from './ops-pane'
 import { PLUGIN_VERSION } from './meta'
+import { shareSession } from './share'
+import { sendSkillFeedback, usedSkills } from './skills-used'
 import { COVERS } from './tag'
 
 export const COMMAND_SPEC: CommandSpec = {
   name: 'alis',
-  description: 'Alis Build: status, or hand this session to a workstation',
-  argumentHint: 'status | ops | handoff [alias]',
+  description: 'AlisX: status, operations, skill feedback, send this session, or hand it to a workstation',
+  argumentHint: 'status | ops | feedback [skill] <message> | share [note] | handoff [alias]',
 }
 
-const USAGE = ['usage: status | ops | handoff [alias]', 'status: CLI, workspace, module and handoff state', 'ops: open or close the operations pane', 'handoff [alias]: continue this session on an enrolled workstation'].join('\n')
+const USAGE = [
+  'usage: status | ops | feedback [skill] <message> | share [note] | handoff [alias]',
+  'status: CLI, workspace, module, skills and handoff state',
+  'ops: open or close the operations pane',
+  'feedback [skill] <message>: tell a skill\'s owner how it went',
+  'share [note]: send this session to the AlisX build team, after you confirm what is sent',
+  'handoff [alias]: continue this session on an enrolled workstation',
+].join('\n')
 
 export async function runAlisCommand(host: Host, args: string): Promise<{ text: string }> {
   const [verb, ...rest] = args.trim().split(/\s+/).filter(Boolean)
@@ -24,6 +33,10 @@ export async function runAlisCommand(host: Host, args: string): Promise<{ text: 
       return { text: await status(host) }
     case 'ops':
       return { text: await toggleOpsPane(host) }
+    case 'feedback':
+      return { text: await sendSkillFeedback(host, rest) }
+    case 'share':
+      return { text: await shareSession(host, rest.join(' ')) }
     case 'handoff':
       return { text: await handoff(host, rest[0]) }
     default:
@@ -48,6 +61,7 @@ async function status(host: Host): Promise<string> {
     `cli: ${version ? `v${version}` : 'not found on PATH'}`,
     `workspace: ${workspace ? `${workspace.org} ${workspace.side} ${workspace.relpath}${workspace.pkg ? ` (${workspace.pkg})` : ''}` : 'none (not inside alis.build)'}`,
     `plugin: v${PLUGIN_VERSION}, function hooks serving ${COVERS.join(', ')}`,
+    ...(usedSkills().length > 0 ? [`skills: ${usedSkills().map(skill => skill.name).join(', ')}`] : []),
     `handoff: ${claimed ? 'this session is claimed' : 'no claim'}`,
   ].join('\n')
 }

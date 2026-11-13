@@ -52,6 +52,12 @@ export type Host = {
   closePane: (id: string) => Promise<void>
   /** Hands the session a prompt, run once it is idle. */
   submitPrompt: (text: string) => Promise<unknown>
+  /** Leaves text in the prompt box for the person to finish and send. */
+  fillPrompt: (text: string) => Promise<void>
+  /** A value this plugin kept between sessions, or undefined. */
+  storeGet: (key: string) => Promise<unknown>
+  /** Keeps JSON data between sessions. */
+  storeSet: (key: string, value: unknown) => Promise<void>
   /** Runs `fn` every `ms` until the returned function is called. */
   every: (ms: number, fn: () => void) => () => void
   /** Writes a text file, creating directories as needed. */

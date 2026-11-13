@@ -52,6 +52,23 @@ export type SecretsMemo = { seen: string[]; masked: string[]; unmasked: string[]
  */
 export type SavedOp = { id: string; wait: { [field: string]: unknown } }
 
+/** A Skill store skill this session used, and where its rating stands (hooks/mod/skills-used.ts). */
+export type UsedSkill = {
+  id: string
+  /** Its display name in the catalogue. */
+  name: string
+  at: number
+  /** The turn that used it has ended, so it may be rated. */
+  turnDone: boolean
+  /** The tool calls that loaded it; their rows are its row. */
+  calls: string[]
+  /** False once it was rated and has not changed since. */
+  canRate: boolean
+  rating?: 'up' | 'down'
+  sending?: boolean
+  failed?: boolean
+}
+
 export type SavedState = {
   secrets: SecretsMemo
   opsPane: OpsPaneState
@@ -59,6 +76,8 @@ export type SavedState = {
   handoffStatusShown: boolean
   /** The calls being followed and the last ones that ended; absent in a snapshot an older version saved. */
   ops?: { live: SavedOp[]; finished: SavedOp[] }
+  /** The Skill store skills used so far; absent in a snapshot an older version saved. */
+  skills?: UsedSkill[]
 }
 
 declare module 'claude-code' {

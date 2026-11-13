@@ -118,7 +118,7 @@ export function barCells(columns: number, surface: RenderSurface, label: string,
 }
 
 /** The mark's slot, mark and gap: the step line keeps the same slot empty, so it sits under the label. */
-function slotCells(surface: RenderSurface): number {
+export function slotCells(surface: RenderSurface): number {
   return surface === 'terminal' ? markCells(surface) + 1 : 3
 }
 
@@ -150,7 +150,7 @@ function progress(kit: Kit, surface: RenderSurface, fill: number | null, cells: 
 }
 
 /** A line under the first: an empty slot where the mark is, then the text. */
-function under(kit: Kit, surface: RenderSurface, text: string, color: string): RenderElement {
+export function under(kit: Pick<Kit, 'Box' | 'Text'>, surface: RenderSurface, text: string, color: string): RenderElement {
   const { Box, Text } = kit
   return (
     <Box flexDirection="row">
@@ -269,7 +269,7 @@ export function renderOpsBand(kit: Kit, ops: readonly LiveWait[], now = Date.now
   )
 }
 
-export type FoldActions = { follow: () => void; cancel: () => void }
+export type FoldActions = { follow: () => void; cancel: () => void; share?: () => void }
 
 /** The folded row's tree. */
 export function foldRow(kit: Kit, surface: RenderSurface, fold: FoldLine, actions?: FoldActions): RenderElement {
@@ -302,6 +302,12 @@ export function foldRow(kit: Kit, surface: RenderSurface, fold: FoldLine, action
         ) : null}
       </Box>
       {fold.sub ? under(kit, surface, fold.sub, KEY.quiet) : null}
+      {actions?.share && fold.share ? (
+        <Box flexDirection="row">
+          <Box width={slotCells(surface)} flexShrink={0} />
+          <Button key="alis-share" label="Send session to the build team" onPress={actions.share} />
+        </Box>
+      ) : null}
       {actions && (fold.follow || fold.cancel) ? (
         <Box flexDirection="row">
           <Box width={slotCells(surface)} flexShrink={0} />
@@ -373,7 +379,7 @@ export function foldOf(output: unknown, last: LiveWait | undefined, names: Recor
   const failed = !!state?.error || !!view?.error || !!view?.stages.some(s => s.state === 'failed')
   const outcome = interrupted ? 'interrupted' : failed ? 'failed' : warning ? 'detached' : state?.done === false ? 'running' : 'done'
   const elapsed = elapsedMs(events.at(-1)?.elapsed) ?? spanOf(view) ?? (last?.endedAt !== undefined ? last.endedAt - last.startedAt : undefined)
-  return foldLineOf({ view, outcome, elapsedMs: elapsed, version: last?.version ?? state?.version, verb: state?.kind ?? last?.kind ?? last?.verb, ...(serviceOf(last?.target) ? { service: serviceOf(last?.target) } : {}), ...(state?.error ? { error: state.error } : {}) })
+  return foldLineOf({ view, outcome, elapsedMs: elapsed, version: last?.version ?? state?.version, verb: state?.kind ?? last?.kind ?? last?.verb, ...(serviceOf(last?.target) ? { service: serviceOf(last?.target) } : {}), ...(state?.error ? { error: state.error } : {}), ...(state?.share ? { share: true } : {}) })
 }
 
 export function renderOpsResult(kit: Kit, output: unknown, last?: LiveWait, surface: RenderSurface = 'terminal', actions?: FoldActions, names?: Record<string, string>): RenderElement | null {

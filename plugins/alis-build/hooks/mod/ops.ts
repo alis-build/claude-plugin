@@ -103,6 +103,8 @@ export type OperationState = {
   error?: string
   /** define | build | deploy | setup | block, from a CLI that says it. */
   kind?: string
+  /** A platform-side failure: the CLI's envelope carries its share command. */
+  share?: boolean
 }
 
 export function operationStateOf(stdout: unknown): OperationState | null {
@@ -118,6 +120,7 @@ export function operationStateOf(stdout: unknown): OperationState | null {
     }
     if (typeof raw.done === 'boolean') state.done = raw.done
     if (state.error === undefined && raw.error && typeof raw.error === 'object' && typeof raw.error.message === 'string') state.error = raw.error.message
+    if (raw.error && typeof raw.error === 'object' && typeof raw.error.share === 'string' && raw.error.share) state.share = true
     return state
   } catch {
     return null
