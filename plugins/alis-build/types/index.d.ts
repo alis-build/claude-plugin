@@ -22,6 +22,35 @@ export type OpsPaneState = {
   isRefreshing: boolean
 }
 
+/** What the platform holds about one session (`alis context session`). */
+export type SessionRecord = {
+  id: string
+  title: string
+  summary: string
+  outcome: string
+  service: string
+  gitBranch: string
+  model: string
+  activeSeconds: number
+  workTokens: number
+  estimatedCostUsd: number
+  transcriptSaved: boolean
+  keyChanges: string[]
+  skillsUsed: string[]
+  filesModified: string[]
+  tickets: string[]
+}
+
+export type SessionPaneState = {
+  isOpen: boolean
+  record: SessionRecord | null
+  refreshedAt: number | null
+  /** Said in place of a record that is not there yet. */
+  note: string | null
+  error: string | null
+  isRefreshing: boolean
+}
+
 /** One handoff as `alis workstation handoff … --json` reports it. */
 export type HandoffState = {
   id: string
@@ -78,6 +107,8 @@ export type SavedState = {
   ops?: { live: SavedOp[]; finished: SavedOp[] }
   /** The Skill store skills used so far; absent in a snapshot an older version saved. */
   skills?: UsedSkill[]
+  /** The session pane; absent in a snapshot an older version saved. */
+  sessionPane?: SessionPaneState
 }
 
 declare module 'claude-code' {

@@ -16,6 +16,9 @@ import { onOpsPaneClosed, OPS_PANE_ID, opsActions, opsPane, resumeOpsPane, showO
 import { renderOpsPane } from './mod/ops-pane-view'
 import { renderLiveRow, renderOpsBand, renderOpsResult, renderOpsRunning, withRowsBelow } from './mod/ops-render'
 import { productOf } from './mod/ops-progress'
+import { presenceModeOf, startPresence } from './mod/presence'
+import { onSessionPaneClosed, resumeSessionPane, SESSION_PANE_ID, sessionActions, sessionPane } from './mod/session-pane'
+import { renderSessionPane } from './mod/session-pane-view'
 import { graphicsFrom, MARK_CELL_PNG, setMarkFile } from './mod/brand'
 import { passClassic } from './mod/classic'
 import { describeBash } from './mod/describe'
@@ -141,9 +144,12 @@ export const register: Register = on => {
       await resumeOpsPane(host)
       resumeOps(host)
       await resumeHandoffPane(host)
+      await resumeSessionPane(host)
     } catch (error) {
       host.debug(`could not restore state: ${String(error)}`)
     }
+    // Who else is in this service: read now and on the clock, never awaited.
+    void startPresence(host).catch(error => host.debug(`presence: could not start: ${String(error)}`))
     return next(e)
   }).catch(($, e, next) => next(e))
   on('command.run', { command: 'alis' }, ($, e) => runAlisCommand(hostOf($), e.args))
@@ -178,10 +184,10 @@ export const register: Register = on => {
     const skill = skillForCall(e.props.tool_use_id)
     return skill ? renderSkillRow($.ui.resolve(e), e.surface, skill) : next(e)
   })
-  // The skill in use, as a dim label in the prompt footer.
+  // The skill in use and the teammates in this service, as dim labels in the prompt footer.
   on('ui.render', { component: 'SessionMode' }, ($, e, next) => {
-    const label = skillModeOf()
-    return next(label ? { ...e, props: { ...e.props, modes: [...e.props.modes, label] } } : e)
+    const labels = [skillModeOf(), presenceModeOf()].filter((label): label is string => !!label)
+    return next(labels.length > 0 ? { ...e, props: { ...e.props, modes: [...e.props.modes, ...labels] } } : e)
   })
   on('ui.render', { component: 'ToolUse', props: { tool: 'Bash' } }, async ($, e, next) => {
     const wait = liveOf(e.props.tool_use_id)
@@ -228,6 +234,14 @@ export const register: Register = on => {
   on('ui.render', { component: 'Pane', requestId: OPS_PANE_ID }, ($, e) => renderOpsPane($.ui.resolve(e), opsPane, opsActions(hostOf($)), e.props.bodyColumns, Date.now(), e.surface))
   on('ui.close', { id: OPS_PANE_ID }, ($, e, next) => {
     onOpsPaneClosed()
+    hostOf($).save()
+    return next(e)
+  })
+
+  // The session pane (/alis session): what AlisX holds about this session.
+  on('ui.render', { component: 'Pane', requestId: SESSION_PANE_ID }, ($, e) => renderSessionPane($.ui.resolve(e), sessionPane, sessionActions(hostOf($)), Date.now(), e.surface))
+  on('ui.close', { id: SESSION_PANE_ID }, ($, e, next) => {
+    onSessionPaneClosed()
     hostOf($).save()
     return next(e)
   })

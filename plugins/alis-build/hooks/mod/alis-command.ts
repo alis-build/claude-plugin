@@ -7,20 +7,24 @@ import type { Host } from './host'
 import { handoffStateOf, openHandoffPane } from './handoff-pane'
 import { toggleOpsPane } from './ops-pane'
 import { PLUGIN_VERSION } from './meta'
+import { whoText } from './presence'
+import { toggleSessionPane } from './session-pane'
 import { shareSession } from './share'
 import { sendSkillFeedback, usedSkills } from './skills-used'
 import { COVERS } from './tag'
 
 export const COMMAND_SPEC: CommandSpec = {
   name: 'alis',
-  description: 'AlisX: status, operations, skill feedback, send this session, or hand it to a workstation',
-  argumentHint: 'status | ops | feedback [skill] <message> | share [note] | handoff [alias]',
+  description: 'AlisX: status, operations, this session, who is here, skill feedback, send this session, or hand it to a workstation',
+  argumentHint: 'status | ops | session | who | feedback [skill] <message> | share [note] | handoff [alias]',
 }
 
 const USAGE = [
-  'usage: status | ops | feedback [skill] <message> | share [note] | handoff [alias]',
+  'usage: status | ops | session | who | feedback [skill] <message> | share [note] | handoff [alias]',
   'status: CLI, workspace, module, skills and handoff state',
   'ops: open or close the operations pane',
+  'session: open or close the pane showing what AlisX holds about this session',
+  'who: teammates with a live session in this product',
   'feedback [skill] <message>: tell a skill\'s owner how it went',
   'share [note]: send this session to the AlisX build team, after you confirm what is sent',
   'handoff [alias]: continue this session on an enrolled workstation',
@@ -33,6 +37,10 @@ export async function runAlisCommand(host: Host, args: string): Promise<{ text: 
       return { text: await status(host) }
     case 'ops':
       return { text: await toggleOpsPane(host) }
+    case 'session':
+      return { text: await toggleSessionPane(host) }
+    case 'who':
+      return { text: await whoText(host) }
     case 'feedback':
       return { text: await sendSkillFeedback(host, rest) }
     case 'share':
