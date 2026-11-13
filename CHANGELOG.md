@@ -4,6 +4,18 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.42.0](https://github.com/alis-build/claude-plugin/compare/v0.41.0...v0.42.0) (2026-11-13)
+
+### Features
+
+#### The primer points at alis catch-up for what the team has been doing ([4b17c4c](https://github.com/alis-build/claude-plugin/commit/4b17c4ccba04bf20c60ab279a18322b7324b40d7))
+
+Asked what teammates worked on or shipped, an agent reached for git log, which
+shows commits but not sessions, deploys or conversations. The primer and the
+digest now name `alis catch-up --days 5 --json` for that question, and
+`--day <day> --part <id>` to explain one piece of work. Needs CLI 1.190.6 or
+later.
+
 ## [0.41.0](https://github.com/alis-build/claude-plugin/compare/v0.40.0...v0.41.0) (2026-11-11)
 
 ### Features
