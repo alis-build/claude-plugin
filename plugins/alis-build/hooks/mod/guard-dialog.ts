@@ -70,7 +70,7 @@ export async function confirmGuarded<E extends object, R>(
 
   let answer: string
   try {
-    answer = await host.ask(guardQuestionOf(command, secrets, manual), { options: ASK_OPTIONS, header: 'Alis' })
+    answer = await host.ask(guardQuestionOf(command, secrets, manual), { options: ASK_OPTIONS, header: 'AlisX' })
   } catch (error) {
     host.debug(`guard: the confirmation was dismissed: ${String(error)}`)
     return { deny: REFUSE_REASON }

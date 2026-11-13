@@ -45,19 +45,19 @@ describe('ops-render', () => {
       expect(drawn).toContain('1:17')
       expect(drawn).toContain('Step 15 of 18 · deploys to Development next')
       // The mark has a fixed slot, and the step line keeps it empty, so the step sits under the label.
-      expect(drawn.match(/"width":(3|5),"flexShrink":0/g)?.length).toBe(2)
+      expect(drawn.match(/"width":(3|6),"flexShrink":0/g)?.length).toBe(2)
       expect(drawn).toContain('"alignItems":"center"')
       if (surface === 'terminal') {
         expect(drawn).toContain('•')
-        expect(drawn).toContain('"color":"background"')
-        expect(drawn).toContain('"Alis"')
+        expect(drawn).toContain('"color":"#F02222"')
+        expect(drawn).toContain('"AlisX"')
         expect(drawn).not.toContain('Svg')
         expect(drawn).not.toContain('operations/040fff29')
       } else {
         expect(drawn).toContain('"type":"Svg"')
         // The bar is a set-width SVG: it cannot wrap in the desktop's font.
         expect(drawn).not.toContain('•')
-        expect(drawn).toContain('#009999')
+        expect(drawn).toContain('#F02222')
         expect(drawn).toContain('"alt":"78% done"')
         expect(drawn).toContain('viewBox=\\"0 0 53 91\\"')
         // The hover card holds the docker step and the operation.
@@ -84,7 +84,7 @@ describe('ops-render', () => {
       expect(drawn).toContain('"type":"Image"')
       expect(drawn).toContain('"file":"/p/assets/alis-mark-cell.png"')
       expect(drawn).toContain('"columns":1')
-      expect(drawn).not.toContain('"Alis"')
+      expect(drawn).not.toContain('"AlisX"')
       expect(drawn).toContain('Building console.v2 2.44.19')
     } finally {
       setMarkFile(null)
@@ -93,7 +93,7 @@ describe('ops-render', () => {
 
   test('the bar takes the spare width and is left out when there is none', () => {
     expect(barCells(100, 'terminal', 'Building 2.44.19', '1:17')).toBe(40)
-    expect(barCells(60, 'terminal', 'Building 2.44.19', '1:17')).toBe(27)
+    expect(barCells(60, 'terminal', 'Building 2.44.19', '1:17')).toBe(26)
     expect(barCells(36, 'terminal', 'Building 2.44.19', '1:17')).toBe(0)
   })
 
@@ -119,7 +119,7 @@ describe('ops-render', () => {
 
   test('the fold reads each ending', () => {
     const last = { ...building(), endedAt: 113_000 }
-    expect(foldOf({ stdout: '', stderr: '', interrupted: true }, last)).toMatchObject({ tone: 'neutral', text: 'Still building on Alis', note: 'you stopped watching, not the build', follow: true, cancel: true })
+    expect(foldOf({ stdout: '', stderr: '', interrupted: true }, last)).toMatchObject({ tone: 'neutral', text: 'Still building on AlisX', note: 'you stopped watching, not the build', follow: true, cancel: true })
     expect(foldOf({ stdout: '', stderr: `${LEAN}\n{"elapsed":"10:00","warning":"timed out; operation still running","operation":"operations/x"}` }, last)).toMatchObject({ tone: 'neutral', note: 'Claude stopped waiting after 10m 00s', follow: true })
     const failedBuild = {
       done: true,
@@ -167,7 +167,7 @@ describe('ops-render', () => {
 
   test('an async start folds to one line, and a background call ends on its outcome', () => {
     const started = { done: false, logsUri: 'https://build.example/x', metadata: { '@type': 'type.googleapis.com/alis.os.dbd.v1.RunBuildMetadata', version: '2.44.21' }, name: 'operations/133500a8', schemaVersion: 1, status: 'running', version: '2.44.21' }
-    expect(foldOf({ stdout: JSON.stringify(started), stderr: '' }, undefined)).toEqual({ tone: 'neutral', text: 'Build 2.44.21 started on Alis' })
+    expect(foldOf({ stdout: JSON.stringify(started), stderr: '' }, undefined)).toEqual({ tone: 'neutral', text: 'Build 2.44.21 started on AlisX' })
     // A describe of a running operation is not a start.
     expect(foldOf({ stdout: '{"done":false,"name":"operations/x","status":"running"}', stderr: '' }, undefined)).toBe(null)
 
@@ -221,7 +221,7 @@ describe('ops-render', () => {
         renderOpsResult($.ui.resolve(e), { stdout: '', stderr: '', interrupted: true }, building(), e.surface, { follow: () => undefined, cancel: () => undefined }) ?? ({ type: 'Text', props: {}, children: ['engine'] } as never),
       )
       const drawn = JSON.stringify(await $.ui.render({ surface, component: 'ToolResult', requestId: 't3', props: { tool_use_id: 't3', tool: 'Bash', output: { stdout: '', stderr: '', interrupted: true }, isErrored: false } }))
-      expect(drawn).toContain('Still building on Alis')
+      expect(drawn).toContain('Still building on AlisX')
       expect(drawn).toContain('"label":"Follow"')
       expect(drawn).toContain('"label":"Cancel build"')
     })
@@ -271,7 +271,7 @@ describe('ops-render', () => {
     // A call that resolved before the watcher's own stream said how the operation ended.
     const midStream = { ...building(), endedAt: 200_000 }
     expect(foldOf(undefined, midStream)).toBe(null)
-    expect(foldOf(undefined, { ...midStream, interrupted: true })).toMatchObject({ text: 'Still building on Alis', note: 'you stopped watching, not the build', cancel: true })
+    expect(foldOf(undefined, { ...midStream, interrupted: true })).toMatchObject({ text: 'Still building on AlisX', note: 'you stopped watching, not the build', cancel: true })
     expect(foldOf(undefined, { ...midStream, result: { name: 'operations/040fff29', done: true, version: '2.44.19' } })).toMatchObject({ tone: 'ok' })
   })
 })

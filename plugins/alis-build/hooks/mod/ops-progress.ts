@@ -154,7 +154,9 @@ function warningOf(progress: Json | undefined): string | undefined {
   for (const sync of arr(progress?.['protoSyncs'])) {
     if (sync['throttled'] === true && str(sync['status']) !== 'DONE') return 'Spanner is throttling the update. It carries on by itself.'
   }
-  for (const d of arr(progress?.['diagnostics'])) if (str(d['severity'])?.toLowerCase() === 'warning' && str(d['summary'])) return compact(str(d['summary']) as string, 200)
+  // Terraform's own warnings ("Missing Column Configuration") are a bare
+  // title that asks nothing of the person and stays for the whole deploy:
+  // they are in the logs, and the row keeps saying what the deploy is doing.
   return undefined
 }
 
@@ -462,10 +464,10 @@ export function foldLineOf(input: {
     if (input.outcome === 'failed') return { tone: 'error', text: `${input.service ? `${input.service} define` : 'Define'} failed.`, time, sub: why }
     if (input.outcome === 'done') return { tone: 'ok', text: named ? `${named} is defined` : 'The define finished', time }
     if (input.outcome !== 'running') {
-      return { tone: 'neutral', text: 'Still defining on Alis', note: input.outcome === 'interrupted' ? 'you stopped watching, not the define' : `Claude stopped waiting${time ? ` after ${time}` : ''}`, follow: true }
+      return { tone: 'neutral', text: 'Still defining on AlisX', note: input.outcome === 'interrupted' ? 'you stopped watching, not the define' : `Claude stopped waiting${time ? ` after ${time}` : ''}`, follow: true }
     }
   }
-  const still = building || (isBuild && deploys.length === 0) ? 'Still building on Alis' : 'Still deploying on Alis'
+  const still = building || (isBuild && deploys.length === 0) ? 'Still building on AlisX' : 'Still deploying on AlisX'
   if (input.outcome === 'interrupted') {
     return { tone: 'neutral', text: still, note: 'you stopped watching, not the build', follow: true, cancel: building }
   }
@@ -474,7 +476,7 @@ export function foldLineOf(input: {
   }
   if (input.outcome === 'running') {
     const what = input.verb === 'define' ? 'Define' : isBuild ? 'Build' : 'Deploy'
-    return { tone: 'neutral', text: `${what}${named ? ` ${named}` : ''} started on Alis` }
+    return { tone: 'neutral', text: `${what}${named ? ` ${named}` : ''} started on AlisX` }
   }
   if (input.outcome === 'failed') {
     const failed = stages.find(s => s.state === 'failed')

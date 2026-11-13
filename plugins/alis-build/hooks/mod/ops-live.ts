@@ -512,7 +512,7 @@ function watcherOf(host: Host, tool_use_id: string, state: LiveWait): { start: (
     if (state.background) {
       // Nobody is waiting on a background operation: say that it ended.
       // One a call is waiting on is that call's to report.
-      if (!followedElsewhere(state)) host.notify(endedTextOf(state), 'Alis')
+      if (!followedElsewhere(state)) host.notify(endedTextOf(state), 'AlisX')
       stop()
     }
   }

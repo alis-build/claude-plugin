@@ -11,7 +11,7 @@
 // caller lets the engine draw it.
 import type { Elements, RenderElement, RenderSurface } from 'claude-code'
 
-import { KEY, mark, type MarkKit, markCells } from './brand'
+import { ALIS_RED, KEY, mark, type MarkKit, markCells } from './brand'
 import { type LiveWait, snapshotsOf } from './ops-live'
 import { type BashOutput, operationStateOf, progressEventsOf } from './ops'
 import { defineLineOf, elapsedMs, foldLineOf, type FoldLine, type LiveLine, liveLineOf, mergeView, type OpView, serviceOf, viewOf } from './ops-progress'
@@ -27,8 +27,8 @@ const INDENT = 2
 /**
  * The dot the bars are made of. Progress is drawn as a row of dots, the
  * brand's own element (the mark is eleven of them), rather than a rule: the
- * ones done in the running key, the one being worked on pulsing, the rest on
- * the track. The mark itself is never redrawn; this is the working dots.
+ * ones done in Alis red, the one being worked on pulsing, the rest on the
+ * track. Red is progress here, never failure: a failure is the ✕ and its line. The mark itself is never redrawn; this is the working dots.
  */
 const DOT = '•'
 /** Dots shown while there is nothing to measure yet: one lit, moving along. */
@@ -39,15 +39,15 @@ export function beatOf(now: number): number {
   return Math.floor(now / 1000)
 }
 
-/** One line of dots (terminal): done in the running key, the working one pulsing, the rest on the track. */
+/** One line of dots (terminal): done in Alis red, the working one pulsing, the rest on the track. */
 function bar(kit: Kit, fill: number, cells: number, beat: number): RenderElement {
   const { Text } = kit
   const on = Math.max(0, Math.min(cells, Math.floor(cells * fill)))
   const working = on < cells ? 1 : 0
   return (
     <Text>
-      <Text color={KEY.running}>{DOT.repeat(on)}</Text>
-      {working ? <Text color={beat % 2 === 0 ? KEY.running : KEY.quiet}>{DOT}</Text> : null}
+      <Text color={ALIS_RED}>{DOT.repeat(on)}</Text>
+      {working ? <Text color={beat % 2 === 0 ? ALIS_RED : KEY.quiet}>{DOT}</Text> : null}
       <Text color={KEY.track}>{DOT.repeat(cells - on - working)}</Text>
     </Text>
   )
@@ -60,7 +60,7 @@ function workingDots(kit: Kit, beat: number): RenderElement {
   return (
     <Text>
       {Array.from({ length: WORKING_DOTS }, (_, i) => (
-        <Text color={i === lit ? KEY.running : KEY.track}>{DOT}</Text>
+        <Text color={i === lit ? ALIS_RED : KEY.track}>{DOT}</Text>
       ))}
     </Text>
   )
@@ -68,13 +68,12 @@ function workingDots(kit: Kit, beat: number): RenderElement {
 
 /**
  * The desktop's bar: the same row of dots as SVG at a set width, so it never
- * wraps the way a run of characters does in the desktop's own font, and its
- * cyan does not hang on how the desktop maps a theme key. The cyan is Claude
- * Code's light-theme running colour, which holds on both grounds. The working
+ * wraps the way a run of characters does in the desktop's own font, in Alis
+ * red, which holds on both grounds. The working
  * dot pulses on the brand's dots loop (1.2s); an image runs no script, and a
  * viewer that holds animations still sees it lit.
  */
-export const BAR_FILL = '#009999'
+export const BAR_FILL = ALIS_RED
 const BAR_TRACK = '#8a8a8a'
 const BAR_PX_MIN = 96
 const BAR_PX_MAX = 320

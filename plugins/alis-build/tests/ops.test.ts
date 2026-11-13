@@ -201,7 +201,7 @@ describe('ops-live', () => {
     expect(timer.cancelled).toBe(true)
     expect(finishedOf('toolu_bg')).toMatchObject({ background: true, result: { done: true, version: '2.44.21' } })
     // Nobody was waiting on it: its end is announced, once.
-    expect(host.notifications).toEqual([{ text: '2.44.21 is built', title: 'Alis' }])
+    expect(host.notifications).toEqual([{ text: '2.44.21 is built', title: 'AlisX' }])
     expect(opsAmong([{ tool_use_id: 'other', isRunning: false }, { tool_use_id: 'toolu_bg', isRunning: false }])).toEqual([{ id: 'toolu_bg', finished: finishedOf('toolu_bg') }])
   })
 

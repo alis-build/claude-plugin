@@ -57,6 +57,10 @@ describe('ops-progress', () => {
 
     const throttled = at({ deployments: [{ name: DEV, progress: { startTime: '1970-01-01T00:00:00Z', steps: [{ label: 'protos → Spanner', status: 'RUNNING' }], protoSyncs: [{ target: 'spanner', status: 'RUNNING', percent: 40, throttled: true }] } }] })
     expect(throttled).toMatchObject({ label: 'Deploying console.v2 to Development', sub: 'Spanner is throttling the update. It carries on by itself.', subTone: 'warning' })
+
+    // A Terraform warning is a bare title: the row keeps saying what the deploy is doing.
+    const warned = at({ deployments: [{ name: DEV, progress: { startTime: '1970-01-01T00:00:00Z', steps: [{ label: 'terraform plan', status: 'DONE' }, { label: 'terraform apply', status: 'RUNNING' }], diagnostics: [{ severity: 'warning', summary: 'Missing Column Configuration' }] } }] })
+    expect(warned).toMatchObject({ sub: 'Applying changes', subTone: 'dim' })
   })
 
   test('anything that is not an operation reads as nothing', () => {
@@ -88,8 +92,8 @@ describe('ops-progress', () => {
     expect(defineLineOf(undefined, { service: 'hello.v1', startedAt: 0, now: 5_000 })).toEqual({ label: 'Defining hello.v1', note: 'compiling the definition', fill: null, clock: '0:05' })
     expect(foldLineOf({ outcome: 'done', verb: 'define', version: '3.1.0', elapsedMs: 58_000 })).toEqual({ tone: 'ok', text: '3.1.0 is defined', time: '58s' })
     expect(foldLineOf({ outcome: 'failed', verb: 'define', error: 'hello.proto:12: unknown type' })).toMatchObject({ tone: 'error', text: 'Define failed.', sub: 'hello.proto:12: unknown type' })
-    expect(foldLineOf({ outcome: 'interrupted', verb: 'define' })).toMatchObject({ text: 'Still defining on Alis' })
-    expect(foldLineOf({ outcome: 'running', verb: 'define', version: '3.1.0' })).toEqual({ tone: 'neutral', text: 'Define 3.1.0 started on Alis' })
+    expect(foldLineOf({ outcome: 'interrupted', verb: 'define' })).toMatchObject({ text: 'Still defining on AlisX' })
+    expect(foldLineOf({ outcome: 'running', verb: 'define', version: '3.1.0' })).toEqual({ tone: 'neutral', text: 'Define 3.1.0 started on AlisX' })
   })
 
 })

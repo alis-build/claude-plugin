@@ -5,13 +5,17 @@
 // byte-for-byte copy of design.v1's Brand/alis.svg): its markup on remote
 // surfaces, and in a terminal that draws pictures (Ghostty, kitty) the
 // PNG rendered from it (assets/alis-mark-cell.png, one cell). Elsewhere the
-// bold name: the brand rules forbid boxing, redrawing or approximating the
-// mark. State is coloured with Claude Code's theme keys, so a row reads
-// right in every theme; Alis red is the mark's alone.
+// bold name, AlisX: the brand rules forbid boxing, redrawing or approximating
+// the mark. State is coloured with Claude Code's theme keys, so a row reads
+// right in every theme; Alis red is the mark's and the progress dots', the
+// brand's own element.
 import type { Elements, ImageProps, RenderElement, RenderSurface, SvgProps } from 'claude-code'
 
-/** Alis red: the mark only. */
+/** Alis red: the mark and the progress dots. */
 export const ALIS_RED = '#F02222'
+
+/** The name, where the mark cannot be drawn and wherever a line of ours is titled. */
+export const NAME = 'AlisX'
 
 /** Claude Code theme keys for state. `background` is the theme's cyan, the nearest key to brand cyan. */
 export const KEY = {
@@ -57,7 +61,7 @@ export type MarkKit = Pick<Elements['terminal'], 'Text'> & { Svg?: (props: SvgPr
 
 /** Cells the mark takes on a line, for layout sums. */
 export function markCells(surface: RenderSurface): number {
-  return surface !== 'terminal' ? 2 : markFile ? 1 : 4
+  return surface !== 'terminal' ? 2 : markFile ? 1 : NAME.length
 }
 
 /**
@@ -66,9 +70,9 @@ export function markCells(surface: RenderSurface): number {
  */
 export function mark(kit: MarkKit, surface: RenderSurface): RenderElement {
   const { Text, Svg, Image } = kit
-  if (surface !== 'terminal' && Svg) return <Svg source={MARK_SVG} alt="Alis" width={MARK_W} height={MARK_H} />
+  if (surface !== 'terminal' && Svg) return <Svg source={MARK_SVG} alt={NAME} width={MARK_W} height={MARK_H} />
   if (surface === 'terminal' && markFile && Image) return <Image source={{ file: markFile, format: 'png' }} columns={1} rows={1} alt="A" />
-  return <Text bold>Alis</Text>
+  return <Text bold>{NAME}</Text>
 }
 
 /** Older name for the mark, kept for the panes. */
