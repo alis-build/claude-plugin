@@ -4,6 +4,29 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.43.0](https://github.com/alis-build/claude-plugin/compare/v0.42.0...v0.43.0) (2026-11-15)
+
+### Features
+
+#### The name reads AlisX, progress dots are Alis red, a Terraform warning no longer takes the step line ([091de34](https://github.com/alis-build/claude-plugin/commit/091de34ff878988dc9f4f07a17bdcdb2cc519c18))
+
+#### A Skill store skill shows when in use and takes a rating in one press; /alis share sends the session ([87dee2d](https://github.com/alis-build/claude-plugin/commit/87dee2d1f86dda1c21e412571f1ddb27fee9a81f))
+
+#### The mark is its dots in red where a terminal draws no pictures, not the name ([a6ec4a0](https://github.com/alis-build/claude-plugin/commit/a6ec4a0ab22a13328384c5e1c1294f5e96c52a5c))
+
+#### /alis session shows what AlisX holds about the session; a teammate in the same service is named in the footer ([c29b0b6](https://github.com/alis-build/claude-plugin/commit/c29b0b608c2e195adceb32c720d5ae98d682fd6b))
+
+/alis session opens a pane over alis context session; /alis who lists the
+product's live sessions from alis presence, read every two minutes inside
+an alis.build folder. An older CLI leaves presence silent and the pane
+says to upgrade.
+
+### Fixes
+
+#### The skill in use is a dim footer label, not a status notice, and its row draws under a folded group ([7f518e2](https://github.com/alis-build/claude-plugin/commit/7f518e28c1a1d3064a24d217eed54ac3ccff04d0))
+
+#### The skill rating is asked on a line above the prompt once the turn ends, not on a row in the scrollback ([00e7ee1](https://github.com/alis-build/claude-plugin/commit/00e7ee1367c57de895d5e0a0eb68cd7778e8cd37))
+
 ## [0.42.0](https://github.com/alis-build/claude-plugin/compare/v0.41.0...v0.42.0) (2026-11-13)
 
 ### Features
