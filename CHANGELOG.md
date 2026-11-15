@@ -4,6 +4,18 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.44.0](https://github.com/alis-build/claude-plugin/compare/v0.43.0...v0.44.0) (2026-11-15)
+
+### Features
+
+#### /alis credits shows your AlisX credits, and a sent session the build team finds useful is thanked ([b5934c8](https://github.com/alis-build/claude-plugin/commit/b5934c87c502298a999a2e9e64dd0f995b001fa7))
+
+The plugin's author and descriptions read AlisX. alis presence, context
+session, credits and catch-up are allowed as the read commands they are.
+/alis credits and /alis status show the balance from alis credits; at
+session start an earned grant not seen before is thanked once; the share
+dialog and the session pane say a useful session earns credits.
+
 ## [0.43.0](https://github.com/alis-build/claude-plugin/compare/v0.42.0...v0.43.0) (2026-11-15)
 
 ### Features
