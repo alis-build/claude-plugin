@@ -6,6 +6,7 @@
 import type { RenderElement, RenderSurface } from 'claude-code'
 
 import { badge, DANGER } from './brand'
+import { EARN_NOTE } from './credits'
 import { agoOf } from './ops-pane'
 import type { PaneKit } from './ops-pane-view'
 import { durationOf, type SessionPaneState, type SessionRecord } from './session-pane'
@@ -72,6 +73,7 @@ export function renderSessionPane(kit: PaneKit, state: SessionPaneState, actions
         <Button key="close" label="Close" onPress={actions.close} />
         <Text dimColor>{`  ${state.isRefreshing ? 'refreshing…' : state.refreshedAt ? `read ${agoOf(new Date(state.refreshedAt).toISOString(), now)}` : ''}`}</Text>
       </Box>
+      <Text dimColor>{`Sending this session: ${EARN_NOTE.charAt(0).toLowerCase()}${EARN_NOTE.slice(1)}`}</Text>
     </Box>
   )
 }

@@ -12,10 +12,10 @@ export const GUIDANCE =
 
 const GLOBALS = new Set(['--cwd', '--session-id', '--client-plugin', '--client-call'])
 const BOOLS = new Set(['--json', '--verbose', '--approve', '--confirm-production', '--yes', '--reveal', '--help', '-h'])
-const READ_TOP = new Set(['docs', 'doctor', 'whoami', 'version', 'ask'])
+const READ_TOP = new Set(['docs', 'doctor', 'whoami', 'version', 'ask', 'presence', 'credits', 'catch-up'])
 const READ_PATHS = new Set(
   [
-    ['context', 'view'], ['accounts', 'list'], ['org', 'list'], ['org', 'view'],
+    ['context', 'view'], ['context', 'session'], ['accounts', 'list'], ['org', 'list'], ['org', 'view'],
     ['product', 'view'], ['environment', 'list'],
     ['operations', 'list'], ['operations', 'describe'], ['operations', 'wait'], ['operations', 'watch'],
     ['logs', 'build'], ['logs', 'deploy'], ['logs', 'runtime'],

@@ -1,16 +1,16 @@
 {
   "name": "alis",
   "owner": {
-    "name": "Alis Build"
+    "name": "AlisX"
   },
   "plugins": [
     {
       "name": "alis",
       "source": "./plugins/alis-build",
-      "description": "Connect Claude Code to Alis Build through the alis CLI.",
-      "version": "0.43.0",
+      "description": "Connect Claude Code to AlisX through the alis CLI.",
+      "version": "0.44.0",
       "author": {
-        "name": "Alis Build"
+        "name": "AlisX"
       },
       "homepage": "https://github.com/alis-build/claude-plugin",
       "repository": "https://github.com/alis-build/claude-plugin",

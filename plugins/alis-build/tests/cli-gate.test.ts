@@ -18,6 +18,16 @@ function decision(command: string, permissionMode = 'auto', sessionId = 'session
 }
 
 describe('cli-gate', () => {
+  test('the newer read commands are allowed like the older ones, plan mode included', () => {
+    for (const mode of ['auto', 'default', 'plan']) {
+      for (const cmd of ['alis presence --json', 'alis presence alis.os --json', 'alis context session --json', 'alis credits --json', 'alis catch-up --days 5 --json']) {
+        expect(decision(cmd, mode)).toMatchObject({ matched: true, decision: 'allow' })
+      }
+    }
+    // A sibling that writes stays out of plan mode.
+    expect(decision('alis context push-session --json', 'plan')).not.toMatchObject({ decision: 'allow' })
+  })
+
   test('guarded actions ask in every execution mode', () => {
     for (const mode of ['auto', 'default', 'acceptEdits', 'bypassPermissions', 'dontAsk']) {
       for (const cmd of [

@@ -7,6 +7,7 @@
 // dialog; only their answer sends it, bound to the reviewed message by its
 // digest.
 import { failureOf, jsonOf, withIdentity } from './cli'
+import { EARN_NOTE } from './credits'
 import type { Host } from './host'
 
 export const SEND = 'Send session'
@@ -49,6 +50,8 @@ export function shareQuestionOf(attachment: Attachment, note: string): string {
     ...(attachment.title ? [attachment.title] : []),
     `${sizeOf(attachment.compressedBytes)} · ${lines} · ${masked}`,
     `Note: ${note}`,
+    '',
+    EARN_NOTE,
   ].join('\n')
 }
 

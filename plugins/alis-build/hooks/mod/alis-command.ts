@@ -3,6 +3,7 @@
 // alis-render.tsx draws as a column; the same text reaches the model.
 import type { CommandSpec } from 'claude-code'
 
+import { balanceOf, creditsLines, readCredits } from './credits'
 import type { Host } from './host'
 import { handoffStateOf, openHandoffPane } from './handoff-pane'
 import { toggleOpsPane } from './ops-pane'
@@ -15,18 +16,19 @@ import { COVERS } from './tag'
 
 export const COMMAND_SPEC: CommandSpec = {
   name: 'alis',
-  description: 'AlisX: status, operations, this session, who is here, skill feedback, send this session, or hand it to a workstation',
-  argumentHint: 'status | ops | session | who | feedback [skill] <message> | share [note] | handoff [alias]',
+  description: 'AlisX: status, operations, this session, who is here, credits, skill feedback, send this session, or hand it to a workstation',
+  argumentHint: 'status | ops | session | who | credits | feedback [skill] <message> | share [note] | handoff [alias]',
 }
 
 const USAGE = [
-  'usage: status | ops | session | who | feedback [skill] <message> | share [note] | handoff [alias]',
+  'usage: status | ops | session | who | credits | feedback [skill] <message> | share [note] | handoff [alias]',
   'status: CLI, workspace, module, skills and handoff state',
   'ops: open or close the operations pane',
   'session: open or close the pane showing what AlisX holds about this session',
   'who: teammates with a live session in this product',
+  'credits: your AlisX credits, and how to earn more',
   'feedback [skill] <message>: tell a skill\'s owner how it went',
-  'share [note]: send this session to the AlisX build team, after you confirm what is sent',
+  'share [note]: send this session to the AlisX build team, after you confirm what is sent; a useful one earns credits',
   'handoff [alias]: continue this session on an enrolled workstation',
 ].join('\n')
 
@@ -41,6 +43,8 @@ export async function runAlisCommand(host: Host, args: string): Promise<{ text: 
       return { text: await toggleSessionPane(host) }
     case 'who':
       return { text: await whoText(host) }
+    case 'credits':
+      return { text: await creditsLines(host) }
     case 'feedback':
       return { text: await sendSkillFeedback(host, rest) }
     case 'share':
@@ -53,7 +57,7 @@ export async function runAlisCommand(host: Host, args: string): Promise<{ text: 
 }
 
 async function status(host: Host): Promise<string> {
-  const [version, cwd, sid, home] = await Promise.all([
+  const [version, cwd, sid, home, credits] = await Promise.all([
     host.run(['alis', 'version', '--json'], { timeoutMs: 5_000 }).then(
       r => (r.exitCode === 0 ? String(JSON.parse(r.stdout)?.version ?? '?') : null),
       () => null,
@@ -61,6 +65,7 @@ async function status(host: Host): Promise<string> {
     host.cwd().catch(() => ''),
     host.sessionId().catch(() => ''),
     host.home(),
+    readCredits(host),
   ])
   const workspace = workspaceOf(cwd)
   const claimed = home && sid ? await host.exists(`${home}/.alis/handoff-sessions/${sid}.claim`).catch(() => false) : false
@@ -70,6 +75,7 @@ async function status(host: Host): Promise<string> {
     `workspace: ${workspace ? `${workspace.org} ${workspace.side} ${workspace.relpath}${workspace.pkg ? ` (${workspace.pkg})` : ''}` : 'none (not inside alis.build)'}`,
     `plugin: v${PLUGIN_VERSION}, function hooks serving ${COVERS.join(', ')}`,
     ...(usedSkills().length > 0 ? [`skills: ${usedSkills().map(skill => skill.name).join(', ')}`] : []),
+    ...(credits ? [`credits: ${balanceOf(credits)}`] : []),
     `handoff: ${claimed ? 'this session is claimed' : 'no claim'}`,
   ].join('\n')
 }

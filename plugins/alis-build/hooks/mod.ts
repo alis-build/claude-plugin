@@ -21,6 +21,7 @@ import { onSessionPaneClosed, resumeSessionPane, SESSION_PANE_ID, sessionActions
 import { renderSessionPane } from './mod/session-pane-view'
 import { graphicsFrom, MARK_CELL_PNG, setMarkFile } from './mod/brand'
 import { passClassic } from './mod/classic'
+import { announceEarned } from './mod/credits'
 import { describeBash } from './mod/describe'
 import { confirmGuarded } from './mod/guard-dialog'
 import { cliGateClassic } from './mod/cli-gate-classic'
@@ -148,6 +149,8 @@ export const register: Register = on => {
     } catch (error) {
       host.debug(`could not restore state: ${String(error)}`)
     }
+    // Credits the build team added since the last session: one thank-you each, never awaited.
+    void announceEarned(host)
     // Who else is in this service: read now and on the clock, never awaited.
     void startPresence(host).catch(error => host.debug(`presence: could not start: ${String(error)}`))
     return next(e)

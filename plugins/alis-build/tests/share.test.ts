@@ -23,7 +23,7 @@ describe('share', () => {
     expect(sizeOf(412_300)).toBe('412 KB')
     expect(sizeOf(3_200_000)).toBe('3.2 MB')
     expect(shareQuestionOf({ title: 'Fix the deploy row', compressedBytes: 412_300, truncated: true, keptLines: 2100, totalLines: 9800, redactions: 3 }, 'note')).toBe(
-      'Send this session to the AlisX build team?\n\nFix the deploy row\n412 KB · the last 2,100 of 9,800 lines · 3 credentials masked\nNote: note',
+      'Send this session to the AlisX build team?\n\nFix the deploy row\n412 KB · the last 2,100 of 9,800 lines · 3 credentials masked\nNote: note\n\nIf it proves useful, the build team adds AlisX credits to your account.',
     )
     expect(shareQuestionOf({ compressedBytes: 900, truncated: false, redactions: 0 }, 'n')).toContain('1 KB · the whole transcript · no credentials found')
   })

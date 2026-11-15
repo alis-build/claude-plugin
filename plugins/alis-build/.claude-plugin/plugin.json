@@ -1,9 +1,9 @@
 {
   "name": "alis",
-  "version": "0.43.0",
-  "description": "Connect Claude Code to Alis Build through the alis CLI and workspace context.",
+  "version": "0.44.0",
+  "description": "Connect Claude Code to AlisX through the alis CLI and workspace context.",
   "author": {
-    "name": "Alis Build"
+    "name": "AlisX"
   },
   "homepage": "https://github.com/alis-build/claude-plugin",
   "repository": "https://github.com/alis-build/claude-plugin",
