@@ -4,6 +4,15 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.45.0](https://github.com/alis-build/claude-plugin/compare/v0.44.0...v0.45.0) (2026-11-18)
+
+### Features
+
+#### A define is finished once the service's own languages are ready, and the primer says so ([4b74d2a](https://github.com/alis-build/claude-plugin/commit/4b74d2ad3b12e0a9163c206534b3bda12a7f6665))
+
+alis define now returns once the packages for the languages the service's
+folder uses are generated; the slower ones carry on. The operations row takes the CLI's verdict for a define (a package nobody waited for no longer marks it failed) and names the languages still generating. The primer and digest say what the define waits for.
+
 ## [0.44.0](https://github.com/alis-build/claude-plugin/compare/v0.43.0...v0.44.0) (2026-11-15)
 
 ### Features
