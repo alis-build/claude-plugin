@@ -188,7 +188,12 @@ export function backgroundOps(): LiveWait[] {
 
 /** How a followed operation ended, in one line (the folded row's words). */
 export function endedTextOf(wait: LiveWait): string {
-  const failed = !!wait.result?.error || !!wait.view?.error || !!wait.view?.stages.some(stage => stage.state === 'failed') || !!wait.define?.failed
+  // A define's verdict is the CLI's once it has given one: it waits only for
+  // the languages the service uses, so a package nobody waited for may have
+  // failed, or still be generating, in a define that succeeded. Without a
+  // verdict (the operation was only watched) a failed package is the failure.
+  const settled = wait.result?.done === true && !wait.result.error
+  const failed = !!wait.result?.error || !!wait.view?.error || !!wait.view?.stages.some(stage => stage.state === 'failed') || (!!wait.define?.failed && !settled)
   const fold = foldLineOf({
     ...(wait.view ? { view: wait.view } : {}),
     outcome: failed ? 'failed' : 'done',
@@ -196,6 +201,7 @@ export function endedTextOf(wait: LiveWait): string {
     verb: wait.kind ?? wait.verb,
     ...(serviceOf(wait.target) ? { service: serviceOf(wait.target) } : {}),
     ...(wait.result?.error ? { error: wait.result.error } : {}),
+    ...(wait.result?.stillGenerating ? { stillGenerating: wait.result.stillGenerating } : {}),
   })
   return fold.sub ? `${fold.text} ${fold.sub}` : fold.text
 }

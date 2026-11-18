@@ -105,6 +105,11 @@ export type OperationState = {
   kind?: string
   /** A platform-side failure: the CLI's envelope carries its share command. */
   share?: boolean
+  /**
+   * A define that returned once the service's own languages were generated:
+   * the languages the server is still generating (the CLI's `packages.generating`).
+   */
+  stillGenerating?: string[]
 }
 
 export function operationStateOf(stdout: unknown): OperationState | null {
@@ -121,6 +126,8 @@ export function operationStateOf(stdout: unknown): OperationState | null {
     if (typeof raw.done === 'boolean') state.done = raw.done
     if (state.error === undefined && raw.error && typeof raw.error === 'object' && typeof raw.error.message === 'string') state.error = raw.error.message
     if (raw.error && typeof raw.error === 'object' && typeof raw.error.share === 'string' && raw.error.share) state.share = true
+    const generating = raw.packages && typeof raw.packages === 'object' ? raw.packages.generating : undefined
+    if (Array.isArray(generating) && generating.length > 0 && generating.every((language: unknown) => typeof language === 'string')) state.stillGenerating = generating
     return state
   } catch {
     return null

@@ -285,6 +285,22 @@ describe('ops-live', () => {
     expect(endedTextOf(liveOf('toolu_def')!)).toBe('hello.v1 3.1.0 is defined')
   })
 
+  test('a define that returned once its own languages were ready is defined, and says what is still generating', () => {
+    const result = operationStateOf(JSON.stringify({
+      schemaVersion: 1, done: true, status: 'succeeded', kind: 'define', version: '3.1.0', name: 'operations/def2',
+      packages: { waitedFor: ['go'], ready: ['go'], generating: ['java', 'kotlin'], failed: ['swift'] },
+    }))
+    expect(result).toMatchObject({ done: true, version: '3.1.0', stillGenerating: ['java', 'kotlin'] })
+    // The swift package failed, but nobody waited for it: the CLI's verdict stands.
+    const wait = { verb: 'define', kind: 'define', target: 'acme.sm.hello.v1', version: '3.1.0', define: { done: 1, total: 4, failed: 'swift' }, result }
+    expect(endedTextOf(wait as never)).toBe('hello.v1 3.1.0 is defined java, kotlin still generating')
+    // A define that was only watched has no verdict: a failed package is the failure.
+    expect(endedTextOf({ ...wait, result: undefined } as never)).toBe('hello.v1 define failed.')
+    // The CLI's error (a language the service uses failed) is a failure.
+    expect(endedTextOf({ ...wait, result: { done: true, error: 'the go package failed to generate' } } as never)).toMatch(/^hello\.v1 define failed\./)
+    expect(operationStateOf('{"done":true,"packages":{"generating":[]}}')?.stillGenerating).toBe(undefined)
+  })
+
   test('watchEventsOf keeps whole events and skips the rest', () => {
     expect(watchEventsOf('{"operation":"operations/x","kind":"build","done":false,"status":"running","snapshot":{"images":[]}}\nnot json\n{"operation":"operations/x","done":true}\n{"elapsed":"0:01"}')).toEqual([
       { operation: 'operations/x', kind: 'build', done: false, status: 'running', snapshot: { images: [] } },

@@ -452,6 +452,8 @@ export function foldLineOf(input: {
   service?: string
   /** The failure is the platform's (the CLI's envelope says so). */
   share?: boolean
+  /** Languages a finished define's server is still generating packages for. */
+  stillGenerating?: string[]
 }): FoldLine {
   const view = input.view
   const reason = view?.error ?? input.error
@@ -466,7 +468,10 @@ export function foldLineOf(input: {
   const building = stages.some(s => s.kind === 'build' && s.state !== 'done')
   if (input.verb === 'define' && !view) {
     if (input.outcome === 'failed') return { tone: 'error', text: `${input.service ? `${input.service} define` : 'Define'} failed.`, time, sub: why }
-    if (input.outcome === 'done') return { tone: 'ok', text: named ? `${named} is defined` : 'The define finished', time }
+    if (input.outcome === 'done') {
+      const rest = input.stillGenerating?.length ? { sub: `${input.stillGenerating.join(', ')} still generating` } : {}
+      return { tone: 'ok', text: named ? `${named} is defined` : 'The define finished', time, ...rest }
+    }
     if (input.outcome !== 'running') {
       return { tone: 'neutral', text: 'Still defining on AlisX', note: input.outcome === 'interrupted' ? 'you stopped watching, not the define' : `Claude stopped waiting${time ? ` after ${time}` : ''}`, follow: true }
     }

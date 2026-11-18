@@ -65,7 +65,9 @@ that a capability is missing.
 Use `environment list <org>.<product> --json` for target IDs and production flags,
 without variable values. Check CLI help when using a newly introduced command.
 Start long DBD work with `--async`; retain `name` and run `next`. The exception is
-`define --install`, which waits (the CLI rejects it with `--async`). Start/wait/describe
+`define --install`, which waits for the service's own languages only (`done: true` is
+finished even while `packages.generating` lists others; the CLI rejects it with
+`--async`). Start/wait/describe
 use common top-level fields (`schemaVersion: 1`, `done`, `status`, `version`); legacy
 start `metadata` is different from typed wait output. Read full JSON and errors. A
 deployment's `state` `RUNNING` means up and serving (the state after a successful
