@@ -4,6 +4,21 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.46.0](https://github.com/alis-build/claude-plugin/compare/v0.45.0...v0.46.0) (2026-11-18)
+
+### Features
+
+#### Plan mode waits for the Skill store's judge ([43d3a49](https://github.com/alis-build/claude-plugin/commit/43d3a495f609ddf7e78704624ce0b48767cb42e2))
+
+In plan mode the per-prompt skill hook now allows the alis CLI up to 6
+seconds instead of 2, and tells the CLI so (alis_hook_timeout_ms in the
+hook payload). With that room the Skill store puts its best-ranked skills
+to a judge instead of its score bar: on labelled requests the judge named
+the right skill for 54 or 55 of 55 and never a wrong one, where the bar
+named it for 47. It takes about 1.3 s at the median. Prompts outside plan
+mode keep the 2 second limit, and an older CLI ignores the new field and
+answers as before.
+
 ## [0.45.0](https://github.com/alis-build/claude-plugin/compare/v0.44.0...v0.45.0) (2026-11-18)
 
 ### Features
