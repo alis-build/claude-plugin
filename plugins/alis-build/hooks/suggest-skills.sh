@@ -20,6 +20,12 @@ plan_re='"permission_mode"[[:space:]]*:[[:space:]]*"plan"'
 if [ "${ALIS_SUGGEST_ALWAYS:-1}" = "0" ] && ! [[ $payload =~ $plan_re ]]; then
   printf '%s' "$payload" | grep -qiE 'alis|skill' || exit 0
 fi
+# In plan mode the CLI may wait for the Skill store's judge (alis 1.195.13 or
+# later), but only when told how long this hook may run: hooks.json allows it
+# 6 s. An older CLI ignores the field.
+if [[ $payload =~ $plan_re ]] && [[ $payload == \{* ]]; then
+  payload="{\"alis_hook_timeout_ms\":6000,${payload#\{}"
+fi
 # Swallow every CLI failure (an older alis that rejects --hook exits 1).
 out="$(printf '%s' "$payload" | alis skills suggest --hook 2>/dev/null)" || exit 0
 ambient_re='"additionalContext"[[:space:]]*:[[:space:]]*"Possibly relevant Alis skill'

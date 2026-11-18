@@ -36,18 +36,33 @@ class RoutingTests(unittest.TestCase):
 class SuggestHookTests(unittest.TestCase):
     """suggest-skills.sh passes wake-word hints and Skill store matches through and drops local guesses."""
 
-    def run_with(self, context, prompt, project="/tmp/plain", mode=None, always=None):
+    def run_with(self, context, prompt, project="/tmp/plain", mode=None, always=None, sent=None):
         with tempfile.TemporaryDirectory() as home:
             fake = Path(home, "alis")
             out = json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": context}})
-            fake.write_text("#!/bin/sh\ncat >/dev/null; touch \"$HOME/called\"; echo " + shlex.quote(out) + "\n")
+            fake.write_text("#!/bin/sh\ncat >\"$HOME/stdin\"; touch \"$HOME/called\"; echo " + shlex.quote(out) + "\n")
             fake.chmod(0o700)
             env = dict(os.environ, HOME=home, PATH=home + os.pathsep + os.environ["PATH"], CLAUDE_PROJECT_DIR=project)
             env.pop("ALIS_SUGGEST_ALWAYS", None)
             if always is not None: env["ALIS_SUGGEST_ALWAYS"] = always
             p = subprocess.run(["bash", str(HOOKS / "suggest-skills.sh")], input=json.dumps({"prompt": prompt, **({"permission_mode": mode} if mode else {})}), text=True, capture_output=True, env=env)
             self.assertEqual(p.returncode, 0, p.stderr)
+            if sent is not None and Path(home, "stdin").exists():
+                sent.append(json.loads(Path(home, "stdin").read_text()))
             return p.stdout, Path(home, "called").exists()
+
+    def test_plan_mode_tells_the_cli_the_hook_may_wait(self):
+        # In plan mode the CLI waits for the Skill store's judge only when told
+        # the hook has the time (hooks.json allows it 6 s); otherwise it is not told.
+        sent = []
+        self.run_with("anything", "add a table for invoices", mode="plan", sent=sent)
+        self.run_with("anything", "add a table for invoices", mode="default", sent=sent)
+        self.assertEqual(sent[0].get("alis_hook_timeout_ms"), 6000)
+        self.assertEqual(sent[0].get("prompt"), "add a table for invoices")
+        self.assertNotIn("alis_hook_timeout_ms", sent[1])
+        hooks = json.loads((HOOKS / "hooks.json").read_text())
+        timeouts = [h["timeout"] for g in hooks["hooks"]["UserPromptSubmit"] for h in g["hooks"] if "suggest-skills.sh" in h["command"]]
+        self.assertEqual(timeouts, [6])
 
     def test_wake_hint_passes_through(self):
         out, called = self.run_with("The user addressed alis by name. Invoke the alis:discover skill now.", "alis, add an endpoint")

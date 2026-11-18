@@ -21,6 +21,8 @@ describe('suggest', () => {
       host.dir = dir
       await suggestSkills(host, prompt('add an endpoint'), passthrough)
       expect(host.runs).toHaveLength(1)
+      // Outside plan mode the hook keeps its 2 s.
+      expect(host.runs[0]?.init?.timeoutMs).toBe(2000)
       expect(await suggestSkills(host, prompt('alis, add an endpoint'), passthrough)).toEqual({ text: 'alis, add an endpoint', context: [WAKE_HINT] })
       expect(host.runs).toHaveLength(2)
       // Switched off, only a prompt that could hold an explicit address is asked about.
@@ -39,13 +41,15 @@ describe('suggest', () => {
     const result = await suggestSkills(host, { ...prompt('alis, deploy it'), context: ['earlier'] }, passthrough)
     expect(result).toEqual({ text: 'alis, deploy it', context: ['earlier', WAKE_HINT] })
     expect(host.runs[0]?.argv).toEqual(['alis', 'skills', 'suggest', '--hook'])
-    expect(host.runs[0]?.init?.timeoutMs).toBe(2000)
+    // In plan mode the CLI waits for the Skill store's judge.
+    expect(host.runs[0]?.init?.timeoutMs).toBe(6000)
     expect(JSON.parse(host.runs[0]?.init?.stdin ?? '')).toEqual({
       hook_event_name: 'UserPromptSubmit',
       session_id: 'session-a',
       cwd: host.dir,
       permission_mode: 'plan',
       prompt: 'alis, deploy it',
+      alis_hook_timeout_ms: 6000,
     })
   })
 

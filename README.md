@@ -154,7 +154,10 @@ With the module active:
   with a status line while a handoff claims the session
 - wake-phrase routing comes from the same `alis skills suggest --hook` call,
   attached as context beside the prompt; like the shell hook, it attaches a
-  Skill store match, drops the CLI's local guesses, and shows no suggestion band
+  Skill store match, drops the CLI's local guesses, and shows no suggestion band.
+  In plan mode both allow that call 6 s instead of 2 s, so the Skill store can
+  judge its best-ranked skills rather than answer from its score bar (alis
+  1.195.13 or later; about a second more per planning prompt)
 - `/alis status` shows the CLI version, workspace, what the module serves and the
   handoff claim without spending a model turn; `/alis handoff [alias]` runs
   `alis workstation handoff --session <this session> --json` for you (the
