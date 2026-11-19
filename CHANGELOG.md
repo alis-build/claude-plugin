@@ -4,6 +4,25 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.47.0](https://github.com/alis-build/claude-plugin/compare/v0.46.0...v0.47.0) (2026-11-19)
+
+### Features
+
+#### Artifact reads and private creates run without a prompt, and the primer says pages take the account's brand ([cda5f12](https://github.com/alis-build/claude-plugin/commit/cda5f12c07f90ac6efb80d1e3aa9d790576da435))
+
+Reading artifacts, `alis artifacts check` and `alis artifacts design`, and
+creating or uploading a private artifact version are allowed like the other
+read and workflow commands. Publishing, sharing, unpublishing, revoking and
+deleting an artifact keep Claude's normal prompt, because they change what
+other people can open.
+
+The primer and digest say that a page shared as an artifact is served in the
+account's brand: write it against the hosted fonts and tokens and their roles,
+with no brand colours, fonts or logo of its own, and that one run of
+`alis artifacts create --publish` checks, uploads and publishes it.
+
+Needs alis 1.196.5 or later.
+
 ## [0.46.0](https://github.com/alis-build/claude-plugin/compare/v0.45.0...v0.46.0) (2026-11-18)
 
 ### Features
