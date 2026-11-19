@@ -31,7 +31,8 @@ references an Ideate project (`ideas/<id>`), run `alis ideate context <id>` firs
 team has been doing, run `alis catch-up --days 5 --json` before `git log`: it covers
 sessions, deploys and conversations, which git does not. Sharing an
 HTML page, report or file as a link is `alis artifacts create <folder> --title …
---publish [--password-file <f> | --emails …] --json` (private, versioned, branded;
+--publish [--password-file <f> | --emails …] --json` (one run; private, versioned,
+served in the account's brand, so style with the hosted roles and no brand colours;
 bundle assets locally), not a Cloud Run deployment — see `alis docs artifacts`.
 
 If a local build cannot download private Alis packages, first run

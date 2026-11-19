@@ -26,9 +26,19 @@ const READ_PATHS = new Set(
     ['ideate', 'stream'], ['ideate', 'find'],
     ['ideate', 'output-artifact'], ['ideate', 'output-artifacts'],
     ['ideate', 'session'], ['ideate', 'sessions'],
+    ['artifacts', 'list'], ['artifacts', 'get'], ['artifacts', 'check'], ['artifacts', 'design'],
   ].map(p => p.join(' ')),
 )
-const READ_NESTED = new Set(['ideate artifacts read', 'ideate artifacts list', 'ideate artifacts get'])
+const READ_NESTED = new Set([
+  'ideate artifacts read', 'ideate artifacts list', 'ideate artifacts get',
+  'artifacts versions get', 'artifacts versions list', 'artifacts versions preview',
+  'artifacts shares get', 'artifacts shares list', 'artifacts pdf status',
+])
+// An artifact created or uploaded without --publish is private: no link serves
+// it and nobody outside its project sees it. Those two run like a workflow
+// command. Publishing, sharing, unpublishing, revoking and deleting change what
+// other people can open, and are left to Claude's own prompt.
+const PRIVATE_ARTIFACT = new Set(['artifacts create', 'artifacts versions upload'])
 // Structured workflows retain the CLI automation tier and production gates.
 // Arbitrary process runners and messaging verbs do not get a blanket allow.
 const WORKFLOW_TOP = new Set(['define', 'build', 'deploy', 'authorise'])
@@ -176,6 +186,7 @@ export function decide(input: GateInput): GateDecision {
   if (helpRequested) guarded = secrets = false
   const handoffRead = HANDOFF_READ.has(commandPath(argv, 3).join(' '))
   const readOnly = READ_TOP.has(top) || READ_PATHS.has(path.join(' ')) || READ_NESTED.has(commandPath(argv, 3).join(' ')) || handoffRead || helpRequested
+  const privateArtifact = !flags.has('--publish') && (PRIVATE_ARTIFACT.has(path.join(' ')) || PRIVATE_ARTIFACT.has(commandPath(argv, 3).join(' ')))
 
   const result: GateDecision & { matched: true } = { matched: true }
   if (input.permissionMode === 'plan' && (guarded || !readOnly)) {
@@ -193,7 +204,7 @@ export function decide(input: GateInput): GateDecision {
   } else if (readOnly) {
     result.decision = 'allow'
     result.reason = ALLOW_REASON
-  } else if (WORKFLOW_TOP.has(top) || WORKFLOW_PATHS.has(path.join(' '))) {
+  } else if (WORKFLOW_TOP.has(top) || WORKFLOW_PATHS.has(path.join(' ')) || privateArtifact) {
     // A define --dry-run creates nothing, so the CLI does not gate it.
     if (input.automationTier === 'manual' && !(top === 'define' && flags.has('--dry-run'))) {
       result.decision = 'ask'

@@ -114,7 +114,7 @@ Review the latest deploy logs for this service and suggest the next action.
 
 Claude Code will ask before running tools that require approval.
 
-Use one standalone `alis` command per Bash call. The plugin allows known read commands and structured Define/Build/Deploy/package workflows; the CLI's automation tier and production gate still apply. Arbitrary process runners, unknown commands and messaging verbs retain Claude's normal permission handling. Pipes, redirects and shell composition receive execution guidance and no automatic allow.
+Use one standalone `alis` command per Bash call. The plugin allows known read commands and structured Define/Build/Deploy/package workflows; the CLI's automation tier and production gate still apply. Reading artifacts, `alis artifacts check` and `design`, and creating or uploading a private artifact version (no `--publish`) are allowed the same way (alis 1.196.5 or later); publishing, sharing, unpublishing, revoking and deleting an artifact keep Claude's normal prompt, because they change what other people can open. Arbitrary process runners, unknown commands and messaging verbs retain Claude's normal permission handling. Pipes, redirects and shell composition receive execution guidance and no automatic allow.
 
 Use `alis --cwd /absolute/workspace/path ...` for another workspace, and `alis environment list <org>.<product> --json` to choose a target without fetching variable values. These require the CLI release containing the Claude reliability changes; check `alis --help` and `alis environment --help`. New logs/cancellation commands also need the matching backend.
 

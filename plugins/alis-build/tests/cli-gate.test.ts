@@ -28,6 +28,35 @@ describe('cli-gate', () => {
     expect(decision('alis context push-session --json', 'plan')).not.toMatchObject({ decision: 'allow' })
   })
 
+  // Mirrors TestArtifactReadsAndPrivateCreatesAreAllowed in the CLI's
+  // pluginhooks package: the two tables answer alike.
+  test('artifact reads and private creates run without a prompt; what others can open is still asked about', () => {
+    for (const mode of ['auto', 'default', 'plan']) {
+      for (const cmd of [
+        'alis artifacts list --json', 'alis artifacts get a1 --json', 'alis artifacts check ./page --json', 'alis artifacts design --json',
+        'alis artifacts versions get a1 v1 --json', 'alis artifacts versions list a1 --json', 'alis artifacts versions preview a1 v1 --json',
+        'alis artifacts shares list a1 --json', 'alis artifacts shares get a1 s1 --json', 'alis artifacts pdf status a1 v1 --json',
+      ]) {
+        expect(decision(cmd, mode)).toMatchObject({ matched: true, decision: 'allow' })
+      }
+    }
+    for (const cmd of ['alis artifacts create ./page --title Review --json', 'alis artifacts create ./page --no-brand --json', 'alis artifacts versions upload a1 ./page --json']) {
+      expect(decision(cmd, 'default')).toMatchObject({ matched: true, decision: 'allow' })
+      expect(decide({ toolName: 'Bash', permissionMode: 'default', sessionId: 'session-a', automationTier: 'manual', toolInput: { command: cmd } })).toMatchObject({ decision: 'ask' })
+      expect(decision(cmd, 'plan')).toMatchObject({ decision: 'deny' })
+    }
+    for (const cmd of [
+      'alis artifacts create ./page --title Review --publish --json', 'alis artifacts create ./page --publish=false --json',
+      'alis artifacts versions upload a1 ./page --publish --json', 'alis artifacts publish a1 --share --json', 'alis artifacts unpublish a1 --json',
+      'alis artifacts shares create a1 --json', 'alis artifacts shares revoke a1 s1 --etag e --json', 'alis artifacts delete a1 --etag e --json',
+      'alis artifacts update a1 --etag e --brand none --json', 'alis artifacts select a1 --version v1 --etag e --json', 'alis artifacts pdf generate a1 v1 --json',
+    ]) {
+      expect(decision(cmd, 'default')).not.toMatchObject({ decision: 'allow' })
+    }
+    // A private create that carries its own approval is still asked about.
+    expect(decision('alis artifacts create ./page --yes --json', 'default')).toMatchObject({ decision: 'ask' })
+  })
+
   test('guarded actions ask in every execution mode', () => {
     for (const mode of ['auto', 'default', 'acceptEdits', 'bypassPermissions', 'dontAsk']) {
       for (const cmd of [
