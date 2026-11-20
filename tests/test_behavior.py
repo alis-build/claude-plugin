@@ -51,15 +51,15 @@ class SuggestHookTests(unittest.TestCase):
                 sent.append(json.loads(Path(home, "stdin").read_text()))
             return p.stdout, Path(home, "called").exists()
 
-    def test_plan_mode_tells_the_cli_the_hook_may_wait(self):
-        # In plan mode the CLI waits for the Skill store's judge only when told
-        # the hook has the time (hooks.json allows it 6 s); otherwise it is not told.
+    def test_the_cli_is_told_the_hook_may_wait(self):
+        # The CLI waits for the Skill store's judge only when told the hook has
+        # the time (hooks.json allows it 6 s), in plan mode or not.
         sent = []
         self.run_with("anything", "add a table for invoices", mode="plan", sent=sent)
         self.run_with("anything", "add a table for invoices", mode="default", sent=sent)
-        self.assertEqual(sent[0].get("alis_hook_timeout_ms"), 6000)
-        self.assertEqual(sent[0].get("prompt"), "add a table for invoices")
-        self.assertNotIn("alis_hook_timeout_ms", sent[1])
+        for payload in sent:
+            self.assertEqual(payload.get("alis_hook_timeout_ms"), 6000)
+            self.assertEqual(payload.get("prompt"), "add a table for invoices")
         hooks = json.loads((HOOKS / "hooks.json").read_text())
         timeouts = [h["timeout"] for g in hooks["hooks"]["UserPromptSubmit"] for h in g["hooks"] if "suggest-skills.sh" in h["command"]]
         self.assertEqual(timeouts, [6])
