@@ -4,6 +4,18 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.48.0](https://github.com/alis-build/claude-plugin/compare/v0.47.0...v0.48.0) (2026-11-20)
+
+### Features
+
+#### The hook may wait for the Skill store's judge in every mode ([d103a75](https://github.com/alis-build/claude-plugin/commit/d103a757f2c825aef33591248d751849e0a8088d))
+
+The hook is allowed 6 s and tells the CLI so in every mode, not only in
+plan mode. The Skill store then puts a planning prompt, and the sessions
+in its judge group (an experiment, alis 1.198.1 or later), to its judge;
+every other prompt is still answered by the score bar in a fraction of a
+second, and an older CLI ignores the field.
+
 ## [0.47.0](https://github.com/alis-build/claude-plugin/compare/v0.46.0...v0.47.0) (2026-11-19)
 
 ### Features
