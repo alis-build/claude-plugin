@@ -4,6 +4,14 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.48.1](https://github.com/alis-build/claude-plugin/compare/v0.48.0...v0.48.1) (2026-11-26)
+
+### Fixes
+
+#### Lead captured skill descriptions with the outcome ([e1d84a5](https://github.com/alis-build/claude-plugin/commit/e1d84a556bd3d69eeac205373c44f6eeda2c9926))
+
+Capture opens a description with what the reader gets in 25 words or fewer, explains the work, and ends with quoted trigger phrases. Registration and the skill use the same description.
+
 ## [0.48.0](https://github.com/alis-build/claude-plugin/compare/v0.47.0...v0.48.0) (2026-11-20)
 
 ### Features
