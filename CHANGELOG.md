@@ -4,6 +4,14 @@ What changed in each release of the Alis Build plugin for Claude Code. This
 file is generated from release tags and commit messages; do not edit it by
 hand.
 
+## [0.48.2](https://github.com/alis-build/claude-plugin/compare/v0.48.1...v0.48.2) (2026-11-26)
+
+### Fixes
+
+#### Keep skill rating buttons reachable in narrow windows ([22f26e0](https://github.com/alis-build/claude-plugin/commit/22f26e099845f11d4d7aae509569334d088666f9))
+
+The rating buttons wrap below the skill name. The band shows how to focus the buttons and use their letter shortcuts on desktop and in the terminal.
+
 ## [0.48.1](https://github.com/alis-build/claude-plugin/compare/v0.48.0...v0.48.1) (2026-11-26)
 
 ### Fixes
