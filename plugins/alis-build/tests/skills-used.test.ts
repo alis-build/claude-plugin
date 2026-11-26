@@ -134,6 +134,36 @@ describe('skills-used', () => {
   })
 
   for (const surface of ['terminal', 'desktop'] as const) {
+    test(`the narrow rating band wraps the four working shortcuts below a long name on the ${surface}`, async ($, on) => {
+      const skill = { id: 'block-audit', name: 'Block Audit for a service with a very long display name', at: 0, calls: [], turnDone: true, canRate: true }
+      const pressed: string[] = []
+      const actions = {
+        rate: (rating: 'up' | 'down') => pressed.push(rating),
+        sayMore: () => pressed.push('more'),
+        dismiss: () => pressed.push('later'),
+      }
+      on('ui.render', { component: 'AbovePrompt' }, ($, e) => renderSkillAsk($.ui.resolve(e), e.surface, skill, actions))
+      const ui = await $.ui.mount({
+        plugin: 'test', component: 'AbovePrompt', surface, viewport: { columns: 24, rows: 30 },
+        props: { hasSurvey: false, isCollapsed: false, isWorking: false, bodyColumns: 24, maxRows: 8, scroll: { offset: 0, bodyRows: 8 }, view: {} },
+      })
+      expect(await ui.drawn()).toMatchObject({
+        props: { flexDirection: 'column' },
+        children: [
+          { type: 'Box' },
+          { children: [{ props: { flexWrap: 'wrap' }, children: Array(4).fill({ type: 'Button' }) }, { type: 'Text' }] },
+        ],
+      })
+      for (const [action, letter] of [['up', 'y'], ['down', 'n'], ['more', 'm'], ['later', 'x']]) {
+        const key = `alis-skill-${action}:${skill.id}`
+        expect(await ui.find({ key })).toMatchObject({ type: 'Button', props: { hotkey: letter } })
+        await ui.press({ key })
+      }
+      expect(pressed).toEqual(['up', 'down', 'more', 'later'])
+      expect(await ui.find({ type: 'Text', text: surface === 'terminal' ? /Ctrl\+X then Tab/ : /Tab to a rating button/ })).toBeDefined()
+      await ui.unmount()
+    })
+
     test(`the row names the skill, and a line above the prompt asks once the turn has ended, on the ${surface}`, async ($, on) => {
       const host = start(() => ok())
       await noteSkill(host, 'block-audit', 'toolu_1')

@@ -3,7 +3,7 @@
 // A Skill store skill in use, drawn twice. Its row, on the call that loaded
 // it: the mark and the skill by name, in place of the call's own result (the
 // skill's text, which the model reads and the person does not need again).
-// And once the turn that used it has ended, one line above the prompt asking
+// And once the turn that used it has ended, a band above the prompt asking
 // how it went: the row itself is in the terminal's scrollback by then, where
 // nothing is redrawn and no button can be pressed.
 import type { Elements, RenderElement, RenderSurface } from 'claude-code'
@@ -45,31 +45,33 @@ export function renderSkillRow(kit: SkillKit, surface: RenderSurface, skill: Use
   )
 }
 
-/**
- * The line above the prompt: how did the skill go? The buttons take a click,
- * or their letter once the band has the focus (ctrl+x tab).
- */
+/** The rating band keeps its controls together below the skill name. */
 export function renderSkillAsk(kit: SkillKit, surface: RenderSurface, skill: UsedSkill, actions: SkillActions): RenderElement {
   const { Box, Text, Button } = kit
   const sub = skillSubOf(skill)
+  const terminal = surface === 'terminal'
+  const plain = terminal || undefined
   return (
-    <Box key="alis-skill-ask" flexDirection="column">
+    <Box key="alis-skill-ask" flexDirection="column" minWidth={0}>
       <Box flexDirection="row" alignItems="center">
         <Box width={slotCells(surface)} flexShrink={0}>
           {mark(kit, surface)}
         </Box>
-        <Box flexShrink={1}>
+        <Box minWidth={0} flexShrink={1}>
           <Text wrap="truncate-end">{`How was the skill ${skill.name}?`}</Text>
         </Box>
-        {skill.sending ? null : (
-          <Box flexDirection="row" gap={1} marginLeft={2} flexShrink={0}>
-            <Button key={`alis-skill-up:${skill.id}`} label="Helped" hotkey="y" variant="primary" onPress={() => actions.rate('up')} />
-            <Button key={`alis-skill-down:${skill.id}`} label="Didn't help" hotkey="n" onPress={() => actions.rate('down')} />
-            <Button key={`alis-skill-more:${skill.id}`} label="Say more" hotkey="m" onPress={actions.sayMore} />
-            <Button key={`alis-skill-later:${skill.id}`} label="Not now" hotkey="x" dimColor role="dismiss" onPress={actions.dismiss} />
-          </Box>
-        )}
       </Box>
+      {skill.sending ? null : (
+        <Box flexDirection="column">
+          <Box flexDirection="row" flexWrap="wrap" columnGap={1}>
+            <Button key={`alis-skill-up:${skill.id}`} label="Helped" hotkey="y" plain={plain} variant="primary" onPress={() => actions.rate('up')} />
+            <Button key={`alis-skill-down:${skill.id}`} label="Didn't help" hotkey="n" plain={plain} onPress={() => actions.rate('down')} />
+            <Button key={`alis-skill-more:${skill.id}`} label="Say more" hotkey="m" plain={plain} onPress={actions.sayMore} />
+            <Button key={`alis-skill-later:${skill.id}`} label="Not now" hotkey="x" plain={plain} dimColor role="dismiss" onPress={actions.dismiss} />
+          </Box>
+          <Text color={KEY.quiet}>{terminal ? 'Ctrl+X then Tab to focus the shortcuts.' : 'Tab to a rating button, then press its letter.'}</Text>
+        </Box>
+      )}
       {sub ? under(kit, surface, sub, skill.failed ? KEY.warning : KEY.quiet) : null}
     </Box>
   )
