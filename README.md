@@ -266,7 +266,7 @@ The handoff command follows Claude's normal permission handling.
 
 ### Discovery and capture
 
-Discovery is skill-native: describe platform-shaped work in your own words and the `alis:discover` skill routes it — local catalogue probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis:capture` saves it for your team. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
+Discovery is skill-native: describe platform-shaped work in your own words and the `alis:discover` skill routes it — local catalogue probe first, registry skill loaded only on a distinctive match, silence otherwise. Say "capture this as a skill" after solving something new and `alis:capture` saves it for your team. Captured descriptions open with the outcome in 25 words or fewer, explain the work, and finish with quoted trigger phrases. If you installed or changed the plugin inside an already-running Claude Code session, run `/reload-plugins`.
 
 ## Troubleshooting
 

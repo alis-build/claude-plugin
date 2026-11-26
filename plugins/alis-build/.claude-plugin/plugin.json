@@ -1,6 +1,6 @@
 {
   "name": "alis",
-  "version": "0.48.0",
+  "version": "0.48.1",
   "description": "Connect Claude Code to AlisX through the alis CLI and workspace context.",
   "author": {
     "name": "AlisX"

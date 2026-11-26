@@ -29,11 +29,10 @@ doing the steps by hand": generalise the steps, not the session.
    - improve it if the user owns it (`alis skills edit <id>`), or
    - send feedback to its owner (`alis skills feedback <id>`).
 
-2. **Confirm scope once.** Propose a skill id (lowercase-hyphen) and a one-line
-   description. Ask ONE confirmation covering both the id and what the skill should and
-   should not cover. Do not iterate on naming before registering.
+2. **Confirm scope once.** Propose a skill id (lowercase-hyphen) and an opening sentence
+   saying what the reader gets. Ask ONE confirmation covering the id and the scope. Do not iterate on naming before registering.
 
-3. **Register the draft**:
+3. **Register the draft** with the full description from step 4.
 
    `alis skills capture <id> --name "<Display Name>" --description "<description>" --json`
 
@@ -46,9 +45,11 @@ doing the steps by hand": generalise the steps, not the session.
      session log.
    - Parameterise specifics: `<project-id>`, `<service>`, `<org>`.
    - Scrub: absolute/home paths, emails, build environment/project IDs, tokens/keys, internal URLs.
-   - Description rubric: first clause says what the skill does; then "Use when …" with
-     trigger phrases. This text is both the coding agent trigger and the search-ranking
-     surface — write it for both.
+   - Use the same description for registration and the SKILL.md front matter.
+     Open with one plain sentence of at most 25 words saying what the reader gets.
+     Explain how the skill works and what it works on. Finish with “Use when …” or
+     “Use for …” and double-quote the phrases people would type. Keep the full
+     description within 1,024 characters.
    - Optionally add `references/` files for a scrubbed worked example.
    - **Code is not a reference.** If the practice needs a buildable foundation (a
      template tree, a Dockerfile, Terraform, a server), do not put it under the skill for
